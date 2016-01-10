@@ -1,0 +1,2 @@
+include ':smartfoo-android-lib-core'
+include ':app'
