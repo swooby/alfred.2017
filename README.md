@@ -5,7 +5,9 @@
 On 2016/01/03 MZ announced (via https://www.facebook.com/zuck/posts/10102577175875681):  
 "My personal challenge for 2016 is to build a simple AI to run my home and help me with my work. You can think of it kind of like Jarvis in Iron Man."
 
-Meh! I've had an itch to do that for years, and in 2014/09 I [very] briefly started something:
+Meh! There seems to be very little specifics here, and I am skeptical that his effort(s)/progress will be publicized much along the way.
+
+I've had an itch to do this for years, and in 2014/09 I [very] briefly started something:
 
 * https://github.com/swooby/pocketsphinx-android
 * https://github.com/swooby/pocketsphinx-android-demo
@@ -23,6 +25,4 @@ and the past year has been a stealth attempt to work on #2 and #3.
 This repo is my new revived attempt at trying this, with MZ as inspiration.
 
 Heck, maybe I can follow along w/ him and learn something.  
-Heck, maybe he will find this project and learn from from me.
-
-FWIW, I am say "Meh!" about MZ's project mostly because there seems to be very little specifics and I am skeptical that his effort(s)/progress will be publicized along the way.
+Heck, maybe he will find this project and learn from from me! :)
