@@ -1,6 +1,6 @@
 # Alfred: Personal Assistant for Android
 
-(aka: "If Mark Zuckerberg can do it, then why can't I?")
+(aka: "If Mark Zuckerberg can attempt to do it, then why can't I?")
 
 On 2016/01/03 MZ announced (via https://www.facebook.com/zuck/posts/10102577175875681):  
 "My personal challenge for 2016 is to build a simple AI to run my home and help me with my work. You can think of it kind of like Jarvis in Iron Man."
