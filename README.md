@@ -1,4 +1,4 @@
-# Alfred: Personal Assistant for Android
+# Alfred: Personal Assistant [for Android]
 
 (aka: "If Mark Zuckerberg can attempt to do it, then why can't I?")
 
