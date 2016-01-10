@@ -18,7 +18,7 @@ Those plans were to take place along several fronts:
 3. The supporting software libraries to make TAEPA work
 
 I've been working on these subconsciously over the past few years,  
-and the past year has been a stealth attempt to work on #2.
+and the past year has been a stealth attempt to work on #2 and #3.
 
 This repo is my new revived attempt at trying this, with MZ as inspiration.
 
