@@ -22,7 +22,6 @@ Those plans were to take place along several fronts:
 I've been working on these subconsciously over the past few years,  
 and the past year has been a stealth attempt for tangibles on #2 and #3.
 
-This repo is my new revived attempt at trying this, with MZ as inspiration.
-
+This repo is my new revived attempt at trying this again, and I guess it can't hurt to use MZ as inspiration.  
 Heck, maybe I can follow along w/ him and learn something.  
 Heck, maybe he will find this project and learn from from me! :)
