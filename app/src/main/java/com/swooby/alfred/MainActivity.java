@@ -17,6 +17,7 @@ public class MainActivity
         extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
+    private static final String TAG = FooLog.TAG("MainActivity");
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -32,8 +33,7 @@ public class MainActivity
             @Override
             public void onClick(View view)
             {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                MainActivity.this.onFloatingActionButtonClick();
             }
         });
 
@@ -46,6 +46,14 @@ public class MainActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        Intent intent = getIntent();
+        FooLog.i(TAG, "onCreate: intent=" + PbPlatformUtils.toString(intent));
+
+        if (savedInstanceState == null)
+        {
+            verifyRequirements();
+        }
     }
 
     @Override
@@ -65,7 +73,6 @@ public class MainActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
@@ -76,6 +83,7 @@ public class MainActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
@@ -122,5 +130,28 @@ public class MainActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+    }
+
+    private void verifyRequirements()
+    {
+    }
+
+    private void onFloatingActionButtonClick()
+    {
+        Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                .setAction("Action", null)
+                .show();
     }
 }

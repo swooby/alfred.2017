@@ -2,24 +2,201 @@
 
 buildscript {
     repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
         jcenter()
     }
     dependencies {
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        // NOTE: Do not place your application dependencies here;
+        //  they belong in the individual module build.gradle files
+        classpath 'com.android.tools.build:gradle:1.3.1'
         classpath 'com.github.dcendents:android-maven-plugin:1.2'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.5'
+        classpath 'org.jacoco:org.jacoco.core:0.7.4.201502262128'
+        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:1.2'
     }
 }
 
 allprojects {
     repositories {
+        maven {
+            url 'http://build.pebblebee.com:8090/artifactory/libs-release/'
+        }
         jcenter()
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+// BUILD_VERSION_INFO must be of the form #.#.#-(YYYYMMDD_#-SNAPSHOT), where the '-' parts are optional
+ext {
+    BUILD_VERSION_INFO_REGEX = /^(\d+\.\d+(?:\.\d+)?\.(\d+))(?:-\((\d+(?:_\d+)?(?:-SNAPSHOT)?)\))?$/
+    BUILD_VERSION_DEFAULT = '0.0.1'
+    BUILD_VERSION_INFO_DEFAULT = BUILD_VERSION_DEFAULT + '-SNAPSHOT'
+}
+
+def getAndroidCompileSdkRevision() {
+    return 23 // last checked 2016/01/11
+}
+
+/**
+ * Updates:
+ *  Android SDK Manager
+ */
+def getAndroidBuildToolsRevision() {
+    return '23.0.2' // last checked 2016/01/11
+}
+
+/**
+ * Updates:
+ *  https://developer.android.com/tools/support-library/index.html#revisions
+ */
+def getDependencyAndroidSupportRevision() {
+    return '23.1.1' // last checked 2016/01/11
+}
+
+/**
+ * Updates:
+ *  https://developers.google.com/android/guides/releases
+ */
+def getDependencyGooglePlayServicesRevision() {
+    return '8.4.0' // last checked 2016/01/11
+}
+
+/**
+ * Updates:
+ *  https://developers.facebook.com/docs/android/change-log-4.x
+ */
+def getDependencyFacebookSdkRevision() {
+    return '4.8.2' // last checked 2016/01/11
+}
+
+/**
+ * Updates:
+ *  https://github.com/aws/aws-sdk-android
+ *  https://github.com/aws/amazon-cognito-android
+ */
+def getDependencyAmazonSdkRevision() {
+    return '2.2.10' // last checked 2016/01/11
+}
+
+/**
+ * Checks for project.LOCAL_DEVELOPMENT_BUILD and uses local only projects
+ *
+ * @return true if project.LOCAL_DEVELOPMENT_BUILD == true, else false
+ */
+def getIsLocalDevelopmentBuild() {
+    def isLocalDevelopmentBuild = project.hasProperty('LOCAL_DEVELOPMENT_BUILD') ? project.LOCAL_DEVELOPMENT_BUILD.toBoolean() : false
+    println 'getIsLocalDevelopmentBuild: isLocalDevelopmentBuild=' + isLocalDevelopmentBuild
+    return isLocalDevelopmentBuild
+}
+
+/**
+ * Checks project properties to determine if the project should be compiled as an APK or a library.
+ *
+ * @return true if the buildAsLibrary property is present, otherwise false
+ */
+def getBuildAsLibrary() {
+    def buildAsLibrary = project.hasProperty('buildAsLibrary')
+    println 'getBuildAsLibrary: buildAsLibrary=' + buildAsLibrary
+    return buildAsLibrary
+}
+
+/**
+ * Uses project properties to determine if the build should be signed. A project with non-null KEY_ALIAS, KEY_PASSWORD, KEYSTORE, and KEYSTORE_PASSWORD properties is considered a signed build.
+ *
+ * @return true if the build should be signed, otherwise false
+ */
+def getIsSignedBuild() {
+    def hasKeyStore = project.hasProperty('KEYSTORE')
+    def hasKeyStorePassword = project.hasProperty('KEYSTORE_PASSWORD')
+    def hasKeyAlias = project.hasProperty('KEY_ALIAS')
+    def hasKeyPassword = project.hasProperty('KEY_PASSWORD')
+    def isSignedBuild = (hasKeyAlias && hasKeyPassword && hasKeyStore && hasKeyStorePassword)
+    println 'getIsSignedBuild: isSignedBuild=' + isSignedBuild
+    return isSignedBuild
+}
+
+/**
+ * @return the group ID that should be used for the build artifact
+ */
+def getArtifactGroup() {
+    return 'com.pebblebee'
+}
+
+/**
+ * Returns a string formatted with the build information, including a version code, version name, and a build repository name.
+ *
+ * @return the value of the BUILD_VERSION_INFO property or '0.0.1' if none is specified
+ */
+def getBuildVersionInfo() {
+    def buildVersionInfo = (project.hasProperty('BUILD_VERSION_INFO') ? project.BUILD_VERSION_INFO : BUILD_VERSION_INFO_DEFAULT)
+    println 'getBuildVersionInfo: versionInfo=' + (buildVersionInfo ? ('\"' + buildVersionInfo + '\"') : 'null')
+    return buildVersionInfo
+}
+
+/**
+ * Used as the version code value in the generated AndroidManifest file. Defaults to 1 if no version code is present in the BUILD_VERSION_INFO property.
+ *
+ * @return the version code parsed from the BUILD_VERSION_INFO property or 1 if no property is present (or the regex doesn't match)
+ */
+def getBuildVersionCode() {
+    def matcher = getBuildVersionInfo() =~ BUILD_VERSION_INFO_REGEX
+    def match = matcher.matches() ? matcher[0] : null
+    println 'getBuildVersionCode: match=' + match
+    def versionCode = match ? Integer.parseInt(match[2]) : 1
+    println 'getBuildVersionCode: versionCode=' + versionCode
+    return versionCode
+}
+
+/**
+ * Used as the version name value in the generated AndroidManifest file. Defaults to '0.0.1' if no version name is present in the BUILD_VERSION_INFO property.
+ *
+ * @return the version name parsed from the BUILD_VERSION_INFO property or '0.0.1' if no property is present (or the regex doesn't match)
+ */
+def getBuildVersionName() {
+    def matcher = getBuildVersionInfo() =~ BUILD_VERSION_INFO_REGEX
+    def match = matcher.matches() ? matcher[0] : null
+    println 'getBuildVersion: match=' + match
+    def versionName = match ? ((match[3]) ? match[1] + '-' + match[3] : match[1]) : BUILD_VERSION_INFO_DEFAULT
+    println 'getBuildVersionName: versionName=' + (versionName ? ('\"' + versionName + '\"') : 'null')
+    return versionName
+}
+
+/**
+ * Used as the version name in the artifact repository.
+ *
+ * @return the repository version name or 'unspecified' if there is no valid BUILD_VERSION_INFO property
+ */
+def getBuildRepoVersionName() {
+    def matcher = getBuildVersionInfo() =~ BUILD_VERSION_INFO_REGEX
+    def match = matcher.matches() ? matcher[0] : null
+    println 'getBuildRepoVersionName: match=' + match
+    def repoVersionName = match ? match[1] : BUILD_VERSION_DEFAULT
+    println 'getBuildRepoVersionName: repoVersionName=' + (repoVersionName ? ('\"' + repoVersionName + '\"') : 'null')
+    return repoVersionName
+}
+
+/*
+    Exposes local methods as properties for other scripts to access this scripts' functionality
+ */
+ext {
+    getAndroidCompileSdkRevision = this.&getAndroidCompileSdkRevision
+    getAndroidBuildToolsRevision = this.&getAndroidBuildToolsRevision
+    getDependencyAndroidSupportRevision = this.&getDependencyAndroidSupportRevision
+    getDependencyGooglePlayServicesRevision = this.&getDependencyGooglePlayServicesRevision
+    getDependencyFacebookSdkRevision = this.&getDependencyFacebookSdkRevision
+    getDependencyAmazonSdkRevision = this.&getDependencyAmazonSdkRevision
+
+    getIsLocalDevelopmentBuild = this.&getIsLocalDevelopmentBuild
+    getBuildAsLibrary = this.&getBuildAsLibrary
+    getIsSignedBuild = this.&getIsSignedBuild
+    getArtifactGroup = this.&getArtifactGroup
+    getBuildVersionInfo = this.&getBuildVersionInfo
+    getBuildVersionCode = this.&getBuildVersionCode
+    getBuildVersionName = this.&getBuildVersionName
+    getBuildRepoVersionName = this.&getBuildRepoVersionName
 }

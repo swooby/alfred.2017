@@ -26,13 +26,15 @@ public class MainApplication
         mTextToSpeech = FooTextToSpeech.getInstance();
         mTextToSpeech.start(this);
 
-        if (!SpeechRecognizer.isRecognitionAvailable(this))
+        if (!isRecognitionAvailable())
         {
-            //...
+            // TODO:(pv) Better place for initialization and indication of failure...
+            return;
         }
 
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
-        FooLog.i(TAG, "+onCreate()");
+        FooLog.i(TAG, "-onCreate()");
+    }
     }
 }
