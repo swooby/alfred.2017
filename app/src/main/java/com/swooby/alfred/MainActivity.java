@@ -12,12 +12,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import com.microsoft.azure.iot.service.sdk.Device;
+import com.microsoft.azure.iothub.DeviceClient;
+import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.logging.FooLog;
+import com.swooby.alfred.azure.Azure;
+import com.swooby.alfred.azure.Azure.IoTDeviceAddCallback;
+import com.swooby.alfred.azure.Azure.IoTDeviceSendMessageCallback;
+
+import java.util.Date;
 
 public class MainActivity
         extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
     private static final String TAG = FooLog.TAG("MainActivity");
+
+    private Azure mAzure;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -54,6 +65,7 @@ public class MainActivity
         {
             verifyRequirements();
         }
+        mAzure = new Azure(this);
     }
 
     @Override
@@ -153,5 +165,39 @@ public class MainActivity
         Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null)
                 .show();
+        String deviceId = "qwigybo";
+
+        mAzure.iotDeviceAdd(deviceId, new IoTDeviceAddCallback()
+        {
+            @Override
+            public void onSuccess(Device device)
+            {
+                FooLog.i(TAG, "iotDeviceAdd onSuccess: device id=" + device.getDeviceId());
+                FooLog.i(TAG, "iotDeviceAdd onSuccess: device primaryKey=" + device.getPrimaryKey());
+
+                String message = "w00t @ " + new Date().toString();
+                mAzure.iotDeviceSendMessage(device, message, new IoTDeviceSendMessageCallback()
+                {
+                    @Override
+                    public void onSuccess(Device device, DeviceClient deviceClient)
+                    {
+                        FooLog.i(TAG, "iotDeviceSendMessage onSuccess: device id=" + device.getDeviceId());
+                    }
+
+                    @Override
+                    public void onException(Device device, Exception exception)
+                    {
+                        FooLog.e(TAG, "iotDeviceAdd onException: device id=" + deviceId, exception);
+                    }
+                });
+            }
+
+            @Override
+            public void onException(String deviceId, Exception exception)
+            {
+                FooLog.e(TAG, "iotDeviceAdd onException: device id=" + deviceId, exception);
+            }
+        });
+    }
     }
 }
