@@ -1,8 +1,14 @@
 apply plugin: 'com.android.application'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 23
     buildToolsVersion '23.0.2'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     defaultConfig {
         applicationId 'com.swooby.alfred'
@@ -10,10 +16,13 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName '1.0'
+        multiDexEnabled true
     }
+
     buildTypes {
         release {
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -28,11 +37,31 @@ dependencies {
 
     // Updates:
     //  https://bintray.com/microsoftazuremobile/SDK/Mobile-Services-Android-SDK/view
+    //  https://github.com/Azure/azure-mobile-apps-android-client/tree/master/sdk
     compile 'com.microsoft.azure:azure-mobile-android:3.0'
+    //  https://github.com/Azure/azure-notificationhubs/tree/master/Android/notification-hubs-sdk
     compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
+
+    //
+    // https://azure.microsoft.com/en-us/documentation/articles/iot-hub-java-java-getstarted/
+    // Updates:
+    //  https://github.com/Azure/azure-iot-sdks/tree/master/java
+    //compile 'com.microsoft.azure.iothub-java-client:iothub-java-service-client:1.0.0'
+    compile project(':iothub-service-sdk')
+    //compile 'com.microsoft.azure.iothub-java-client:iothub-java-device-client:1.0.0'
+    compile project(':iothub-java-client')
+    //compile 'com.microsoft.eventhubs.client:eventhubs-client:1.0'
 
     compile project(':smartfoo-android-lib-core')
 
     compile project(':pebblebee-lib-common')
     compile project(':pebblebee-lib-bluetooth')
+}
+
+retrolambda {
+    jdk JAVA8_HOME
+    oldJdk JAVA7_HOME
+    javaVersion JavaVersion.VERSION_1_7
+    //jvmArgs '-noverify'
+    //defaultMethods true
 }
