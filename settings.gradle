@@ -4,6 +4,9 @@ include ':smartfoo-android-lib-core'
 //include ':qpid-proton'
 //include ':paho-mqtt-java-mqttv3'
 include ':iothub-java-common'
+project(':iothub-java-common').projectDir = new File('../azure-iot-sdks/java/common/iothub-java-common')
 include ':iothub-service-sdk'
+project(':iothub-service-sdk').projectDir = new File('../azure-iot-sdks/java/service/iothub-service-sdk')
 include ':iothub-java-client'
+project(':iothub-java-client').projectDir = new File('../azure-iot-sdks/java/device/iothub-java-client')
 include ':app'
