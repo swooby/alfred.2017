@@ -9,7 +9,7 @@ import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
 public class MainApplication
         extends Application
 {
-    private static final String TAG = FooLog.TAG("MainApplication");
+    private static final String TAG = FooLog.TAG(MainApplication.class);
 
     private static final String KEYPHRASE = "alfred";
 

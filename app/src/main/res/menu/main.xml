@@ -1,9 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <!--
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"
-        app:showAsAction="never"/>
+        app:showAsAction="never"
+        />
+        -->
+
+    <item
+        android:id="@+id/action_application_info"
+        android:title="@string/action_application_info"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_notification_access"
+        android:title="@string/action_notification_access"
+        app:showAsAction="never"
+        />
+
 </menu>

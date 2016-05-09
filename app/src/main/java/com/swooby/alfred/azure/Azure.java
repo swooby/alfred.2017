@@ -50,7 +50,7 @@ import java.util.concurrent.Future;
 
 public class Azure
 {
-    private static final String TAG = FooLog.TAG("Azure");
+    private static final String TAG = FooLog.TAG(Azure.class);
 
     public static final String GOOGLE_CLOUD_MESSAGING_APP_ID = "234844979664";
 
