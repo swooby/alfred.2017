@@ -30,36 +30,67 @@ public class MainActivity
 
     private Azure mAzure;
 
+    private DrawerLayout          mDrawerLayout;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private NavigationView        mNavigationView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        if (actionbar != null)
+        {
+            actionbar.setHomeButtonEnabled(true);
+            actionbar.setDisplayHomeAsUpEnabled(true);
+        }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener()
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         {
             @Override
-            public void onClick(View view)
+            public void onDrawerOpened(View drawerView)
             {
-                MainActivity.this.onFloatingActionButtonClick();
+                super.onDrawerOpened(drawerView);
+                invalidateOptionsMenu();
             }
-        });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open,
-                R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
+            @Override
+            public void onDrawerClosed(View drawerView)
+            {
+                super.onDrawerClosed(drawerView);
+                invalidateOptionsMenu();
+            }
+        };
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+        mDrawerToggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        if (mNavigationView != null)
+        {
+            mNavigationView.setNavigationItemSelectedListener(this);
 
-        Intent intent = getIntent();
-        FooLog.i(TAG, "onCreate: intent=" + PbPlatformUtils.toString(intent));
+        }
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        if (fab != null)
+        {
+            fab.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View view)
+                {
+                    MainActivity.this.onFloatingActionButtonClick();
+                }
+            });
+        }
 
         if (savedInstanceState == null)
         {
@@ -69,23 +100,46 @@ public class MainActivity
     }
 
     @Override
+    protected void onPostCreate(Bundle savedInstanceState)
+    {
+        super.onPostCreate(savedInstanceState);
+        if (mDrawerToggle != null)
+        {
+            mDrawerToggle.syncState();
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+        if (mDrawerToggle != null)
+        {
+            mDrawerToggle.onConfigurationChanged(newConfig);
+        }
+    }
+
+    @Override
     public void onBackPressed()
     {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START))
+        if (drawer != null)
         {
-            drawer.closeDrawer(GravityCompat.START);
-        }
-        else
-        {
-            super.onBackPressed();
+            if (drawer.isDrawerOpen(GravityCompat.START))
+            {
+                drawer.closeDrawer(GravityCompat.START);
+            }
+            else
+            {
+                super.onBackPressed();
+            }
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
 
@@ -109,6 +163,13 @@ public class MainActivity
 
         switch (item.getItemId())
         {
+            case android.R.id.home:
+                if (mDrawerLayout != null)
+                {
+                    mDrawerLayout.openDrawer(GravityCompat.START);
+                    return true;
+                }
+                break;
             //case R.id.action_settings:
             //    // TODO:(pv) ...
             //    return true;
@@ -121,9 +182,17 @@ public class MainActivity
             //case R.id.menu_refresh:
             //    refreshItemsFromTable();
             //    return true;
-            default:
-                return super.onOptionsItemSelected(item);
         }
+
+        if (mDrawerToggle != null)
+        {
+            if (mDrawerToggle.onOptionsItemSelected(item))
+            {
+                return true;
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -159,7 +228,10 @@ public class MainActivity
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
+        if (drawer != null)
+        {
+            drawer.closeDrawer(GravityCompat.START);
+        }
         return true;
     }
 
