@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity
@@ -51,6 +50,7 @@ public class MainActivity
     private DrawerLayout          mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
+    private Spinner mSpinnerVoices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -59,10 +59,12 @@ public class MainActivity
 
         mMainApplication = (MainApplication) getApplication();
         mAppPreferences = mMainApplication.getAppPreferences();
+        mTextToSpeech = mMainApplication.getTextToSpeech();
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
 
         setContentView(R.layout.activity_main);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
@@ -297,6 +299,32 @@ public class MainActivity
             return mDisplayName;
         }
 
+        public boolean equals(Voice another)
+        {
+            return toString().equalsIgnoreCase(another.getName());
+        }
+
+        public boolean equals(VoiceWrapper another)
+        {
+            return compareTo(another) == 0;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o instanceof VoiceWrapper)
+            {
+                return equals((VoiceWrapper) o);
+            }
+
+            if (o instanceof Voice)
+            {
+                return equals((Voice) o);
+            }
+
+            return super.equals(o);
+        }
+
         @Override
         public int compareTo(
                 @NonNull
@@ -322,14 +350,8 @@ public class MainActivity
                         //
                         // We're initialize; start populating the UI
                         //
-                        TextToSpeech tts = FooTextToSpeech.getInstance().getTextToSpeech();
-                        if (tts == null)
-                        {
-                            break;
-                        }
-
                         ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
-                        Set<Voice> voices = tts.getVoices();
+                        Set<Voice> voices = mTextToSpeech.getVoices();
                         for (Voice voice : voices)
                         {
                             Set<String> voiceFeatures = voice.getFeatures();
@@ -344,8 +366,21 @@ public class MainActivity
                         }
                         Collections.sort(availableVoices);
 
+                        Voice currentVoice = mTextToSpeech.getVoice();
+                        int currentVoiceIndex = 0;
+                        for (int i = 0; i < availableVoices.size(); i++)
+                        {
+                            VoiceWrapper voiceWrapper = availableVoices.get(i);
+                            if (voiceWrapper.equals(currentVoice))
+                            {
+                                currentVoiceIndex = i;
+                                break;
+                            }
+                        }
+
                         ArrayAdapter<VoiceWrapper> spinnerVoicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, availableVoices);
                         mSpinnerVoices.setAdapter(spinnerVoicesAdapter);
+                        mSpinnerVoices.setSelection(currentVoiceIndex);
                         mSpinnerVoices.setOnItemSelectedListener(new OnItemSelectedListener()
                         {
                             @Override
@@ -354,13 +389,11 @@ public class MainActivity
                                 VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
                                 Voice voice = voiceWrapper.getVoice();
 
-                                FooTextToSpeech fooTextToSpeech = FooTextToSpeech.getInstance();
-                                TextToSpeech textToSpeech = fooTextToSpeech.getTextToSpeech();
-                                textToSpeech.setVoice(voice);
-
-                                fooTextToSpeech.speak("Initialized");
-
                                 mAppPreferences.setVoice(voice);
+
+                                mTextToSpeech.setVoice(voice);
+
+                                mTextToSpeech.speak("Initialized");
                             }
 
                             @Override

@@ -26,6 +26,11 @@ public class MainApplication
         return mAppPreferences;
     }
 
+    public FooTextToSpeech getTextToSpeech()
+    {
+        return mTextToSpeech;
+    }
+
     @Override
     public void onCreate()
     {
@@ -48,8 +53,7 @@ public class MainApplication
 
         AppNotificationListener appNotificationListener = new AppNotificationListener(this, mTextToSpeech);
 
-        FooNotificationListener fooNotificationListener = FooNotificationListener.getInstance();
-        fooNotificationListener.addListener(appNotificationListener);
+        FooNotificationListener.addListener(appNotificationListener);
 
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
