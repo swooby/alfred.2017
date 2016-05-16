@@ -10,4 +10,18 @@
     <string name="action_notification_access">Notification Access</string>
     <string name="action_text_to_speech">Text-To-Speech</string>
 
+    <string name="pandora_package_app_name">Pandora</string>
+    <string name="pandora_advertisement_title">Advertisement</string>
+    <string name="pandora_advertisement_artist">Your station will be right back…</string>
+
+    <string name="spotify_package_app_spoken_name">Spotify</string>
+
+    <string name="hangouts_package_app_spoken_name">Hangouts</string>
+
+    <plurals name="X_new_messages">
+        <item quantity="one">%1$d new message</item>
+        <item quantity="other">%1$d new messages</item>
+    </plurals>
+    <string name="X_says">%1$s says</string>
+
 </resources>

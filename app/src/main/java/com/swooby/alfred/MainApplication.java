@@ -4,7 +4,9 @@ import android.app.Application;
 import android.speech.SpeechRecognizer;
 
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.notification.AppNotificationListener;
 
 public class MainApplication
         extends Application
@@ -43,6 +45,11 @@ public class MainApplication
             // TODO:(pv) Better place for initialization and indication of failure...
             return;
         }
+
+        AppNotificationListener appNotificationListener = new AppNotificationListener(this, mTextToSpeech);
+
+        FooNotificationListener fooNotificationListener = FooNotificationListener.getInstance();
+        fooNotificationListener.addListener(appNotificationListener);
 
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
