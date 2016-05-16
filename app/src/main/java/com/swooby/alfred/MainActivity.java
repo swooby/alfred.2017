@@ -1,35 +1,53 @@
 package com.swooby.alfred;
 
+import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.Voice;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import com.microsoft.azure.iot.service.sdk.Device;
-import com.microsoft.azure.iothub.DeviceClient;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
-import com.swooby.alfred.azure.Azure;
-import com.swooby.alfred.azure.Azure.IoTDeviceAddCallback;
-import com.swooby.alfred.azure.Azure.IoTDeviceSendMessageCallback;
+import com.smartfoo.android.core.notification.FooNotificationListener;
+import com.smartfoo.android.core.platform.FooPlatformUtils;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public class MainActivity
-        extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener
+        extends AppCompatActivity//PbPermissionHandlingActivity
+        implements OnNavigationItemSelectedListener //, AlfredPermissionsCallbacks
 {
     private static final String TAG = FooLog.TAG(MainActivity.class);
 
-    private Azure mAzure;
+    private static final int REQUEST_ACTION_CHECK_TTS_DATA = 100;
 
+
+    private MainApplication mMainApplication;
+    private AppPreferences  mAppPreferences;
     private DrawerLayout          mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
@@ -38,6 +56,9 @@ public class MainActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
+        mMainApplication = (MainApplication) getApplication();
+        mAppPreferences = mMainApplication.getAppPreferences();
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
 
@@ -79,6 +100,8 @@ public class MainActivity
 
         }
 
+        mSpinnerVoices = (Spinner) findViewById(R.id.spinnerVoices);
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null)
         {
@@ -96,7 +119,6 @@ public class MainActivity
         {
             verifyRequirements();
         }
-        mAzure = new Azure(this);
     }
 
     @Override
@@ -179,6 +201,9 @@ public class MainActivity
             case R.id.action_notification_access:
                 startActivity(FooNotificationListener.getIntentNotificationListenerSettings());
                 return true;
+            case R.id.action_text_to_speech:
+                startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
+                return true;
             //case R.id.menu_refresh:
             //    refreshItemsFromTable();
             //    return true;
@@ -245,6 +270,110 @@ public class MainActivity
     protected void onPause()
     {
         super.onPause();
+    }
+
+    private static class VoiceWrapper
+            implements Comparable<VoiceWrapper>
+    {
+        private final Voice  mVoice;
+        private final String mDisplayName;
+
+        public VoiceWrapper(
+                @NonNull
+                Voice voice)
+        {
+            mVoice = voice;
+            mDisplayName = voice.getName().toLowerCase();
+        }
+
+        public Voice getVoice()
+        {
+            return mVoice;
+        }
+
+        @Override
+        public String toString()
+        {
+            return mDisplayName;
+        }
+
+        @Override
+        public int compareTo(
+                @NonNull
+                VoiceWrapper another)
+        {
+            return toString().compareTo(another.toString());
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode)
+        {
+            case REQUEST_ACTION_CHECK_TTS_DATA:
+            {
+                switch (resultCode)
+                {
+                    case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
+                    {
+                        //
+                        // We're initialize; start populating the UI
+                        //
+                        TextToSpeech tts = FooTextToSpeech.getInstance().getTextToSpeech();
+                        if (tts == null)
+                        {
+                            break;
+                        }
+
+                        ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
+                        Set<Voice> voices = tts.getVoices();
+                        for (Voice voice : voices)
+                        {
+                            Set<String> voiceFeatures = voice.getFeatures();
+                            if (voiceFeatures.contains("notInstalled"))
+                            {
+                                continue;
+                            }
+
+                            VoiceWrapper voiceWrapper = new VoiceWrapper(voice);
+
+                            availableVoices.add(voiceWrapper);
+                        }
+                        Collections.sort(availableVoices);
+
+                        ArrayAdapter<VoiceWrapper> spinnerVoicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, availableVoices);
+                        mSpinnerVoices.setAdapter(spinnerVoicesAdapter);
+                        mSpinnerVoices.setOnItemSelectedListener(new OnItemSelectedListener()
+                        {
+                            @Override
+                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+                            {
+                                VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
+                                Voice voice = voiceWrapper.getVoice();
+
+                                FooTextToSpeech fooTextToSpeech = FooTextToSpeech.getInstance();
+                                TextToSpeech textToSpeech = fooTextToSpeech.getTextToSpeech();
+                                textToSpeech.setVoice(voice);
+
+                                fooTextToSpeech.speak("Initialized");
+
+                                mAppPreferences.setVoice(voice);
+                            }
+
+                            @Override
+                            public void onNothingSelected(AdapterView<?> parent)
+                            {
+                            }
+                        });
+                        break;
+                    }
+                }
+                break;
+            }
+        }
     }
 
     private void verifyRequirements()

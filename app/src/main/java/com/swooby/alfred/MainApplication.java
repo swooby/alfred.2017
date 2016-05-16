@@ -11,11 +11,18 @@ public class MainApplication
 {
     private static final String TAG = FooLog.TAG(MainApplication.class);
 
-    private static final String KEYPHRASE = "alfred";
+    public static final String KEYPHRASE = "alfred";
+
+    private AppPreferences mAppPreferences;
 
     private FooTextToSpeech mTextToSpeech;
 
     private SpeechRecognizer mSpeechRecognizer;
+
+    public AppPreferences getAppPreferences()
+    {
+        return mAppPreferences;
+    }
 
     @Override
     public void onCreate()
@@ -23,7 +30,12 @@ public class MainApplication
         FooLog.i(TAG, "+onCreate()");
         super.onCreate();
 
+        mAppPreferences = new AppPreferences(this);
+
+        String voiceName = mAppPreferences.getVoiceName();
+
         mTextToSpeech = FooTextToSpeech.getInstance();
+        mTextToSpeech.setVoiceName(voiceName);
         mTextToSpeech.start(this);
 
         if (!isRecognitionAvailable())

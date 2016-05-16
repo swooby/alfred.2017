@@ -25,4 +25,10 @@
         app:showAsAction="never"
         />
 
+    <item
+        android:id="@+id/action_text_to_speech"
+        android:title="@string/action_text_to_speech"
+        app:showAsAction="never"
+        />
+
 </menu>
