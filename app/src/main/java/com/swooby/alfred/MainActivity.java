@@ -1,5 +1,6 @@
 package com.swooby.alfred;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -24,16 +25,17 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
 import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectedCallbacks;
+import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
+import com.swooby.alfred.Profile.Tokens;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 
 public class MainActivity
@@ -44,13 +46,17 @@ public class MainActivity
 
     private static final int REQUEST_ACTION_CHECK_TTS_DATA = 100;
 
+    private MainApplication     mMainApplication;
+    private AppPreferences      mAppPreferences;
+    private FooBluetoothManager mBluetoothManager;
+    private FooTextToSpeech     mTextToSpeech;
 
-    private MainApplication mMainApplication;
-    private AppPreferences  mAppPreferences;
     private DrawerLayout          mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
-    private Spinner mSpinnerVoices;
+    private Spinner               mSpinnerVoices;
+    private Spinner               mSpinnerProfiles;
+    private ArrayAdapter<Profile> mSpinnerProfilesAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -59,6 +65,7 @@ public class MainActivity
 
         mMainApplication = (MainApplication) getApplication();
         mAppPreferences = mMainApplication.getAppPreferences();
+        mBluetoothManager = mMainApplication.getBluetoothManager();
         mTextToSpeech = mMainApplication.getTextToSpeech();
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
@@ -103,6 +110,24 @@ public class MainActivity
         }
 
         mSpinnerVoices = (Spinner) findViewById(R.id.spinnerVoices);
+        mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
+        ArrayList<Profile> profiles = profilesCreate();
+        mSpinnerProfilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
+        mSpinnerProfiles.setAdapter(mSpinnerProfilesAdapter);
+        mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                Profile profile = (Profile) parent.getAdapter().getItem(position);
+                mAppPreferences.setProfileToken(profile.getToken());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+            }
+        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null)
@@ -120,6 +145,8 @@ public class MainActivity
         if (savedInstanceState == null)
         {
             verifyRequirements();
+
+            FooTextToSpeechHelper.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
         }
     }
 
@@ -266,12 +293,67 @@ public class MainActivity
     protected void onResume()
     {
         super.onResume();
+
+        profilesUpdate();
+
+        mBluetoothManager.getBluetoothHeadsetConnectionListener().attach(mOnBluetoothDeviceConnectedCallbacks);
     }
 
     @Override
     protected void onPause()
     {
         super.onPause();
+
+        mBluetoothManager.getBluetoothHeadsetConnectionListener().detach(mOnBluetoothDeviceConnectedCallbacks);
+    }
+
+    private Profile profileCreate(int index, int resIdName, String token)
+    {
+        String name = getString(resIdName);
+        return new Profile(index, name, token);
+    }
+
+    private ArrayList<Profile> profilesCreate()
+    {
+        ArrayList<Profile> profiles = new ArrayList<>();
+
+        profiles.add(profileCreate(0, R.string.profile_disabled, Tokens.DISABLED));
+        profiles.add(profileCreate(1, R.string.profile_always_on, Tokens.ALWAYS_ON));
+        profiles.add(profileCreate(2, R.string.profile_headphones, Tokens.HEADPHONES));
+
+        return profiles;
+    }
+
+    private void profilesUpdate()
+    {
+        mSpinnerProfilesAdapter.sort(Profile.COMPARATOR);
+
+        int selectedIndex = -1;
+
+        String profileToken = mAppPreferences.getProfileToken();
+
+        for (int i = 0; i < mSpinnerProfilesAdapter.getCount(); i++)
+        {
+            Profile profile = mSpinnerProfilesAdapter.getItem(i);
+            if (profile.getToken().equals(profileToken))
+            {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        if (selectedIndex != -1)
+        {
+            mSpinnerProfiles.setSelection(selectedIndex);
+        }
+    }
+
+    private void onBluetoothDeviceConnected(BluetoothDevice bluetoothDevice)
+    {
+    }
+
+    private void onBluetoothDeviceDisconnected(BluetoothDevice bluetoothDevice)
+    {
     }
 
     private static class VoiceWrapper
@@ -352,17 +434,20 @@ public class MainActivity
                         //
                         ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
                         Set<Voice> voices = mTextToSpeech.getVoices();
-                        for (Voice voice : voices)
+                        if (voices != null)
                         {
-                            Set<String> voiceFeatures = voice.getFeatures();
-                            if (voiceFeatures.contains("notInstalled"))
+                            for (Voice voice : voices)
                             {
-                                continue;
+                                Set<String> voiceFeatures = voice.getFeatures();
+                                if (voiceFeatures.contains("notInstalled"))
+                                {
+                                    continue;
+                                }
+
+                                VoiceWrapper voiceWrapper = new VoiceWrapper(voice);
+
+                                availableVoices.add(voiceWrapper);
                             }
-
-                            VoiceWrapper voiceWrapper = new VoiceWrapper(voice);
-
-                            availableVoices.add(voiceWrapper);
                         }
                         Collections.sort(availableVoices);
 

@@ -1,16 +1,16 @@
 package com.swooby.alfred.notification;
 
-import android.content.Context;
 import android.service.notification.StatusBarNotification;
 
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
 
 public class GoogleDialerNotificationParser
         extends AbstractNotificationParser
 {
-    protected GoogleDialerNotificationParser(Context context, FooTextToSpeech textToSpeech)
+    protected GoogleDialerNotificationParser(MainApplication application, FooTextToSpeech textToSpeech)
     {
-        super(context, textToSpeech, "com.google.android.dialer", "Google Dialer");
+        super(application, "com.google.android.dialer", "Google Dialer");
     }
 
     @Override

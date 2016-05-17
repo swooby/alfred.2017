@@ -1,14 +1,13 @@
 package com.swooby.alfred.notification;
 
-import android.content.Context;
 import android.service.notification.StatusBarNotification;
 import android.view.View;
 import android.widget.RemoteViews;
 
 import com.smartfoo.android.core.FooString;
-import com.smartfoo.android.core.R;
 import com.smartfoo.android.core.logging.FooLog;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
+import com.swooby.alfred.R;
 
 public class SpotifyNotificationParser
         extends AbstractMediaPlayerNotificiationParser
@@ -20,9 +19,9 @@ public class SpotifyNotificationParser
     private String  mLastTitle;
     private String  mLastAlbum;
 
-    public SpotifyNotificationParser(Context applicationContext, FooTextToSpeech textToSpeech)
+    public SpotifyNotificationParser(MainApplication application)
     {
-        super(applicationContext, textToSpeech, "com.spotify.music", applicationContext.getString(R.string.spotify_package_app_spoken_name));
+        super(application, "com.spotify.music", application.getString(R.string.spotify_package_app_spoken_name));
     }
 
     @Override
@@ -32,7 +31,7 @@ public class SpotifyNotificationParser
 
         RemoteViews contentView = getContentView(sbn);
 
-        View mockRemoteView = mockRemoteView(mApplicationContext, contentView);
+        View mockRemoteView = mockRemoteView(mApplication, contentView);
         if (mockRemoteView == null)
         {
             return false;
@@ -123,17 +122,17 @@ public class SpotifyNotificationParser
 
             if (isPlaying)
             {
-                mTextToSpeech.speak(mPackageAppSpokenName + " playing");
-                mTextToSpeech.silence(500);
-                mTextToSpeech.speak("artist " + textArtist);
-                mTextToSpeech.silence(500);
-                mTextToSpeech.speak("title " + textTitle);
-                mTextToSpeech.silence(500);
-                mTextToSpeech.speak("album " + textAlbum);
+                mApplication.speak(mPackageAppSpokenName + " playing");
+                mApplication.silence(500);
+                mApplication.speak("artist " + textArtist);
+                mApplication.silence(500);
+                mApplication.speak("title " + textTitle);
+                mApplication.silence(500);
+                mApplication.speak("album " + textAlbum);
             }
             else
             {
-                mTextToSpeech.speak(mPackageAppSpokenName + " paused");
+                mApplication.speak(mPackageAppSpokenName + " paused");
             }
 
             return true;

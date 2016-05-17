@@ -1,16 +1,15 @@
 package com.swooby.alfred.notification;
 
-import android.content.Context;
 import android.service.notification.StatusBarNotification;
 
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
 
 public class GoogleMessengerNotificationParser
         extends AbstractNotificationParser
 {
-    protected GoogleMessengerNotificationParser(Context context, FooTextToSpeech textToSpeech)
+    protected GoogleMessengerNotificationParser(MainApplication application)
     {
-        super(context, textToSpeech, "com.google.android.apps.messaging", "Google Messenger");
+        super(application, "com.google.android.apps.messaging", "Google Messenger");
     }
 
     @Override

@@ -1,13 +1,12 @@
 package com.swooby.alfred.notification;
 
-import android.content.Context;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListener.FooNotificationListenerCallbacks;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,30 +22,32 @@ public class AppNotificationListener
 {
     private static final String TAG = FooLog.TAG(AppNotificationListener.class);
 
-    private final Context                                 mApplicationContext;
-    private final FooTextToSpeech                         mTextToSpeech;
+    private final MainApplication                         mApplication;
     private final Map<String, AbstractNotificationParser> mNotificationParsers;
 
     public AppNotificationListener(
             @NonNull
-            Context applicationContext,
-            @NonNull
-            FooTextToSpeech textToSpeech)
+            MainApplication application)
     {
-        mApplicationContext = applicationContext;
-        mTextToSpeech = textToSpeech;
+        mApplication = application;
         mNotificationParsers = new HashMap<>();
 
-        addNotificationParser(new PandoraNotificationParser(applicationContext, mTextToSpeech));
-        addNotificationParser(new SpotifyNotificationParser(applicationContext, mTextToSpeech));
-        addNotificationParser(new GoogleHangoutsNotificationParser(applicationContext, mTextToSpeech));
-        addNotificationParser(new GmailNotificationParser(applicationContext, mTextToSpeech));
-        addNotificationParser(new GoogleMessengerNotificationParser(applicationContext, mTextToSpeech));
+        addNotificationParser(new PandoraNotificationParser(mApplication));//, mTextToSpeech));
+        addNotificationParser(new SpotifyNotificationParser(mApplication));//, mTextToSpeech));
+        addNotificationParser(new GoogleHangoutsNotificationParser(mApplication));//, mTextToSpeech));
+        addNotificationParser(new GmailNotificationParser(mApplication));//, mTextToSpeech));
+        addNotificationParser(new GoogleMessengerNotificationParser(mApplication));//, mTextToSpeech));
     }
 
     private void addNotificationParser(AbstractNotificationParser notificationParser)
     {
         mNotificationParsers.put(notificationParser.getPackageName(), notificationParser);
+    }
+
+    @Override
+    public void onCreate()
+    {
+        mApplication.speak("Listening for Notifications");
     }
 
     @Override
@@ -64,12 +65,12 @@ public class AppNotificationListener
         }
         else
         {
-            handled = AbstractNotificationParser.defaultOnNotificationPosted(mTextToSpeech, sbn, null);
+            handled = AbstractNotificationParser.defaultOnNotificationPosted(mApplication, sbn, null);
         }
 
         if (handled)
         {
-            mTextToSpeech.silence(500);
+            mApplication.silence(500);
         }
     }
 

@@ -20,7 +20,7 @@ import android.widget.RemoteViews;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -641,7 +641,7 @@ public abstract class AbstractNotificationParser
 
     public static boolean defaultOnNotificationPosted(
             @NonNull
-            FooTextToSpeech textToSpeech,
+            MainApplication mainApplication,
             @NonNull
             StatusBarNotification sbn,
             String packageAppSpokenName)
@@ -651,9 +651,9 @@ public abstract class AbstractNotificationParser
         if (!FooString.isNullOrEmpty(tickerText))
         {
             String title = FooString.isNullOrEmpty(packageAppSpokenName) ? getPackageName(sbn) : packageAppSpokenName;
-            textToSpeech.speak(title);
-            textToSpeech.silence(500);
-            textToSpeech.speak(tickerText.toString());
+            mainApplication.speak(title);
+            mainApplication.silence(500);
+            mainApplication.speak(tickerText.toString());
 
             return true;
         }
@@ -661,25 +661,21 @@ public abstract class AbstractNotificationParser
         return false;
     }
 
-    protected final Context         mApplicationContext;
+    protected final MainApplication mApplication;
     protected final Resources       mResources;
-    protected final FooTextToSpeech mTextToSpeech;
     protected final String          mPackageName;
     protected final String          mPackageAppSpokenName;
 
     protected AbstractNotificationParser(
             @NonNull
-            Context applicationContext,
-            @NonNull
-            FooTextToSpeech textToSpeech,
+            MainApplication application,
             @NonNull
             String packageName,
             @NonNull
             String packageAppSpokenName)
     {
-        mApplicationContext = applicationContext;
-        mResources = applicationContext.getResources();
-        mTextToSpeech = textToSpeech;
+        mApplication = application;
+        mResources = application.getResources();
         mPackageName = packageName;
         mPackageAppSpokenName = packageAppSpokenName;
     }
@@ -711,13 +707,13 @@ public abstract class AbstractNotificationParser
         //  All ImageView Resource Ids and TextView Texts in ContentView
 
         RemoteViews bigContentView = notification.bigContentView;
-        View mockBigContentView = mockRemoteView(mApplicationContext, bigContentView);
+        View mockBigContentView = mockRemoteView(mApplication, bigContentView);
         FooLog.v(TAG, "onNotificationPosted: bigContentView");
         Set<Integer> bigContentViewIds = new LinkedHashSet<>();
         walkView(mockBigContentView, bigContentViewIds);
         FooLog.v(TAG, "onNotificationPosted: --------");
         RemoteViews contentView = notification.contentView;
-        View mockContentView = mockRemoteView(mApplicationContext, contentView);
+        View mockContentView = mockRemoteView(mApplication, contentView);
         FooLog.v(TAG, "onNotificationPosted: contentView");
         Set<Integer> contentViewIds = new LinkedHashSet<>();
         walkView(mockContentView, contentViewIds);
@@ -731,7 +727,7 @@ public abstract class AbstractNotificationParser
         Bundle extras = notification.extras;
         FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
 
-        return defaultOnNotificationPosted(mTextToSpeech, sbn, mPackageAppSpokenName);
+        return defaultOnNotificationPosted(mApplication, sbn, mPackageAppSpokenName);
     }
 
     public void onNotificationRemoved(StatusBarNotification sbn)

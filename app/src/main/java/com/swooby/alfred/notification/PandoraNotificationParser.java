@@ -7,9 +7,9 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import com.smartfoo.android.core.FooString;
-import com.smartfoo.android.core.R;
 import com.smartfoo.android.core.logging.FooLog;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
+import com.swooby.alfred.R;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -33,12 +33,12 @@ public class PandoraNotificationParser
     protected String  mLastTitle;
     protected String  mLastStation;
 
-    public PandoraNotificationParser(Context applicationContext, FooTextToSpeech textToSpeech)
+    public PandoraNotificationParser(MainApplication application)
     {
-        super(applicationContext, textToSpeech, "com.pandora.android", applicationContext.getString(R.string.pandora_package_app_name));
+        super(application, "com.pandora.android", application.getString(R.string.pandora_package_app_name));
 
-        mAdvertisementTitle = applicationContext.getString(R.string.pandora_advertisement_title);
-        mAdvertisementArtist = applicationContext.getString(R.string.pandora_advertisement_artist);
+        mAdvertisementTitle = application.getString(R.string.pandora_advertisement_title);
+        mAdvertisementArtist = application.getString(R.string.pandora_advertisement_artist);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class PandoraNotificationParser
         // NOTE: We intentionally recompute this every time;
         // The app can update in the background which can cause the resource ids to change.
         //
-        View mockBigContentView = mockRemoteView(mApplicationContext, bigContentView);
+        View mockBigContentView = mockRemoteView(mApplication, bigContentView);
         if (mockBigContentView == null)
         {
             FooLog.w(TAG, "onNotificationPosted: mockBigContentView == null; ignoring");
@@ -180,7 +180,7 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idLoading, "loading");
 
-        Context otherAppContext = createPackageContext(mApplicationContext, bigContentView);
+        Context otherAppContext = createPackageContext(mApplication, bigContentView);
         if (otherAppContext == null)
         {
             FooLog.w(TAG, "onNotificationPosted: otherAppContext == null; ignoring");
@@ -312,11 +312,11 @@ public class PandoraNotificationParser
             {
                 FooLog.w(TAG, "onNotificationPosted: playing");
 
-                mTextToSpeech.speak(mPackageAppSpokenName + " playing");
-                mTextToSpeech.silence(500);
-                mTextToSpeech.speak("artist " + textArtist);
-                mTextToSpeech.silence(500);
-                mTextToSpeech.speak("title " + textTitle);
+                mApplication.speak(mPackageAppSpokenName + " playing");
+                mApplication.silence(500);
+                mApplication.speak("artist " + textArtist);
+                mApplication.silence(500);
+                mApplication.speak("title " + textTitle);
                 //mTextToSpeech.silence(500);
                 //mTextToSpeech.speak("station " + textStation);
             }
@@ -324,7 +324,7 @@ public class PandoraNotificationParser
             {
                 FooLog.w(TAG, "onNotificationPosted: paused");
 
-                mTextToSpeech.speak(mPackageAppSpokenName + " paused");
+                mApplication.speak(mPackageAppSpokenName + " paused");
             }
 
             return true;

@@ -1,12 +1,11 @@
 package com.swooby.alfred.notification;
 
 import android.app.Notification;
-import android.content.Context;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 
-import com.smartfoo.android.core.R;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
+import com.swooby.alfred.R;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -49,9 +48,9 @@ public class GoogleHangoutsNotificationParser
 
     private final List<TextMessage> mTextMessages;
 
-    public GoogleHangoutsNotificationParser(Context applicationContext, FooTextToSpeech textToSpeech)
+    public GoogleHangoutsNotificationParser(MainApplication application)
     {
-        super(applicationContext, textToSpeech, "com.google.android.talk", applicationContext.getString(R.string.hangouts_package_app_spoken_name));
+        super(application, "com.google.android.talk", application.getString(R.string.hangouts_package_app_spoken_name));
 
         mTextMessages = new LinkedList<>();
     }
@@ -122,14 +121,14 @@ public class GoogleHangoutsNotificationParser
         }
 
         String title = mResources.getQuantityString(R.plurals.X_new_messages, count, count);
-        mTextToSpeech.speak(title);
+        mApplication.speak(title);
         for (TextMessage textMessage : textMessages)
         {
-            mTextToSpeech.silence(750);
-            mTextToSpeech.speak(mApplicationContext.getString(R.string.X_says, textMessage.mFrom));
+            mApplication.silence(750);
+            mApplication.speak(mApplication.getString(R.string.X_says, textMessage.mFrom));
             //mTextToSpeech.speak("to " + to);
-            mTextToSpeech.silence(500);
-            mTextToSpeech.speak(textMessage.mMessage);
+            mApplication.silence(500);
+            mApplication.speak(textMessage.mMessage);
         }
 
         return true;

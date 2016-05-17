@@ -11,176 +11,180 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     >
 
+    <!--
+    TODO:(pv) Move to a "Filter" dialog
+    -->
+    <!--
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         >
 
-        <!--
-        TODO:(pv) Move to a "Filter" dialog
-        -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             >
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/rounded_rectangle_divider"
+                android:orientation="vertical"
+                android:paddingBottom="8dp"
+                android:paddingEnd="8dp"
+                android:paddingStart="8dp"
+                android:paddingTop="10dp"
                 >
 
-                <LinearLayout
+                <CheckBox
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/rounded_rectangle_divider"
-                    android:orientation="vertical"
-                    android:paddingBottom="8dp"
-                    android:paddingEnd="8dp"
-                    android:paddingStart="8dp"
-                    android:paddingTop="10dp"
-                    >
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Very Low"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="Low"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="Normal"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="High"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="Very High"
-                        />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginStart="20dp"
-                    android:background="@android:color/white"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp"
-                    android:text="Quality"
-                    android:textAppearance="?android:attr/textAppearanceMedium"/>
-
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                >
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginTop="10dp"
-                    android:background="@drawable/rounded_rectangle_divider"
-                    android:orientation="vertical"
-                    android:paddingBottom="8dp"
-                    android:paddingEnd="8dp"
-                    android:paddingStart="8dp"
-                    android:paddingTop="10dp"
-                    >
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Very Low"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="Low"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="Normal"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="High"
-                        />
-
-                    <CheckBox
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:switchPadding="10dp"
-                        android:text="Very High"
-                        />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentTop="true"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginStart="20dp"
-                    android:background="@android:color/white"
-                    android:paddingLeft="8dp"
-                    android:paddingRight="8dp"
-                    android:text="Latency"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Very Low"
                     />
 
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="Low"
+                    />
 
-            </RelativeLayout>
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="Normal"
+                    />
 
-            <CheckBox
-                android:layout_width="match_parent"
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="High"
+                    />
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="Very High"
+                    />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:switchPadding="10dp"
-                android:text="Include Network Connection Required"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="20dp"
+                android:layout_marginStart="20dp"
+                android:background="@android:color/white"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:text="Quality"
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/rounded_rectangle_divider"
+                android:orientation="vertical"
+                android:paddingBottom="8dp"
+                android:paddingEnd="8dp"
+                android:paddingStart="8dp"
+                android:paddingTop="10dp"
+                >
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Very Low"
+                    />
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="Low"
+                    />
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="Normal"
+                    />
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="High"
+                    />
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:switchPadding="10dp"
+                    android:text="Very High"
+                    />
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_marginEnd="20dp"
+                android:layout_marginStart="20dp"
+                android:background="@android:color/white"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:text="Latency"
+                android:textAppearance="?android:attr/textAppearanceMedium"
                 />
 
-        </LinearLayout>
 
-        <LinearLayout
+        </RelativeLayout>
+
+        <CheckBox
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
+            android:switchPadding="10dp"
+            android:text="Include Network Connection Required"
+            />
+
+    </LinearLayout>
+    -->
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <TableRow>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="Voice:"
+                />
 
             <Spinner
                 android:id="@+id/spinnerVoices"
@@ -189,12 +193,14 @@
                 android:layout_weight="1"
                 />
 
+            <!--
             <ImageButton
                 android:id="@+id/buttonVoicesFilter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_filter_list_black_24dp"
                 />
+                -->
 
             <ImageButton
                 android:id="@+id/buttonVoicesRefresh"
@@ -203,8 +209,33 @@
                 android:src="@drawable/ic_refresh_black_24dp"
                 />
 
-        </LinearLayout>
+        </TableRow>
 
-    </LinearLayout>
+        <TableRow>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="Profile:"
+                />
+
+            <Spinner
+                android:id="@+id/spinnerProfiles"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                />
+
+            <ImageButton
+                android:id="@+id/buttonDevicesRefresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_refresh_black_24dp"
+                />
+
+        </TableRow>
+
+    </TableLayout>
 
 </ScrollView>

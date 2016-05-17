@@ -4,7 +4,7 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.support.annotation.NonNull;
 
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
 
 public abstract class AbstractMediaPlayerNotificiationParser
         extends AbstractNotificationParser
@@ -20,17 +20,15 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
     protected AbstractMediaPlayerNotificiationParser(
             @NonNull
-            Context applicationContext,
-            @NonNull
-            FooTextToSpeech textToSpeech,
+            MainApplication application,
             @NonNull
             String packageName,
             @NonNull
             String packageAppSpokenName)
     {
-        super(applicationContext, textToSpeech, packageName, packageAppSpokenName);
+        super(application, packageName, packageAppSpokenName);
 
-        mAudioManager = (AudioManager) applicationContext.getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager = (AudioManager) application.getSystemService(Context.AUDIO_SERVICE);
     }
 
     // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
@@ -43,7 +41,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 return;
             }
 
-            final int audioStreamType = mTextToSpeech.getAudioStreamType();
+            final int audioStreamType = mApplication.getAudioStreamType();
             mLastVolume = mAudioManager.getStreamVolume(audioStreamType);
 
             if (speech == null)
@@ -51,7 +49,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 speech = "attenuating";
             }
 
-            mTextToSpeech.speak(mPackageAppSpokenName + ' ' + speech, new Runnable()
+            mApplication.speak(mPackageAppSpokenName + ' ' + speech, new Runnable()
             {
                 @Override
                 public void run()
@@ -67,7 +65,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 return;
             }
 
-            int audioStreamType = mTextToSpeech.getAudioStreamType();
+            int audioStreamType = mApplication.getAudioStreamType();
             int audioStreamVolume = mAudioManager.getStreamVolume(audioStreamType);
             if (audioStreamVolume == MUTE_VOLUME)
             {

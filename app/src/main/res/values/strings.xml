@@ -24,4 +24,8 @@
     </plurals>
     <string name="X_says">%1$s says</string>
 
+    <string name="profile_disabled">Disabled</string>
+    <string name="profile_always_on">Always On</string>
+    <string name="profile_headphones">Headphones</string>
+
 </resources>

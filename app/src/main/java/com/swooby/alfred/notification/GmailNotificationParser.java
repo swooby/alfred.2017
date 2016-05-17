@@ -1,16 +1,15 @@
 package com.swooby.alfred.notification;
 
-import android.content.Context;
 import android.service.notification.StatusBarNotification;
 
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.swooby.alfred.MainApplication;
 
 public class GmailNotificationParser
         extends AbstractNotificationParser
 {
-    protected GmailNotificationParser(Context context, FooTextToSpeech textToSpeech)
+    protected GmailNotificationParser(MainApplication application)
     {
-        super(context, textToSpeech, "com.google.android.gm", "G mail");
+        super(application, "com.google.android.gm", "G mail");
     }
 
     @Override
