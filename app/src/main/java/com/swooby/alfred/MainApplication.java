@@ -4,6 +4,8 @@ import android.app.Application;
 import android.bluetooth.BluetoothDevice;
 import android.media.AudioManager;
 import android.speech.SpeechRecognizer;
+import android.speech.tts.Voice;
+import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener;
@@ -55,9 +57,22 @@ public class MainApplication
         return mTextToSpeech;
     }
 
-    public int getAudioStreamType()
+    public void setVoice(
+            @NonNull
+            Voice voice)
+    {
+        mAppPreferences.setVoice(voice);
+        mTextToSpeech.setVoice(voice);
+    }
+
+    public int getVoiceAudioStreamType()
     {
         return mTextToSpeech.getAudioStreamType();
+    }
+
+    public void setVoiceAudioStreamType(int audioStreamType)
+    {
+        mTextToSpeech.setAudioStreamType(audioStreamType);
     }
 
     public void speak(String text)
@@ -161,8 +176,12 @@ public class MainApplication
         String voiceName = mAppPreferences.getVoiceName();
         FooLog.i(TAG, "onCreate: voiceName=" + FooString.quote(voiceName));
 
+        int voiceAudioStreamType = mAppPreferences.getVoiceAudioStreamType();
+        FooLog.i(TAG, "onCreate: voiceAudioStreamType=" + FooAudioUtils.audioStreamTypeToString(voiceAudioStreamType));
+
         mTextToSpeech = FooTextToSpeech.getInstance();
         mTextToSpeech.setVoiceName(voiceName);
+        mTextToSpeech.setAudioStreamType(voiceAudioStreamType);
         mTextToSpeech.start(this);
 
         if (!isRecognitionAvailable())

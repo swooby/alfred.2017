@@ -28,4 +28,8 @@
     <string name="profile_always_on">Always On</string>
     <string name="profile_headphones">Headphones</string>
 
+    <string name="audio_stream_notification">Notification</string>
+    <string name="audio_stream_media">Media</string>
+    <string name="audio_stream_alarm">Alarm</string>
+
 </resources>

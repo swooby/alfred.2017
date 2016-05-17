@@ -3,6 +3,7 @@ package com.swooby.alfred;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
@@ -19,15 +20,21 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
 import com.smartfoo.android.core.FooString;
-import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectedCallbacks;
 import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
+import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
+import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
@@ -49,14 +56,17 @@ public class MainActivity
     private MainApplication     mMainApplication;
     private AppPreferences      mAppPreferences;
     private FooBluetoothManager mBluetoothManager;
-    private FooTextToSpeech     mTextToSpeech;
+
+    private AudioManager                 mAudioManager;
+    private FooAudioStreamVolumeObserver mAudioStreamVolumeObserver;
 
     private DrawerLayout          mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
-    private Spinner               mSpinnerVoices;
-    private Spinner               mSpinnerProfiles;
-    private ArrayAdapter<Profile> mSpinnerProfilesAdapter;
+    private Spinner mSpinnerVoices;
+    private Spinner mSpinnerVoiceAudioStreamType;
+    private SeekBar mSeekbarVoiceAudioStreamVolume;
+    private Spinner mSpinnerProfiles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -66,7 +76,12 @@ public class MainActivity
         mMainApplication = (MainApplication) getApplication();
         mAppPreferences = mMainApplication.getAppPreferences();
         mBluetoothManager = mMainApplication.getBluetoothManager();
-        mTextToSpeech = mMainApplication.getTextToSpeech();
+
+        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+        int voiceAudioStreamType = mMainApplication.getVoiceAudioStreamType();
+        setVolumeControlStream(voiceAudioStreamType);
+
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
 
@@ -110,10 +125,62 @@ public class MainActivity
         }
 
         mSpinnerVoices = (Spinner) findViewById(R.id.spinnerVoices);
+
+        mSpinnerVoiceAudioStreamType = (Spinner) findViewById(R.id.spinnerVoiceAudioStreamType);
+        ArrayList<AudioStreamType> voiceAudioStreamTypes = AudioStreamType.getTypes(this);
+        ArrayAdapter voiceAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, voiceAudioStreamTypes);
+        mSpinnerVoiceAudioStreamType.setAdapter(voiceAudioStreamTypeAdapter);
+        mSpinnerVoiceAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                AudioStreamType voiceAudioStreamType = (AudioStreamType) parent.getAdapter().getItem(position);
+                int audioStreamType = voiceAudioStreamType.getAudioStreamType();
+
+                onVoiceAudioStreamTypeChanged(audioStreamType);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+            }
+        });
+
+        ImageButton buttonVoiceAudioStreamTypeTest = (ImageButton) findViewById(R.id.buttonVoiceAudioStreamTypeTest);
+        buttonVoiceAudioStreamTypeTest.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                mMainApplication.speak("Testing testing 1 2 3");
+            }
+        });
+
+        mSeekbarVoiceAudioStreamVolume = (SeekBar) findViewById(R.id.seekbarVoiceAudioStreamVolume);
+        mSeekbarVoiceAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+            {
+                onVoiceAudioStreamVolumeChanged(progress, false, fromUser);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar)
+            {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar)
+            {
+            }
+        });
+
         mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
         ArrayList<Profile> profiles = profilesCreate();
-        mSpinnerProfilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
-        mSpinnerProfiles.setAdapter(mSpinnerProfilesAdapter);
+        ArrayAdapter profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
+        mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
         {
             @Override
@@ -294,9 +361,10 @@ public class MainActivity
     {
         super.onResume();
 
+        voiceAudioStreamTypeUpdate();
+
         profilesUpdate();
 
-        mBluetoothManager.getBluetoothHeadsetConnectionListener().attach(mOnBluetoothDeviceConnectedCallbacks);
     }
 
     @Override
@@ -304,7 +372,90 @@ public class MainActivity
     {
         super.onPause();
 
-        mBluetoothManager.getBluetoothHeadsetConnectionListener().detach(mOnBluetoothDeviceConnectedCallbacks);
+        volumeObserverStop();
+    }
+
+    private int voiceAudioStreamTypeUpdate()
+    {
+        //noinspection unchecked
+        ArrayAdapter<AudioStreamType> voiceAudioStreamTypeAdapter = (ArrayAdapter<AudioStreamType>) mSpinnerVoiceAudioStreamType
+                .getAdapter();
+
+        int selectedIndex = -1;
+
+        int voiceAudioStreamType = mAppPreferences.getVoiceAudioStreamType();
+        FooLog.i(TAG, "voiceAudioStreamTypeUpdate: voiceAudioStreamType=" +
+                      FooAudioUtils.audioStreamTypeToString(voiceAudioStreamType));
+
+        for (int i = 0; i < voiceAudioStreamTypeAdapter.getCount(); i++)
+        {
+            AudioStreamType audioStreamType = voiceAudioStreamTypeAdapter.getItem(i);
+            if (audioStreamType.getAudioStreamType() == voiceAudioStreamType)
+            {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        if (selectedIndex != -1 && selectedIndex != mSpinnerVoiceAudioStreamType.getSelectedItemPosition())
+        {
+            mSpinnerVoiceAudioStreamType.setSelection(selectedIndex);
+        }
+
+        onVoiceAudioStreamTypeChanged(voiceAudioStreamType);
+
+        return voiceAudioStreamType;
+    }
+
+    private void onVoiceAudioStreamTypeChanged(int audioStreamType)
+    {
+        mAppPreferences.setVoiceAudioStreamType(audioStreamType);
+        mMainApplication.setVoiceAudioStreamType(audioStreamType);
+
+        int percent = FooAudioUtils.getVolumePercent(mAudioManager, audioStreamType);
+        onVoiceAudioStreamVolumeChanged(percent, true, false);
+
+        volumeObserverStart(audioStreamType);
+    }
+
+    private void onVoiceAudioStreamVolumeChanged(int percent, boolean updateSeekbar, boolean updateStreamVolume)
+    {
+        if (updateSeekbar)
+        {
+            mSeekbarVoiceAudioStreamVolume.setProgress(percent);
+        }
+
+        if (updateStreamVolume)
+        {
+            int voiceAudioStreamType = mMainApplication.getVoiceAudioStreamType();
+            int volume = FooAudioUtils.getVolumeAbsoluteFromPercent(mAudioManager, voiceAudioStreamType, percent);
+            mAudioManager.setStreamVolume(voiceAudioStreamType, volume, 0);
+        }
+    }
+
+    private void volumeObserverStop()
+    {
+        if (mAudioStreamVolumeObserver != null)
+        {
+            mAudioStreamVolumeObserver.stop();
+            mAudioStreamVolumeObserver = null;
+        }
+    }
+
+    private void volumeObserverStart(int audioStreamType)
+    {
+        volumeObserverStop();
+
+        mAudioStreamVolumeObserver = new FooAudioStreamVolumeObserver(this);
+        mAudioStreamVolumeObserver.start(audioStreamType, new OnAudioStreamVolumeChangedListener()
+        {
+            @Override
+            public void onAudioStreamVolumeChanged(int audioStreamType, int volume)
+            {
+                int percent = FooAudioUtils.getVolumePercentFromAbsolute(mAudioManager, audioStreamType, volume);
+                onVoiceAudioStreamVolumeChanged(percent, true, false);
+            }
+        });
     }
 
     private Profile profileCreate(int index, int resIdName, String token)
@@ -326,15 +477,17 @@ public class MainActivity
 
     private void profilesUpdate()
     {
-        mSpinnerProfilesAdapter.sort(Profile.COMPARATOR);
+        //noinspection unchecked
+        ArrayAdapter<Profile> profileAdapter = (ArrayAdapter<Profile>) mSpinnerProfiles.getAdapter();
+        profileAdapter.sort(Profile.COMPARATOR);
 
         int selectedIndex = -1;
 
         String profileToken = mAppPreferences.getProfileToken();
 
-        for (int i = 0; i < mSpinnerProfilesAdapter.getCount(); i++)
+        for (int i = 0; i < profileAdapter.getCount(); i++)
         {
-            Profile profile = mSpinnerProfilesAdapter.getItem(i);
+            Profile profile = profileAdapter.getItem(i);
             if (profile.getToken().equals(profileToken))
             {
                 selectedIndex = i;
@@ -432,8 +585,11 @@ public class MainActivity
                         //
                         // We're initialize; start populating the UI
                         //
+
+                        FooTextToSpeech textToSpeech = mMainApplication.getTextToSpeech();
+
                         ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
-                        Set<Voice> voices = mTextToSpeech.getVoices();
+                        Set<Voice> voices = textToSpeech.getVoices();
                         if (voices != null)
                         {
                             for (Voice voice : voices)
@@ -451,7 +607,7 @@ public class MainActivity
                         }
                         Collections.sort(availableVoices);
 
-                        Voice currentVoice = mTextToSpeech.getVoice();
+                        Voice currentVoice = textToSpeech.getVoice();
                         int currentVoiceIndex = 0;
                         for (int i = 0; i < availableVoices.size(); i++)
                         {
@@ -474,11 +630,9 @@ public class MainActivity
                                 VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
                                 Voice voice = voiceWrapper.getVoice();
 
-                                mAppPreferences.setVoice(voice);
+                                mMainApplication.setVoice(voice);
 
-                                mTextToSpeech.setVoice(voice);
-
-                                mTextToSpeech.speak("Initialized");
+                                mMainApplication.speak("Initialized");
                             }
 
                             @Override

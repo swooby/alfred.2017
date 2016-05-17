@@ -16,7 +16,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
     protected final AudioManager mAudioManager;
 
-    protected int mLastVolume = -1;
+    protected int mLastStreamMusicVolume = -1;
 
     protected AbstractMediaPlayerNotificiationParser(
             @NonNull
@@ -36,40 +36,34 @@ public abstract class AbstractMediaPlayerNotificiationParser
     {
         if (mute)
         {
-            if (mLastVolume != -1)
+            if (mLastStreamMusicVolume != -1)
             {
                 return;
             }
 
-            final int audioStreamType = mApplication.getAudioStreamType();
-            mLastVolume = mAudioManager.getStreamVolume(audioStreamType);
+            int audioStreamType = AudioManager.STREAM_MUSIC;
+            mLastStreamMusicVolume = mAudioManager.getStreamVolume(audioStreamType);
+            mAudioManager.setStreamVolume(audioStreamType, MUTE_VOLUME, 0);
 
             if (speech == null)
             {
                 speech = "attenuating";
             }
 
-            mApplication.speak(mPackageAppSpokenName + ' ' + speech, new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    mAudioManager.setStreamVolume(audioStreamType, MUTE_VOLUME, 0);
-                }
-            });
+            mApplication.speak(mPackageAppSpokenName + ' ' + speech);
         }
         else
         {
-            if (mLastVolume == -1)
+            if (mLastStreamMusicVolume == -1)
             {
                 return;
             }
 
-            int audioStreamType = mApplication.getAudioStreamType();
+            int audioStreamType = mApplication.getVoiceAudioStreamType();
             int audioStreamVolume = mAudioManager.getStreamVolume(audioStreamType);
             if (audioStreamVolume == MUTE_VOLUME)
             {
-                mAudioManager.setStreamVolume(audioStreamType, mLastVolume, 0);
+                mAudioManager.setStreamVolume(audioStreamType, mLastStreamMusicVolume, 0);
 
                 /*
                 if (speech == null)
@@ -81,7 +75,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 */
             }
 
-            mLastVolume = -1;
+            mLastStreamMusicVolume = -1;
         }
     }
 }
