@@ -236,12 +236,17 @@ public class MainApplication
             @Override
             public void run()
             {
-                if (!FooNotificationListener.isNotificationAccessEnabled(MainApplication.this))
+                //
+                // HACK required to detect non-binding when re-installing app
+                // even if notification access is enabled:
+                //  http://stackoverflow.com/a/37081128/252308
+                //
+                if (!FooNotificationListener.isNotificationListenerBound())
                 {
                     appNotificationListener.onNotificationListenerUnbound();
                 }
             }
-        }, 500);
+        }, 250);
 
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
