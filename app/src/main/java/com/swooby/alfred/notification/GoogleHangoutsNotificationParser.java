@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 
@@ -121,15 +122,16 @@ public class GoogleHangoutsNotificationParser
         }
 
         String title = mResources.getQuantityString(R.plurals.X_new_messages, count, count);
-        mApplication.speak(title);
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(title);
         for (TextMessage textMessage : textMessages)
         {
-            mApplication.silence(750);
-            mApplication.speak(mApplication.getString(R.string.X_says, textMessage.mFrom));
-            //mTextToSpeech.speak("to " + to);
-            mApplication.silence(500);
-            mApplication.speak(textMessage.mMessage);
+            builder.appendSilence(750);
+            builder.appendSpeech(mApplication.getString(R.string.X_says, textMessage.mFrom));
+            //builder.appendSpeech("to " + to);
+            builder.appendSilence(500);
+            builder.appendSpeech(textMessage.mMessage);
         }
+        mApplication.speak(builder);
 
         return true;
     }

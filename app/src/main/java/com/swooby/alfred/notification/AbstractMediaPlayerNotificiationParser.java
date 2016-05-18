@@ -34,6 +34,8 @@ public abstract class AbstractMediaPlayerNotificiationParser
     // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
     protected void mute(boolean mute, String speech)
     {
+        final int musicAudioStreamType = AudioManager.STREAM_MUSIC;
+
         if (mute)
         {
             if (mLastStreamMusicVolume != -1)
@@ -41,16 +43,30 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 return;
             }
 
-            int audioStreamType = AudioManager.STREAM_MUSIC;
-            mLastStreamMusicVolume = mAudioManager.getStreamVolume(audioStreamType);
-            mAudioManager.setStreamVolume(audioStreamType, MUTE_VOLUME, 0);
+            int voiceAudioStreamType = mApplication.getVoiceAudioStreamType();
+
+            mLastStreamMusicVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
+
+            Runnable runAfter = new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    mAudioManager.setStreamVolume(musicAudioStreamType, MUTE_VOLUME, 0);
+                }
+            };
 
             if (speech == null)
             {
                 speech = "attenuating";
             }
 
-            mApplication.speak(mPackageAppSpokenName + ' ' + speech);
+            mApplication.speak(mPackageAppSpokenName + ' ' + speech, runAfter);
+
+            if (voiceAudioStreamType != musicAudioStreamType)
+            {
+                runAfter.run();
+            }
         }
         else
         {
@@ -59,11 +75,10 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 return;
             }
 
-            int audioStreamType = mApplication.getVoiceAudioStreamType();
-            int audioStreamVolume = mAudioManager.getStreamVolume(audioStreamType);
+            int audioStreamVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
             if (audioStreamVolume == MUTE_VOLUME)
             {
-                mAudioManager.setStreamVolume(audioStreamType, mLastStreamMusicVolume, 0);
+                mAudioManager.setStreamVolume(musicAudioStreamType, mLastStreamMusicVolume, 0);
 
                 /*
                 if (speech == null)

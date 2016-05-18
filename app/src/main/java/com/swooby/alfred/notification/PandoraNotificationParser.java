@@ -8,6 +8,7 @@ import android.widget.RemoteViews;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 
@@ -308,24 +309,28 @@ public class PandoraNotificationParser
             mLastArtist = textArtist;
             mLastStation = textStation;
 
+            FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder();
+
             if (isPlaying)
             {
                 FooLog.w(TAG, "onNotificationPosted: playing");
 
-                mApplication.speak(mPackageAppSpokenName + " playing");
-                mApplication.silence(500);
-                mApplication.speak("artist " + textArtist);
-                mApplication.silence(500);
-                mApplication.speak("title " + textTitle);
-                //mTextToSpeech.silence(500);
-                //mTextToSpeech.speak("station " + textStation);
+                builder.appendSpeech(mPackageAppSpokenName + " playing")
+                        .appendSilence(500)
+                        .appendSpeech("artist " + textArtist)
+                        .appendSilence(500)
+                        .appendSpeech("title " + textTitle);
+                //.appendSilence(500)
+                //.appendSpeech("station " + textStation);
             }
             else
             {
                 FooLog.w(TAG, "onNotificationPosted: paused");
 
-                mApplication.speak(mPackageAppSpokenName + " paused");
+                builder.appendSpeech(mPackageAppSpokenName + " paused");
             }
+
+            mApplication.speak(builder);
 
             return true;
         }

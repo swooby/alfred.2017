@@ -20,6 +20,7 @@ import android.widget.RemoteViews;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.MainApplication;
 
 import java.lang.reflect.Field;
@@ -651,9 +652,11 @@ public abstract class AbstractNotificationParser
         if (!FooString.isNullOrEmpty(tickerText))
         {
             String title = FooString.isNullOrEmpty(packageAppSpokenName) ? getPackageName(sbn) : packageAppSpokenName;
-            mainApplication.speak(title);
-            mainApplication.silence(500);
-            mainApplication.speak(tickerText.toString());
+            FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder()
+                    .appendSpeech(title)
+                    .appendSilence(500)
+                    .appendSpeech(tickerText.toString());
+            mainApplication.speak(builder);
 
             return true;
         }

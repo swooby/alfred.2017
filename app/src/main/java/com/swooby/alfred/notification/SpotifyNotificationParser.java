@@ -6,6 +6,7 @@ import android.widget.RemoteViews;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 
@@ -120,20 +121,24 @@ public class SpotifyNotificationParser
             mLastTitle = textTitle;
             mLastAlbum = textAlbum;
 
+            FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder();
+
             if (isPlaying)
             {
-                mApplication.speak(mPackageAppSpokenName + " playing");
-                mApplication.silence(500);
-                mApplication.speak("artist " + textArtist);
-                mApplication.silence(500);
-                mApplication.speak("title " + textTitle);
-                mApplication.silence(500);
-                mApplication.speak("album " + textAlbum);
+                builder.appendSpeech(mPackageAppSpokenName + " playing");
+                builder.appendSilence(500);
+                builder.appendSpeech("artist " + textArtist);
+                builder.appendSilence(500);
+                builder.appendSpeech("title " + textTitle);
+                builder.appendSilence(500);
+                builder.appendSpeech("album " + textAlbum);
             }
             else
             {
-                mApplication.speak(mPackageAppSpokenName + " paused");
+                builder.appendSpeech(mPackageAppSpokenName + " paused");
             }
+
+            mApplication.speak(builder);
 
             return true;
         }

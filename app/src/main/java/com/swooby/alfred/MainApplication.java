@@ -3,6 +3,7 @@ package com.swooby.alfred;
 import android.app.Application;
 import android.bluetooth.BluetoothDevice;
 import android.media.AudioManager;
+import android.os.Handler;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.Voice;
 import android.support.annotation.NonNull;
@@ -12,9 +13,11 @@ import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener
 import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectedCallbacks;
 import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.Profile.Tokens;
 import com.swooby.alfred.notification.AppNotificationListener;
 
@@ -30,6 +33,7 @@ public class MainApplication
 
 
     private AppPreferences      mAppPreferences;
+    private AudioManager        mAudioManager;
     private FooBluetoothManager mBluetoothManager;
     private FooTextToSpeech     mTextToSpeech;
 
@@ -77,6 +81,36 @@ public class MainApplication
 
     public void speak(String text)
     {
+        mTextToSpeech.speak(text);
+    }
+
+    public void speak(String text, boolean clear)
+    {
+        mTextToSpeech.speak(text, clear, null);
+    }
+
+    public void speak(String text, Runnable runAfter)
+    {
+        mTextToSpeech.speak(text, runAfter);
+    }
+
+    public void speak(
+            @NonNull
+            FooTextToSpeechBuilder builder)
+    {
+        mTextToSpeech.speak(builder);
+    }
+
+    public void speak(
+            @NonNull
+            FooTextToSpeechBuilder builder, boolean clear)
+    {
+        mTextToSpeech.speak(builder, clear, null);
+    }
+
+    /*
+    public void speak(String text)
+    {
         speak(false, false, text, null);
     }
 
@@ -84,6 +118,7 @@ public class MainApplication
     {
         speak(false, false, text, runAfter);
     }
+    */
 
     public void speak(boolean force, boolean toast, String text)
     {
@@ -168,6 +203,8 @@ public class MainApplication
 
         mAppPreferences = new AppPreferences(this);
 
+        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+
         mBluetoothManager = new FooBluetoothManager(this);
 
         FooBluetoothHeadsetConnectionListener bluetoothHeadsetConnectionListener = mBluetoothManager.getBluetoothHeadsetConnectionListener();
@@ -190,9 +227,21 @@ public class MainApplication
             return;
         }
 
-        AppNotificationListener appNotificationListener = new AppNotificationListener(this);
+        final AppNotificationListener appNotificationListener = new AppNotificationListener(this);
 
         FooNotificationListener.addListener(appNotificationListener);
+
+        new Handler().postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if (!FooNotificationListener.isNotificationAccessEnabled(MainApplication.this))
+                {
+                    appNotificationListener.onNotificationListenerUnbound();
+                }
+            }
+        }, 500);
 
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 

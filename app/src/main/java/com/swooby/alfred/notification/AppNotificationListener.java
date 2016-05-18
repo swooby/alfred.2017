@@ -7,6 +7,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListener.FooNotificationListenerCallbacks;
 import com.swooby.alfred.MainApplication;
+import com.swooby.alfred.R;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,9 +46,17 @@ public class AppNotificationListener
     }
 
     @Override
-    public void onCreate()
+    public void onNotificationListenerBound()
     {
         mApplication.speak("Listening for Notifications");
+    }
+
+    @Override
+    public void onNotificationListenerUnbound()
+    {
+        String appName = mApplication.getString(R.string.app_name);
+        String text = mApplication.getString(R.string.notification_access_is_disabled_please_enable, appName);
+        mApplication.speak(text);
     }
 
     @Override
@@ -56,21 +65,14 @@ public class AppNotificationListener
         String packageName = AbstractNotificationParser.getPackageName(sbn);
         FooLog.d(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
 
-        boolean handled;
-
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
         if (notificationParser != null)
         {
-            handled = notificationParser.onNotificationPosted(sbn);
+            notificationParser.onNotificationPosted(sbn);
         }
         else
         {
-            handled = AbstractNotificationParser.defaultOnNotificationPosted(mApplication, sbn, null);
-        }
-
-        if (handled)
-        {
-            mApplication.silence(500);
+            AbstractNotificationParser.defaultOnNotificationPosted(mApplication, sbn, null);
         }
     }
 

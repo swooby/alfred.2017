@@ -2,6 +2,8 @@
 
     <string name="app_name">Alfred for Android</string>
 
+    <string name="notification_access_is_disabled_please_enable">Notification access is disabled.\nPlease enable notification access for the \"%1$s\" application.</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
