@@ -2,7 +2,6 @@ package com.swooby.alfred;
 
 import android.app.Application;
 import android.bluetooth.BluetoothDevice;
-import android.media.AudioManager;
 import android.os.Handler;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.Voice;
@@ -31,13 +30,13 @@ public class MainApplication
     private static final String TAG = FooLog.TAG(MainApplication.class);
 
 
+    private final Map<String, BluetoothDevice> mConnectedBluetoothHeadsets;
 
     private AppPreferences      mAppPreferences;
-    private AudioManager        mAudioManager;
     private FooBluetoothManager mBluetoothManager;
     private FooTextToSpeech     mTextToSpeech;
 
-    private final Map<String, BluetoothDevice> mConnectedBluetoothHeadsets;
+    private AppNotificationListener mAppNotificationListener;
 
     private SpeechRecognizer mSpeechRecognizer;
 
@@ -81,31 +80,46 @@ public class MainApplication
 
     public void speak(String text)
     {
-        mTextToSpeech.speak(text);
+        if (isSpeechEnabled())
+        {
+            mTextToSpeech.speak(text);
+        }
     }
 
     public void speak(String text, boolean clear)
     {
-        mTextToSpeech.speak(text, clear, null);
+        if (isSpeechEnabled())
+        {
+            mTextToSpeech.speak(text, clear, null);
+        }
     }
 
     public void speak(String text, Runnable runAfter)
     {
-        mTextToSpeech.speak(text, runAfter);
+        if (isSpeechEnabled())
+        {
+            mTextToSpeech.speak(text, runAfter);
+        }
     }
 
     public void speak(
             @NonNull
             FooTextToSpeechBuilder builder)
     {
-        mTextToSpeech.speak(builder);
+        if (isSpeechEnabled())
+        {
+            mTextToSpeech.speak(builder);
+        }
     }
 
     public void speak(
             @NonNull
             FooTextToSpeechBuilder builder, boolean clear)
     {
-        mTextToSpeech.speak(builder, clear, null);
+        if (isSpeechEnabled())
+        {
+            mTextToSpeech.speak(builder, clear, null);
+        }
     }
 
     /*
@@ -170,6 +184,11 @@ public class MainApplication
         }
     }
 
+    private boolean isProfileTokenHeadphones()
+    {
+        return Tokens.HEADPHONES.equals(mAppPreferences.getProfileToken());
+    }
+
     @Override
     public void onBluetoothDeviceConnected(BluetoothDevice bluetoothDevice)
     {
@@ -177,6 +196,14 @@ public class MainApplication
         synchronized (mConnectedBluetoothHeadsets)
         {
             mConnectedBluetoothHeadsets.put(bluetoothDevice.getAddress(), bluetoothDevice);
+            if (mConnectedBluetoothHeadsets.size() == 1 && isProfileTokenHeadphones())
+            {
+                speak("Bluetooth Headset Connected");
+                if (FooNotificationListener.isNotificationListenerBound())
+                {
+                    mAppNotificationListener.onNotificationListenerBound();
+                }
+            }
         }
     }
 
@@ -203,8 +230,6 @@ public class MainApplication
 
         mAppPreferences = new AppPreferences(this);
 
-        mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-
         mBluetoothManager = new FooBluetoothManager(this);
 
         FooBluetoothHeadsetConnectionListener bluetoothHeadsetConnectionListener = mBluetoothManager.getBluetoothHeadsetConnectionListener();
@@ -227,9 +252,9 @@ public class MainApplication
             return;
         }
 
-        final AppNotificationListener appNotificationListener = new AppNotificationListener(this);
+        mAppNotificationListener = new AppNotificationListener(this);
 
-        FooNotificationListener.addListener(appNotificationListener);
+        FooNotificationListener.addListener(mAppNotificationListener);
 
         new Handler().postDelayed(new Runnable()
         {
@@ -243,7 +268,7 @@ public class MainApplication
                 //
                 if (!FooNotificationListener.isNotificationListenerBound())
                 {
-                    appNotificationListener.onNotificationListenerUnbound();
+                    mAppNotificationListener.onNotificationListenerUnbound();
                 }
             }
         }, 250);

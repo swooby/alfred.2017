@@ -1,4 +1,4 @@
-package com.swooby.alfred.notification;
+package com.swooby.alfred.notification.parsers;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -22,6 +22,18 @@ public abstract class AbstractMediaPlayerNotificiationParser
             @NonNull
             MainApplication application,
             @NonNull
+            String packageName)
+    {
+        super(application, packageName);
+
+        mAudioManager = (AudioManager) application.getSystemService(Context.AUDIO_SERVICE);
+    }
+
+    /*
+    protected AbstractMediaPlayerNotificiationParser(
+            @NonNull
+            MainApplication application,
+            @NonNull
             String packageName,
             @NonNull
             String packageAppSpokenName)
@@ -30,6 +42,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
         mAudioManager = (AudioManager) application.getSystemService(Context.AUDIO_SERVICE);
     }
+    */
 
     // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
     protected void mute(boolean mute, String speech)

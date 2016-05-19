@@ -1,4 +1,4 @@
-package com.swooby.alfred.notification;
+package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
 
@@ -7,13 +7,13 @@ import com.swooby.alfred.MainApplication;
 public class GmailNotificationParser
         extends AbstractNotificationParser
 {
-    protected GmailNotificationParser(MainApplication application)
+    public GmailNotificationParser(MainApplication application)
     {
-        super(application, "com.google.android.gm", "G mail");
+        super(application, "com.google.android.gm");//, "G mail");
     }
 
     @Override
-    public boolean onNotificationPosted(StatusBarNotification sbn)
+    public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
         /*
 onNotificationPosted: notification=Notification(pri=0 contentView=com.google.android.gm/0x1090085 vibrate=null sound=null tick defaults=0x4 flags=0x19 color=0xffdb4437 category=email actions=2 vis=PRIVATE publicVersion=Notification(pri=0 contentView=com.google.android.gm/0x1090085 vibrate=null sound=null defaults=0x0 flags=0x0 color=0xffdb4437 category=email vis=PUBLIC))

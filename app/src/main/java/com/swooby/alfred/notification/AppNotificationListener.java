@@ -8,6 +8,11 @@ import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListener.FooNotificationListenerCallbacks;
 import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
+import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
+import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
+import com.swooby.alfred.notification.parsers.GooglePhotosNotificationParser;
+import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
+import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,11 +38,9 @@ public class AppNotificationListener
         mApplication = application;
         mNotificationParsers = new HashMap<>();
 
-        addNotificationParser(new PandoraNotificationParser(mApplication));//, mTextToSpeech));
-        addNotificationParser(new SpotifyNotificationParser(mApplication));//, mTextToSpeech));
-        addNotificationParser(new GoogleHangoutsNotificationParser(mApplication));//, mTextToSpeech));
-        addNotificationParser(new GmailNotificationParser(mApplication));//, mTextToSpeech));
-        addNotificationParser(new GoogleMessengerNotificationParser(mApplication));//, mTextToSpeech));
+        addNotificationParser(new GooglePhotosNotificationParser(mApplication));
+        addNotificationParser(new PandoraNotificationParser(mApplication));
+        addNotificationParser(new SpotifyNotificationParser(mApplication));
     }
 
     private void addNotificationParser(AbstractNotificationParser notificationParser)
@@ -63,16 +66,31 @@ public class AppNotificationListener
     public void onNotificationPosted(StatusBarNotification sbn)
     {
         String packageName = AbstractNotificationParser.getPackageName(sbn);
-        FooLog.d(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
+        FooLog.v(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
+
+        NotificationParseResult result;
 
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
         if (notificationParser != null)
         {
-            notificationParser.onNotificationPosted(sbn);
+            result = notificationParser.onNotificationPosted(sbn);
         }
         else
         {
-            AbstractNotificationParser.defaultOnNotificationPosted(mApplication, sbn, null);
+            result = AbstractNotificationParser.defaultOnNotificationPosted(mApplication, sbn, null);
+        }
+
+        switch (result)
+        {
+            case DefaultWithTickerText:
+            case DefaultWithoutTickerText:
+                break;
+            case Unparsable:
+                FooLog.w(TAG, "onNotificationPosted: Unparsable StatusBarNotification");
+                break;
+            case ParsableHandled:
+            case ParsableIgnored:
+                break;
         }
     }
 

@@ -1,9 +1,10 @@
-package com.swooby.alfred.notification;
+package com.swooby.alfred.notification.parsers;
 
 import android.app.Notification;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 
+import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
@@ -14,6 +15,8 @@ import java.util.List;
 public class GoogleHangoutsNotificationParser
         extends AbstractNotificationParser
 {
+    private static final String TAG = FooLog.TAG(GoogleHangoutsNotificationParser.class);
+
     private static class TextMessage
     {
         final String mFrom;
@@ -51,7 +54,7 @@ public class GoogleHangoutsNotificationParser
 
     public GoogleHangoutsNotificationParser(MainApplication application)
     {
-        super(application, "com.google.android.talk", application.getString(R.string.hangouts_package_app_spoken_name));
+        super(application, "com.google.android.talk");//, application.getString(R.string.hangouts_package_app_spoken_name));
 
         mTextMessages = new LinkedList<>();
     }
@@ -70,16 +73,22 @@ public class GoogleHangoutsNotificationParser
     }
 
     @Override
-    public boolean onNotificationPosted(StatusBarNotification sbn)
+    public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        //super.onNotificationPosted(sbn);
+        super.onNotificationPosted(sbn);
 
         Notification notification = sbn.getNotification();
+        if (notification == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: textViewStation == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
 
         Bundle extras = notification.extras;
         if (extras == null)
         {
-            return false;
+            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
+            return NotificationParseResult.Unparsable;
         }
 
         List<TextMessage> textMessages = new LinkedList<>();
@@ -118,7 +127,8 @@ public class GoogleHangoutsNotificationParser
         int count = textMessages.size();
         if (count == 0)
         {
-            return false;
+            FooLog.w(TAG, "onNotificationPosted: textMessages.size() == 0; Unparsable");
+            return NotificationParseResult.Unparsable;
         }
 
         String title = mResources.getQuantityString(R.plurals.X_new_messages, count, count);
@@ -133,7 +143,7 @@ public class GoogleHangoutsNotificationParser
         }
         mApplication.speak(builder);
 
-        return true;
+        return NotificationParseResult.ParsableHandled;
     }
 
     @Override

@@ -632,7 +632,7 @@ public class MainActivity
 
                                 mMainApplication.setVoice(voice);
 
-                                mMainApplication.speak("Initialized");
+                                mMainApplication.speak("Voice Initialized");
                             }
 
                             @Override

@@ -1,10 +1,13 @@
-package com.swooby.alfred.notification;
+package com.swooby.alfred.notification.parsers;
 
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -15,17 +18,20 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.smartfoo.android.core.view.FooViewUtils;
 import com.swooby.alfred.MainApplication;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -33,48 +39,57 @@ public abstract class AbstractNotificationParser
 {
     private static final String TAG = FooLog.TAG(AbstractNotificationParser.class);
 
+    @NonNull
     public static String toVerboseString(Integer value)
     {
-        return value == null ? "null" : Integer.toString(value) + " (0x" + Integer.toHexString(value) + ')';
+        return value == null ? "null" : Integer.toString(value) + "(0x" + Integer.toHexString(value) + ')';
     }
 
-    @NonNull
+    @Nullable
     public static String getPackageName(
-            @NonNull
             StatusBarNotification sbn)
     {
-        return sbn.getPackageName();
+        return sbn != null ? sbn.getPackageName() : null;
     }
 
-    @NonNull
+    @Nullable
     public static Notification getNotification(
-            @NonNull
             StatusBarNotification sbn)
     {
-        return sbn.getNotification();
+        return sbn != null ? sbn.getNotification() : null;
     }
 
+    @Nullable
     public static RemoteViews getBigContentView(
-            @NonNull
             StatusBarNotification sbn)
     {
-        return getNotification(sbn).bigContentView;
+        Notification notification = getNotification(sbn);
+        return notification != null ? notification.bigContentView : null;
     }
 
+    @Nullable
     public static RemoteViews getContentView(
-            @NonNull
             StatusBarNotification sbn)
     {
-        return getNotification(sbn).contentView;
+        Notification notification = getNotification(sbn);
+        return notification != null ? notification.contentView : null;
     }
 
     @Nullable
     public static Context createPackageContext(
-            @NonNull
             Context context,
-            @NonNull
             RemoteViews remoteView)
     {
+        if (context == null)
+        {
+            return null;
+        }
+
+        if (remoteView == null)
+        {
+            return null;
+        }
+
         String packageName = remoteView.getPackage();
 
         try
@@ -89,9 +104,7 @@ public abstract class AbstractNotificationParser
 
     @Nullable
     public static View mockRemoteView(
-            @NonNull
             Context context,
-            @NonNull
             RemoteViews remoteView)
     {
         Context otherAppContext = createPackageContext(context, remoteView);
@@ -120,6 +133,96 @@ public abstract class AbstractNotificationParser
         return resources.getIdentifier(childName, "id", packageName);
     }
 
+    public enum ResourceType
+    {
+        drawable,
+    }
+
+    public static int getIdentifier(
+            @NonNull
+            Context context,
+            @NonNull
+            ResourceType resourceType,
+            @NonNull
+            String name)
+    {
+        Resources resources = context.getResources();
+        String packageName = context.getPackageName();
+        return resources.getIdentifier(name, resourceType.name(), packageName);
+    }
+
+    public static int getImageResource(
+            @NonNull
+            ImageView imageView)
+    {
+        //noinspection TryWithIdenticalCatches
+        try
+        {
+            Field field = imageView.getClass().getDeclaredField("mResource");
+            field.setAccessible(true);
+            return (int) field.get(imageView);
+        }
+        catch (NoSuchFieldException e)
+        {
+            FooLog.e(TAG, "getImageResource", e);
+        }
+        catch (IllegalAccessException e)
+        {
+            FooLog.e(TAG, "getImageResource", e);
+        }
+
+        return 0;
+    }
+
+    public static BitmapDrawable getImageBitmap(
+            @NonNull
+            ImageView imageView)
+    {
+        //noinspection TryWithIdenticalCatches
+        try
+        {
+            Field field = imageView.getClass().getDeclaredField("mRecycleableBitmapDrawable");
+            field.setAccessible(true);
+            return (BitmapDrawable) field.get(imageView);
+        }
+        catch (NoSuchFieldException e)
+        {
+            FooLog.e(TAG, "getImageBitmap", e);
+        }
+        catch (IllegalAccessException e)
+        {
+            FooLog.e(TAG, "getImageBitmap", e);
+        }
+
+        return null;
+    }
+
+    /*
+    public static BitmapDrawable getImageBitmap(
+            @NonNull
+            RemoteViews remoteViews,
+            BitmapDrawable )
+    {
+        //noinspection TryWithIdenticalCatches
+        try
+        {
+            Field field = imageView.getClass().getDeclaredField("mRecycleableBitmapDrawable");
+            field.setAccessible(true);
+            return (BitmapDrawable) field.get(imageView);
+        }
+        catch (NoSuchFieldException e)
+        {
+            FooLog.e(TAG, "getImageBitmap", e);
+        }
+        catch (IllegalAccessException e)
+        {
+            FooLog.e(TAG, "getImageBitmap", e);
+        }
+
+        return null;
+    }
+    */
+
     /*
     @Nullable
     public static View findViewByName(
@@ -145,15 +248,23 @@ public abstract class AbstractNotificationParser
         /**
          * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L733
          */
-        int PendingIntent          = 1;
+        int PendingIntent               = 1;
         /**
          * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1057
          */
-        int ReflectionAction       = 2;
+        int ReflectionAction            = 2;
+        /**
+         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L437
+         */
+        int SetOnClickFillInIntent      = 9;
+        /**
+         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L655
+         */
+        int SetRemoteViewsAdapterIntent = 10;
         /**
          * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1050
          */
-        int BitmapReflectionAction = 12;
+        int BitmapReflectionAction      = 12;
     }
 
     /**
@@ -188,6 +299,7 @@ public abstract class AbstractNotificationParser
         public static final int IMAGE_RESOURCE_ID  = 4;
         public static final int BITMAP_RESOURCE_ID = 5;
         public static final int PENDING_INTENT     = 6;
+        public static final int INTENT             = 7;
         /*
         public static final int ICON              = ?;
         */
@@ -216,13 +328,23 @@ public abstract class AbstractNotificationParser
 
     @Nullable
     public static Object getRemoteViewValueById(
-            @NonNull
             RemoteViews remoteViews, int viewId, int valueType)
     {
+        if (remoteViews == null)
+        {
+            return null;
+        }
+
         //noinspection TryWithIdenticalCatches
         try
         {
-            Field field = remoteViews.getClass().getDeclaredField("mActions");
+            Class cls = remoteViews.getClass();
+            while (cls != RemoteViews.class)
+            {
+                cls = cls.getSuperclass();
+            }
+
+            Field field = cls.getDeclaredField("mActions");
             field.setAccessible(true);
 
             @SuppressWarnings("unchecked")
@@ -241,30 +363,47 @@ public abstract class AbstractNotificationParser
                     parcel.setDataPosition(0);
 
                     int actionTag = parcel.readInt();
-                    //FooLog.v(TAG, "getRemoteViewValueById: actionTag=" + toVerboseString(tag));
+                    FooLog.v(TAG, "getRemoteViewValueById: actionTag=" + toVerboseString(actionTag));
                     switch (valueType)
                     {
-                        /*
                         case ValueTypes.PENDING_INTENT:
-                            if (tag != TagTypes.PendingIntent)
+                            switch (actionTag)
                             {
-                                continue;
+                                case TagTypes.PendingIntent:
+                                    break;
+                                default:
+                                    continue;
                             }
                             break;
-                        */
                         case ValueTypes.TEXT:
                         case ValueTypes.VISIBILITY:
                         case ValueTypes.ENABLED:
                         case ValueTypes.IMAGE_RESOURCE_ID:
-                            if (actionTag != TagTypes.ReflectionAction)
+                            switch (actionTag)
                             {
-                                continue;
+                                case TagTypes.ReflectionAction:
+                                    break;
+                                default:
+                                    continue;
+                            }
+                            break;
+                        case ValueTypes.INTENT:
+                            switch (actionTag)
+                            {
+                                case TagTypes.SetOnClickFillInIntent:
+                                case TagTypes.SetRemoteViewsAdapterIntent:
+                                    break;
+                                default:
+                                    continue;
                             }
                             break;
                         case ValueTypes.BITMAP_RESOURCE_ID:
-                            if (actionTag != TagTypes.BitmapReflectionAction)
+                            switch (actionTag)
                             {
-                                continue;
+                                case TagTypes.BitmapReflectionAction:
+                                    break;
+                                default:
+                                    continue;
                             }
                             break;
                         default:
@@ -272,7 +411,7 @@ public abstract class AbstractNotificationParser
                     }
 
                     int actionViewId = parcel.readInt();
-                    //FooLog.v(TAG, "getRemoteViewValueById: actionViewId=" + toVerboseString(viewId));
+                    FooLog.v(TAG, "getRemoteViewValueById: actionViewId=" + toVerboseString(actionViewId));
                     if (actionViewId != viewId)
                     {
                         continue;
@@ -282,7 +421,6 @@ public abstract class AbstractNotificationParser
 
                     switch (actionTag)
                     {
-                        /*
                         case TagTypes.PendingIntent:
                         {
                             if (parcel.readInt() != 0)
@@ -291,11 +429,11 @@ public abstract class AbstractNotificationParser
                             }
                             break;
                         }
-                        */
                         case TagTypes.ReflectionAction:
                         {
                             String actionMethodName = parcel.readString();
-                            //FooLog.v(TAG, "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
+                            FooLog.v(TAG,
+                                    "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
                             switch (valueType)
                             {
                                 case ValueTypes.TEXT:
@@ -352,16 +490,26 @@ public abstract class AbstractNotificationParser
                                 case ActionTypes.ICON:
                                     if (parcel.readInt() != 0)
                                     {
-                                        value = null;//Icon.CREATOR.createFromParcel(parcel);
+                                        value = Icon.CREATOR.createFromParcel(parcel);
                                     }
-                                */
+                                    */
+                            }
+                            break;
+                        }
+                        case TagTypes.SetOnClickFillInIntent:
+                        case TagTypes.SetRemoteViewsAdapterIntent:
+                        {
+                            if (parcel.readInt() != 0)
+                            {
+                                value = Intent.CREATOR.createFromParcel(parcel);
                             }
                             break;
                         }
                         case TagTypes.BitmapReflectionAction:
                         {
                             String actionMethodName = parcel.readString();
-                            //FooLog.v(TAG, "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
+                            FooLog.v(TAG,
+                                    "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
                             switch (valueType)
                             {
                                 case ValueTypes.BITMAP_RESOURCE_ID:
@@ -408,16 +556,39 @@ public abstract class AbstractNotificationParser
         return null;
     }
 
+    /*
+    public static Object getViewValueById(View parent, int viewId, int valueType)
+    {
+        Object value = null;
+
+        View view = parent.findViewById(viewId);
+        if (view != null)
+        {
+            switch (valueType)
+            {
+                case ValueTypes.TEXT:
+                    if (view instanceof TextView)
+                    {
+                        value = ((TextView) view).getText();
+                    }
+                    break;
+            }
+        }
+
+        return value;
+    }
+    */
+
     public static class KeyValue
             implements Comparable<KeyValue>
     {
-        public final int    mKey;
+        public final int    mViewId;
         public final int    mValueType;
         public final Object mValue;
 
-        public KeyValue(int key, int valueType, Object value)
+        public KeyValue(int viewId, int valueType, Object value)
         {
-            mKey = key;
+            mViewId = viewId;
             mValueType = valueType;
             mValue = value;
         }
@@ -427,8 +598,7 @@ public abstract class AbstractNotificationParser
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.append(getClass().getSimpleName()).append('@').append(Integer.toHexString(hashCode()))
-                    .append("{ mKey=").append(toVerboseString(mKey))
+            sb.append("{ mViewId=").append(toVerboseString(mViewId))
                     .append(", mValueType=").append(ValueTypes.toString(mValueType))
                     .append(", mValue=");
 
@@ -441,7 +611,7 @@ public abstract class AbstractNotificationParser
                 case ValueTypes.VISIBILITY:
                     if (mValue instanceof Integer)
                     {
-                        sb.append(FooPlatformUtils.viewVisibilityToString((Integer) mValue));
+                        sb.append(FooViewUtils.viewVisibilityToString((Integer) mValue));
                         break;
                     }
                 default:
@@ -459,16 +629,27 @@ public abstract class AbstractNotificationParser
                 @NonNull
                 KeyValue another)
         {
-            return Integer.compare(mKey, another.mKey);
+            return Integer.compare(mViewId, another.mViewId);
         }
     }
 
     public static void walkActions(RemoteViews remoteViews, List<KeyValue> listKeyValues)
     {
+        if (remoteViews == null)
+        {
+            return;
+        }
+
         //noinspection TryWithIdenticalCatches
         try
         {
-            Field field = remoteViews.getClass().getDeclaredField("mActions");
+            Class cls = remoteViews.getClass();
+            while (cls != RemoteViews.class)
+            {
+                cls = cls.getSuperclass();
+            }
+
+            Field field = cls.getDeclaredField("mActions");
             field.setAccessible(true);
 
             @SuppressWarnings("unchecked")
@@ -541,11 +722,8 @@ public abstract class AbstractNotificationParser
                                     value = parcel.readInt();
                                     break;
                                 case ActionTypes.CHAR_SEQUENCE:
-                                    value = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel)
-                                            .toString()
-                                            .trim();
+                                    value = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel);
                                     break;
-                                /*
                                 case ActionTypes.INTENT:
                                     if (parcel.readInt() != 0)
                                     {
@@ -555,9 +733,8 @@ public abstract class AbstractNotificationParser
                                 case ActionTypes.ICON:
                                     if (parcel.readInt() != 0)
                                     {
-                                        value = null;//Icon.CREATOR.createFromParcel(parcel);
+                                        value = Icon.CREATOR.createFromParcel(parcel);
                                     }
-                                */
                             }
                             break;
                         }
@@ -631,6 +808,12 @@ public abstract class AbstractNotificationParser
     }
 
     @NonNull
+    public static String unknownIfNullOrEmpty(CharSequence value)
+    {
+        return unknownIfNullOrEmpty(value != null ? value.toString() : null);
+    }
+
+    @NonNull
     public static String unknownIfNullOrEmpty(String value)
     {
         if (FooString.isNullOrEmpty(value))
@@ -640,28 +823,119 @@ public abstract class AbstractNotificationParser
         return value;
     }
 
-    public static boolean defaultOnNotificationPosted(
-            @NonNull
+    public static NotificationParseResult defaultOnNotificationPosted(
             MainApplication mainApplication,
-            @NonNull
+            StatusBarNotification sbn)
+    {
+        return defaultOnNotificationPosted(mainApplication, sbn, null);
+    }
+
+    public static NotificationParseResult defaultOnNotificationPosted(
+            MainApplication mainApplication,
             StatusBarNotification sbn,
             String packageAppSpokenName)
     {
-        Notification notification = getNotification(sbn);
-        CharSequence tickerText = notification.tickerText;
-        if (!FooString.isNullOrEmpty(tickerText))
+        if (mainApplication == null)
         {
-            String title = FooString.isNullOrEmpty(packageAppSpokenName) ? getPackageName(sbn) : packageAppSpokenName;
-            FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder()
-                    .appendSpeech(title)
-                    .appendSilence(500)
-                    .appendSpeech(tickerText.toString());
-            mainApplication.speak(builder);
-
-            return true;
+            throw new IllegalArgumentException("mainApplication must not be null");
         }
 
-        return false;
+        if (sbn == null)
+        {
+            throw new IllegalArgumentException("sbn must not be null");
+        }
+
+        String packageName = getPackageName(sbn);
+        FooLog.v(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
+        if (FooString.isNullOrEmpty(packageName))
+        {
+            throw new IllegalStateException("sbn.getPackageName() returned null");
+        }
+
+        if (FooString.isNullOrEmpty(packageAppSpokenName))
+        {
+            packageAppSpokenName = FooPlatformUtils.getApplicationName(mainApplication, packageName);
+        }
+        FooLog.v(TAG, "onNotificationPosted: packageAppSpokenName=" + FooString.quote(packageAppSpokenName));
+        if (FooString.isNullOrEmpty(packageAppSpokenName))
+        {
+            throw new IllegalStateException("FooPlatformUtils.getApplicationName(...) returned null");
+        }
+
+        //String groupKey = sbn.getGroupKey();
+        //String key = sbn.getKey();
+        //UserHandle user = sbn.getUser();
+        //long postTime = sbn.getPostTime();
+        //int id = sbn.getId();
+        //String tag = sbn.getTag();
+
+        Notification notification = getNotification(sbn);
+        FooLog.v(TAG, "onNotificationPosted: notification=" + notification);
+        if (notification == null)
+        {
+            FooLog.v(TAG, "onNotificationPosted: notification == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+
+        Bundle extras = notification.extras;
+        FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
+
+
+        FooLog.v(TAG, "onNotificationPosted: ---- bigContentView ----");
+        RemoteViews bigContentView = notification.bigContentView;
+        View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
+        Set<Integer> bigContentViewIds = new LinkedHashSet<>();
+        walkView(mockBigContentView, bigContentViewIds);
+        List<KeyValue> bigContentViewKeyValues = new LinkedList<>();
+        walkActions(bigContentView, bigContentViewKeyValues);
+        for (int i = 0; i < bigContentViewKeyValues.size(); i++)
+        {
+            KeyValue keyValue = bigContentViewKeyValues.get(i);
+            FooLog.e(TAG, "bigContentView.mAction[" + i + "]=" + keyValue);
+        }
+
+        FooLog.v(TAG, "onNotificationPosted: ---- contentView ----");
+        RemoteViews contentView = notification.contentView;
+        View mockContentView = mockRemoteView(mainApplication, contentView);
+        Set<Integer> contentViewIds = new LinkedHashSet<>();
+        walkView(mockContentView, contentViewIds);
+        List<KeyValue> contentViewKeyValues = new LinkedList<>();
+        walkActions(contentView, contentViewKeyValues);
+        for (int i = 0; i < contentViewKeyValues.size(); i++)
+        {
+            KeyValue keyValue = contentViewKeyValues.get(i);
+            FooLog.e(TAG, "contentView.mAction[" + i + "]=" + keyValue);
+        }
+
+        //RemoteViews headUpContentView = notification.headsUpContentView;
+
+        //Notification.Action[] actions = notification.actions;
+
+        //String category = notification.category;
+
+        CharSequence tickerText = notification.tickerText;
+        FooLog.v(TAG, "onNotificationPosted: tickerText=" + FooString.quote(tickerText));
+        if (FooString.isNullOrEmpty(tickerText))
+        {
+            return NotificationParseResult.DefaultWithoutTickerText;
+        }
+
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder()
+                .appendSpeech(packageAppSpokenName)
+                .appendSilence(500)
+                .appendSpeech(tickerText.toString());
+        mainApplication.speak(builder);
+
+        return NotificationParseResult.DefaultWithTickerText;
+    }
+
+    public enum NotificationParseResult
+    {
+        DefaultWithTickerText,
+        DefaultWithoutTickerText,
+        Unparsable,
+        ParsableIgnored,
+        ParsableHandled,
     }
 
     protected final MainApplication mApplication;
@@ -670,13 +944,32 @@ public abstract class AbstractNotificationParser
     protected final String          mPackageAppSpokenName;
 
     protected AbstractNotificationParser(
-            @NonNull
             MainApplication application,
-            @NonNull
+            String packageName)
+    {
+        this(application, packageName, FooPlatformUtils.getApplicationName(application, packageName));
+    }
+
+    protected AbstractNotificationParser(
+            MainApplication application,
             String packageName,
-            @NonNull
             String packageAppSpokenName)
     {
+        if (application == null)
+        {
+            throw new IllegalArgumentException("application must not be null");
+        }
+
+        if (FooString.isNullOrEmpty(packageName))
+        {
+            throw new IllegalArgumentException("packageName must not be null/empty");
+        }
+
+        if (FooString.isNullOrEmpty(packageAppSpokenName))
+        {
+            throw new IllegalArgumentException("packageAppSpokenName must not be null/empty");
+        }
+
         mApplication = application;
         mResources = application.getResources();
         mPackageName = packageName;
@@ -688,48 +981,8 @@ public abstract class AbstractNotificationParser
         return mPackageName;
     }
 
-    public boolean onNotificationPosted(StatusBarNotification sbn)
+    public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        //String groupKey = sbn.getGroupKey();
-        //String key = sbn.getKey();
-        //UserHandle user = sbn.getUser();
-        //String packageName = sbn.getPackageName();
-        //long postTime = sbn.getPostTime();
-
-        Notification notification = sbn.getNotification();
-        FooLog.v(TAG, "onNotificationPosted: notification=" + notification);
-
-        //int id = sbn.getId();
-        //String tag = sbn.getTag();
-
-        //CharSequence tickerText = notification.tickerText;
-
-        // TODO:(pv) Seriously, introspect and walk all StatusBarNotification fields, especially:
-        //  Notification.tickerText
-        //  All ImageView Resource Ids and TextView Texts in BigContentView
-        //  All ImageView Resource Ids and TextView Texts in ContentView
-
-        RemoteViews bigContentView = notification.bigContentView;
-        View mockBigContentView = mockRemoteView(mApplication, bigContentView);
-        FooLog.v(TAG, "onNotificationPosted: bigContentView");
-        Set<Integer> bigContentViewIds = new LinkedHashSet<>();
-        walkView(mockBigContentView, bigContentViewIds);
-        FooLog.v(TAG, "onNotificationPosted: --------");
-        RemoteViews contentView = notification.contentView;
-        View mockContentView = mockRemoteView(mApplication, contentView);
-        FooLog.v(TAG, "onNotificationPosted: contentView");
-        Set<Integer> contentViewIds = new LinkedHashSet<>();
-        walkView(mockContentView, contentViewIds);
-
-        //RemoteViews headUpContentView = notification.headsUpContentView;
-
-        //Notification.Action[] actions = notification.actions;
-
-        //String category = notification.category;
-
-        Bundle extras = notification.extras;
-        FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
-
         return defaultOnNotificationPosted(mApplication, sbn, mPackageAppSpokenName);
     }
 
