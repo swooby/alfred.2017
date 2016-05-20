@@ -15,11 +15,12 @@ import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
@@ -27,11 +28,10 @@ import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
 import com.swooby.alfred.MainApplication;
+import com.swooby.alfred.R;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -46,43 +46,44 @@ public abstract class AbstractNotificationParser
     }
 
     @Nullable
-    public static String getPackageName(
-            StatusBarNotification sbn)
+    public static String getPackageName(StatusBarNotification sbn)
     {
         return sbn != null ? sbn.getPackageName() : null;
     }
 
     @Nullable
-    public static Notification getNotification(
-            StatusBarNotification sbn)
+    public static Notification getNotification(StatusBarNotification sbn)
     {
         return sbn != null ? sbn.getNotification() : null;
     }
 
     @Nullable
-    public static RemoteViews getBigContentView(
-            StatusBarNotification sbn)
+    public static RemoteViews getBigContentView(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
         return notification != null ? notification.bigContentView : null;
     }
 
     @Nullable
-    public static RemoteViews getContentView(
-            StatusBarNotification sbn)
+    public static Bundle getExtras(StatusBarNotification sbn)
+    {
+        Notification notification = getNotification(sbn);
+        return notification != null ? notification.extras : null;
+    }
+
+    @Nullable
+    public static RemoteViews getContentView(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
         return notification != null ? notification.contentView : null;
     }
 
     @Nullable
-    public static Context createPackageContext(
-            Context context,
-            RemoteViews remoteView)
+    public static Context createPackageContext(Context context, RemoteViews remoteView)
     {
         if (context == null)
         {
-            return null;
+            throw new IllegalArgumentException("context must not be null");
         }
 
         if (remoteView == null)
@@ -103,9 +104,25 @@ public abstract class AbstractNotificationParser
     }
 
     @Nullable
-    public static View mockRemoteView(
-            Context context,
-            RemoteViews remoteView)
+    public static View inflateRemoteView(Context context, RemoteViews remoteViews)
+    {
+        if (context == null)
+        {
+            throw new IllegalArgumentException("context must not be null");
+        }
+
+        Context remoteContext = createPackageContext(context, remoteViews);
+        if (remoteContext == null)
+        {
+            return null;
+        }
+
+        return remoteViews.apply(remoteContext, new RelativeLayout(remoteContext));
+    }
+
+    /*
+    @Nullable
+    public static View mockRemoteView(Context context, RemoteViews remoteView)
     {
         Context otherAppContext = createPackageContext(context, remoteView);
         if (otherAppContext == null)
@@ -117,6 +134,7 @@ public abstract class AbstractNotificationParser
 
         return layoutInflater.inflate(remoteView.getLayoutId(), null, true);
     }
+    */
 
     public static int getIdOfChildWithName(
             @NonNull
@@ -783,7 +801,17 @@ public abstract class AbstractNotificationParser
         }
     }
 
+    public interface WalkViewCallbacks
+    {
+        void onTextView(TextView textView);
+    }
+
     public static void walkView(View view, Set<Integer> viewIds)
+    {
+        walkView(view, viewIds, null);
+    }
+
+    public static void walkView(View view, Set<Integer> viewIds, WalkViewCallbacks callbacks)
     {
         FooLog.v(TAG, "walkView: view=" + view);
 
@@ -794,6 +822,14 @@ public abstract class AbstractNotificationParser
                 viewIds.add(view.getId());
             }
 
+            if (callbacks != null)
+            {
+                if (view instanceof TextView)
+                {
+                    callbacks.onTextView((TextView) view);
+                }
+            }
+
             if (view instanceof ViewGroup)
             {
                 ViewGroup viewGroup = (ViewGroup) view;
@@ -801,36 +837,38 @@ public abstract class AbstractNotificationParser
                 for (int i = 0; i < childCount; i++)
                 {
                     View childView = viewGroup.getChildAt(i);
-                    walkView(childView, viewIds);
+                    walkView(childView, viewIds, callbacks);
                 }
             }
         }
     }
 
     @NonNull
-    public static String unknownIfNullOrEmpty(CharSequence value)
+    public static String unknownIfNullOrEmpty(Context context, CharSequence value)
     {
-        return unknownIfNullOrEmpty(value != null ? value.toString() : null);
+        return unknownIfNullOrEmpty(context, value != null ? value.toString() : null);
     }
 
     @NonNull
-    public static String unknownIfNullOrEmpty(String value)
+    public static String unknownIfNullOrEmpty(Context context, String value)
     {
         if (FooString.isNullOrEmpty(value))
         {
-            value = "Unknown";
+            value = context.getString(R.string.unknown);
         }
         return value;
     }
 
     public static NotificationParseResult defaultOnNotificationPosted(
+            boolean speak,
             MainApplication mainApplication,
             StatusBarNotification sbn)
     {
-        return defaultOnNotificationPosted(mainApplication, sbn, null);
+        return defaultOnNotificationPosted(speak, mainApplication, sbn, null);
     }
 
     public static NotificationParseResult defaultOnNotificationPosted(
+            boolean speak,
             MainApplication mainApplication,
             StatusBarNotification sbn,
             String packageAppSpokenName)
@@ -880,12 +918,44 @@ public abstract class AbstractNotificationParser
         Bundle extras = notification.extras;
         FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
 
+        CharSequence tickerText = notification.tickerText;
+        FooLog.v(TAG, "onNotificationPosted: tickerText=" + FooString.quote(tickerText));
+
+        // TODO:(pv) Seriously, introspect and walk all StatusBarNotification fields, especially:
+        //  Notification.tickerText
+        //  All ImageView Resource Ids and TextView Texts in BigContentView
+        //  All ImageView Resource Ids and TextView Texts in ContentView
+
+        final FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(packageAppSpokenName);
+
+        WalkViewCallbacks walkViewCallbacks = new WalkViewCallbacks()
+        {
+            @Override
+            public void onTextView(TextView textView)
+            {
+                if (textView.getVisibility() != View.VISIBLE)
+                {
+                    return;
+                }
+
+                String text = textView.getText().toString();
+                if (FooString.isNullOrEmpty(text))
+                {
+                    return;
+                }
+
+                builder.appendSpeech(text);
+            }
+        };
 
         FooLog.v(TAG, "onNotificationPosted: ---- bigContentView ----");
         RemoteViews bigContentView = notification.bigContentView;
-        View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
-        Set<Integer> bigContentViewIds = new LinkedHashSet<>();
-        walkView(mockBigContentView, bigContentViewIds);
+        View inflatedBigContentView = inflateRemoteView(mainApplication, bigContentView);
+        walkView(inflatedBigContentView, null, walkViewCallbacks);
+        //View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
+        //Set<Integer> bigContentViewIds = new LinkedHashSet<>();
+        //walkView(mockBigContentView, bigContentViewIds);
+        /*
         List<KeyValue> bigContentViewKeyValues = new LinkedList<>();
         walkActions(bigContentView, bigContentViewKeyValues);
         for (int i = 0; i < bigContentViewKeyValues.size(); i++)
@@ -893,12 +963,16 @@ public abstract class AbstractNotificationParser
             KeyValue keyValue = bigContentViewKeyValues.get(i);
             FooLog.e(TAG, "bigContentView.mAction[" + i + "]=" + keyValue);
         }
+        */
 
         FooLog.v(TAG, "onNotificationPosted: ---- contentView ----");
         RemoteViews contentView = notification.contentView;
-        View mockContentView = mockRemoteView(mainApplication, contentView);
-        Set<Integer> contentViewIds = new LinkedHashSet<>();
-        walkView(mockContentView, contentViewIds);
+        View inflatedContentView = inflateRemoteView(mainApplication, contentView);
+        walkView(inflatedContentView, null, bigContentView != null ? null : walkViewCallbacks);
+        //View mockContentView = mockRemoteView(mainApplication, contentView);
+        //Set<Integer> contentViewIds = new LinkedHashSet<>();
+        //walkView(mockContentView, contentViewIds);
+        /*
         List<KeyValue> contentViewKeyValues = new LinkedList<>();
         walkActions(contentView, contentViewKeyValues);
         for (int i = 0; i < contentViewKeyValues.size(); i++)
@@ -906,6 +980,7 @@ public abstract class AbstractNotificationParser
             KeyValue keyValue = contentViewKeyValues.get(i);
             FooLog.e(TAG, "contentView.mAction[" + i + "]=" + keyValue);
         }
+        */
 
         //RemoteViews headUpContentView = notification.headsUpContentView;
 
@@ -913,17 +988,17 @@ public abstract class AbstractNotificationParser
 
         //String category = notification.category;
 
-        CharSequence tickerText = notification.tickerText;
-        FooLog.v(TAG, "onNotificationPosted: tickerText=" + FooString.quote(tickerText));
-        if (FooString.isNullOrEmpty(tickerText))
+        if (!speak)
         {
-            return NotificationParseResult.DefaultWithoutTickerText;
+            return NotificationParseResult.ParsableIgnored;
         }
 
-        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder()
-                .appendSpeech(packageAppSpokenName)
-                .appendSilence(500)
-                .appendSpeech(tickerText.toString());
+        if (builder.getNumberOfParts() == 1)
+        {
+            builder.appendSilence(500)
+                    .appendSpeech(tickerText.toString());
+        }
+
         mainApplication.speak(builder);
 
         return NotificationParseResult.DefaultWithTickerText;
@@ -981,9 +1056,14 @@ public abstract class AbstractNotificationParser
         return mPackageName;
     }
 
+    protected boolean getSpeakDefaultNotification()
+    {
+        return false;
+    }
+
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        return defaultOnNotificationPosted(mApplication, sbn, mPackageAppSpokenName);
+        return defaultOnNotificationPosted(getSpeakDefaultNotification(), mApplication, sbn, mPackageAppSpokenName);
     }
 
     public void onNotificationRemoved(StatusBarNotification sbn)

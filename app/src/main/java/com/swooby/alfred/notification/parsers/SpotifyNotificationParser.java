@@ -1,16 +1,18 @@
 package com.swooby.alfred.notification.parsers;
 
-import android.content.Context;
+import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.view.View;
-import android.widget.RelativeLayout;
+import android.widget.ImageView;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
+import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.platform.FooPlatformUtils;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.smartfoo.android.core.view.FooViewUtils;
 import com.swooby.alfred.MainApplication;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 public class SpotifyNotificationParser
         extends AbstractMediaPlayerNotificiationParser
@@ -30,51 +32,54 @@ public class SpotifyNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        //super.onNotificationPosted(sbn);
+        FooLog.i(TAG, "---- #SPOTIFY ----");
+        super.onNotificationPosted(sbn);
 
-        RemoteViews contentView = getContentView(sbn);
-        if (contentView == null)
+        Bundle extras = getExtras(sbn);
+        FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
+        /*
+        if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: contentView == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
-        Set<Integer> contentViewIds = new LinkedHashSet<>();
+        String androidTitle = extras.getString("android.title");
+        FooLog.v(TAG, "onNotificationPosted: androidTitle=" + FooString.quote(androidTitle));
+        */
 
-        Context remoteContext = createPackageContext(mApplication, contentView);
-        RelativeLayout viewGroup = new RelativeLayout(remoteContext);
-        View remoteView = contentView.apply(remoteContext, viewGroup);
+        RemoteViews bigContentView = getBigContentView(sbn);
+        if (bigContentView == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: bigContentView == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+
+        View remoteView = inflateRemoteView(mApplication, bigContentView);
         if (remoteView == null)
         {
             FooLog.w(TAG, "onNotificationPosted: remoteView == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
-        if (true)
+        int idFirstLine = getIdOfChildWithName(remoteView, "firstLine");
+        if (idFirstLine == 0)
         {
-            FooLog.e(TAG, "After bigContentView.apply");
-            walkView(remoteView, contentViewIds);
-        }
-
-        /*
-        View mockRemoteView = mockRemoteView(mApplication, contentView);
-        if (mockRemoteView == null)
-        {
-            return NotificationParseResult.Unparsable;
-        }
-        */
-
-        int idTitle = getIdOfChildWithName(remoteView, "title");
-        if (idTitle == 0)
-        {
-            FooLog.w(TAG, "onNotificationPosted: idTitle == 0; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: idFirstLine == 0; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
-        int idSubtitle = getIdOfChildWithName(remoteView, "subtitle");
-        if (idSubtitle == 0)
+        int idSecondLine = getIdOfChildWithName(remoteView, "secondLine");
+        if (idSecondLine == 0)
         {
-            FooLog.w(TAG, "onNotificationPosted: idSubtitle == 0; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: idSecondLine == 0; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+
+        int idThirdLine = getIdOfChildWithName(remoteView, "thirdLine");
+        if (idThirdLine == 0)
+        {
+            FooLog.w(TAG, "onNotificationPosted: idThirdLine == 0; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -85,45 +90,46 @@ public class SpotifyNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        return NotificationParseResult.Unparsable;
-        /*
-        Integer pauseVisibility = (Integer) getRemoteViewValueById(contentView, idPause, ValueTypes.VISIBILITY);
-        FooLog.v(TAG, "onNotificationPosted: pauseVisibility=" + pauseVisibility);
-        if (pauseVisibility == null)
+        ImageView imageViewPause = (ImageView) remoteView.findViewById(idPause);
+        if (imageViewPause == null)
         {
+            FooLog.w(TAG, "onNotificationPosted: imageViewPause == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
+        int pauseVisibility = imageViewPause.getVisibility();
+        FooLog.v(TAG, "onNotificationPosted: pauseVisibility=" + FooViewUtils.viewVisibilityToString(pauseVisibility));
 
         boolean isPlaying = pauseVisibility == View.VISIBLE;
         FooLog.v(TAG, "onNotificationPosted: isPlaying=" + isPlaying);
 
-        String textTitle = (String) getRemoteViewValueById(contentView, idTitle, ValueTypes.TEXT);
-        textTitle = unknownIfNullOrEmpty(textTitle);
+        TextView textViewFirstLine = (TextView) remoteView.findViewById(idFirstLine);
+        if (textViewFirstLine == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: textViewFirstLine == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+        String textTitle = textViewFirstLine.getText().toString();
         FooLog.v(TAG, "onNotificationPosted: textTitle=" + FooString.quote(textTitle));
 
-        String textSubtitle = (String) getRemoteViewValueById(contentView, idSubtitle, ValueTypes.TEXT);
-        FooLog.v(TAG, "onNotificationPosted: textSubtitle=" + FooString.quote(textSubtitle));
-        String[] textArtistAndAlbum = (textSubtitle != null) ? textSubtitle.split("—") : null;
-        String textArtist = null;
-        String textAlbum = null;
-        if (textArtistAndAlbum != null)
+        TextView textViewSecondLine = (TextView) remoteView.findViewById(idSecondLine);
+        if (textViewSecondLine == null)
         {
-            int offset = 0;
-            if (offset < textArtistAndAlbum.length)
-            {
-                textArtist = textArtistAndAlbum[offset++];
-            }
-            if (offset < textArtistAndAlbum.length)
-            {
-                //noinspection UnusedAssignment
-                textAlbum = textArtistAndAlbum[offset++];
-            }
+            FooLog.w(TAG, "onNotificationPosted: textViewSecondLine == null; Unparsable");
+            return NotificationParseResult.Unparsable;
         }
-
-        FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
+        String textAlbum = textViewSecondLine.getText().toString();
         FooLog.v(TAG, "onNotificationPosted: textAlbum=" + FooString.quote(textAlbum));
 
-        if (textArtist == null && textAlbum == null)
+        TextView textViewThirdLine = (TextView) remoteView.findViewById(idThirdLine);
+        if (textViewThirdLine == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: textViewThirdLine == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+        String textArtist = textViewThirdLine.getText().toString();
+        FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
+
+        if (FooString.isNullOrEmpty(textAlbum) && FooString.isNullOrEmpty(textArtist))
         {
             //
             // It's a commercial!
@@ -137,8 +143,9 @@ public class SpotifyNotificationParser
             return NotificationParseResult.ParsableIgnored;
         }
 
-        textArtist = unknownIfNullOrEmpty(textArtist);
-        textAlbum = unknownIfNullOrEmpty(textAlbum);
+        textArtist = unknownIfNullOrEmpty(mApplication, textArtist);
+        textTitle = unknownIfNullOrEmpty(mApplication, textTitle);
+        textAlbum = unknownIfNullOrEmpty(mApplication, textAlbum);
 
         if (isPlaying == mLastIsPlaying &&
             textArtist.equals(mLastArtist) &&
@@ -175,6 +182,5 @@ public class SpotifyNotificationParser
         mApplication.speak(builder);
 
         return NotificationParseResult.ParsableHandled;
-        */
     }
 }

@@ -33,5 +33,6 @@
     <string name="audio_stream_notification">Notification</string>
     <string name="audio_stream_media">Media</string>
     <string name="audio_stream_alarm">Alarm</string>
+    <string name="unknown">Unknown</string>
 
 </resources>

@@ -3,16 +3,17 @@ package com.swooby.alfred.notification.parsers;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
 import com.swooby.alfred.MainApplication;
@@ -53,11 +54,12 @@ public class PandoraNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        //super.onNotificationPosted(sbn);
+        FooLog.i(TAG, "---- #PANDORA ----");
+        super.onNotificationPosted(sbn);
 
-        //
-        // Source: com.pandora.android/res/layout-v21/persistant_notification_expanded.xml
-        //
+        Bundle extras = getExtras(sbn);
+        FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
+
         RemoteViews bigContentView = getBigContentView(sbn);
         if (bigContentView == null)
         {
@@ -87,19 +89,17 @@ public class PandoraNotificationParser
             17  2131821308 (0x7F1102FC) ?           setVisibility       8 (GONE)
         */
 
-        Context remoteContext = createPackageContext(mApplication, bigContentView);
-        if (remoteContext == null)
+        View remoteView = inflateRemoteView(mApplication, bigContentView);
+        if (remoteView == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: remoteContext == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: remoteView == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
-        View remoteView = bigContentView.apply(remoteContext, new RelativeLayout(remoteContext));
         if (true)
         {
-            FooLog.e(TAG, "---- #PANDORA ----");
-            Set<Integer> mockBigContentViewIds = new LinkedHashSet<>();
-            walkView(remoteView, mockBigContentViewIds);
+            Set<Integer> bigContentViewIds = new LinkedHashSet<>();
+            walkView(remoteView, bigContentViewIds);
             //FooLog.e(TAG, "mockBigContentViewIds=" + mockBigContentViewIds);
         }
 
@@ -230,17 +230,19 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idLoading, "loading");
 
-        int idDrawablePause = getIdentifier(remoteContext, ResourceType.drawable, "notification_pause_selector");
-        // Pandora v7.2: 2130838193 (0x7F0202B1)
+        //
+        // Source: com.pandora.android v7.2
+        //
+        Context remoteContext = remoteView.getContext();
+        int idDrawablePause = getIdentifier(remoteContext, ResourceType.drawable, "notification_pause_selector"); // 2130838193(0x7F0202B1)
         FooLog.v(TAG, "onNotificationPosted: idDrawablePause=" + toVerboseString(idDrawablePause));
-
-        int idDrawablePlay = getIdentifier(remoteContext, ResourceType.drawable, "notification_play_selector");
-        // Pandora v7.2: 2130838194 (0x7F0202B2)
+        int idDrawablePlay = getIdentifier(remoteContext, ResourceType.drawable, "notification_play_selector"); // 2130838194(0x7F0202B2)
         FooLog.v(TAG, "onNotificationPosted: idDrawablePlay=" + toVerboseString(idDrawablePlay));
 
         ImageView imageViewPlay = (ImageView) remoteView.findViewById(idPlay);
         if (imageViewPlay == null)
         {
+            FooLog.w(TAG, "onNotificationPosted: imageViewPlay == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -258,6 +260,7 @@ public class PandoraNotificationParser
         ImageView imageViewIcon = (ImageView) remoteView.findViewById(idIcon);
         if (imageViewIcon == null)
         {
+            FooLog.w(TAG, "onNotificationPosted: imageViewIcon == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -276,6 +279,11 @@ public class PandoraNotificationParser
         FooLog.e(TAG, "\nonNotificationPosted: iconVisibility=" + FooViewUtils.viewVisibilityToString(iconVisibility));
 
         ProgressBar progressBarLoading = (ProgressBar) remoteView.findViewById(idLoading);
+        if (progressBarLoading == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: progressBarLoading == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
         int loadingVisibility = progressBarLoading.getVisibility();
         FooLog.e(TAG,
                 "\nonNotificationPosted: loadingVisibility=" + FooViewUtils.viewVisibilityToString(loadingVisibility));
@@ -326,7 +334,7 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: textViewTitle == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
-        String textTitle = unknownIfNullOrEmpty(textViewTitle.getText());
+        String textTitle = unknownIfNullOrEmpty(mApplication, textViewTitle.getText());
         FooLog.v(TAG, "onNotificationPosted: textTitle=" + FooString.quote(textTitle));
 
         TextView textViewArtist = (TextView) remoteView.findViewById(idArtist);
@@ -335,7 +343,7 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: textViewArtist == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
-        String textArtist = unknownIfNullOrEmpty(textViewArtist.getText());
+        String textArtist = unknownIfNullOrEmpty(mApplication, textViewArtist.getText());
         FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
 
         TextView textViewStation = (TextView) remoteView.findViewById(idStation);
@@ -344,7 +352,7 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: textViewStation == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
-        String textStation = unknownIfNullOrEmpty(textViewStation.getText());
+        String textStation = unknownIfNullOrEmpty(mApplication, textViewStation.getText());
         FooLog.v(TAG, "onNotificationPosted: textStation=" + FooString.quote(textStation));
 
         boolean isCommercial = mAdvertisementTitle.equalsIgnoreCase(textTitle) &&
