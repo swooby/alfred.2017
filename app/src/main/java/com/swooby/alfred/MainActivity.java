@@ -29,7 +29,6 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
-import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
@@ -323,6 +322,7 @@ public class MainActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        /*
         if (id == R.id.nav_camera)
         {
             // Handle the camera action
@@ -347,6 +347,7 @@ public class MainActivity
         {
 
         }
+        */
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer != null)
@@ -654,6 +655,7 @@ public class MainActivity
 
     private void onFloatingActionButtonClick()
     {
+        /*
         Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null)
                 .show();
@@ -690,5 +692,6 @@ public class MainActivity
                 FooLog.e(TAG, "iotDeviceAdd onException: device id=" + deviceId, exception);
             }
         });
+        */
     }
 }
