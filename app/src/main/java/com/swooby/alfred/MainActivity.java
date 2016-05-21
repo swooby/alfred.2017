@@ -1,6 +1,5 @@
 package com.swooby.alfred;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.AudioManager;
@@ -29,6 +28,7 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
+import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
@@ -45,8 +45,8 @@ import java.util.Collections;
 import java.util.Set;
 
 public class MainActivity
-        extends AppCompatActivity//PbPermissionHandlingActivity
-        implements OnNavigationItemSelectedListener //, AlfredPermissionsCallbacks
+        extends AppCompatActivity
+        implements OnNavigationItemSelectedListener
 {
     private static final String TAG = FooLog.TAG(MainActivity.class);
 
@@ -83,6 +83,9 @@ public class MainActivity
 
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
+
+        String action = intent.getAction();
+        FooLog.i(TAG, "onCreate: action=" + FooString.quote(action));
 
         setContentView(R.layout.activity_main);
 
@@ -147,14 +150,17 @@ public class MainActivity
         });
 
         ImageButton buttonVoiceAudioStreamTypeTest = (ImageButton) findViewById(R.id.buttonVoiceAudioStreamTypeTest);
-        buttonVoiceAudioStreamTypeTest.setOnClickListener(new OnClickListener()
+        if (buttonVoiceAudioStreamTypeTest != null)
         {
-            @Override
-            public void onClick(View v)
+            buttonVoiceAudioStreamTypeTest.setOnClickListener(new OnClickListener()
             {
-                mMainApplication.speak("Testing testing 1 2 3");
-            }
-        });
+                @Override
+                public void onClick(View v)
+                {
+                    mMainApplication.speak("Testing testing 1 2 3");
+                }
+            });
+        }
 
         mSeekbarVoiceAudioStreamVolume = (SeekBar) findViewById(R.id.seekbarVoiceAudioStreamVolume);
         mSeekbarVoiceAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
@@ -502,14 +508,6 @@ public class MainActivity
         }
     }
 
-    private void onBluetoothDeviceConnected(BluetoothDevice bluetoothDevice)
-    {
-    }
-
-    private void onBluetoothDeviceDisconnected(BluetoothDevice bluetoothDevice)
-    {
-    }
-
     private static class VoiceWrapper
             implements Comparable<VoiceWrapper>
     {
@@ -659,39 +657,7 @@ public class MainActivity
         Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null)
                 .show();
-        String deviceId = "qwigybo";
-
-        mAzure.iotDeviceAdd(deviceId, new IoTDeviceAddCallback()
-        {
-            @Override
-            public void onSuccess(Device device)
-            {
-                FooLog.i(TAG, "iotDeviceAdd onSuccess: device id=" + device.getDeviceId());
-                FooLog.i(TAG, "iotDeviceAdd onSuccess: device primaryKey=" + device.getPrimaryKey());
-
-                String message = "w00t @ " + new Date().toString();
-                mAzure.iotDeviceSendMessage(device, message, new IoTDeviceSendMessageCallback()
-                {
-                    @Override
-                    public void onSuccess(Device device, DeviceClient deviceClient)
-                    {
-                        FooLog.i(TAG, "iotDeviceSendMessage onSuccess: device id=" + device.getDeviceId());
-                    }
-
-                    @Override
-                    public void onException(Device device, Exception exception)
-                    {
-                        FooLog.e(TAG, "iotDeviceAdd onException: device id=" + deviceId, exception);
-                    }
-                });
-            }
-
-            @Override
-            public void onException(String deviceId, Exception exception)
-            {
-                FooLog.e(TAG, "iotDeviceAdd onException: device id=" + deviceId, exception);
-            }
-        });
         */
+        //mMainApplication.startScanning();
     }
 }

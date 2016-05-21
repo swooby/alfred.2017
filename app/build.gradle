@@ -37,29 +37,20 @@ dependencies {
 
     //compile 'com.google.android.gms:play-services-gcm:9.0.0'
 
+    //compile 'com.github.clans:fab:1.6.2'
+
     compile 'com.google.code.gson:gson:2.4'
-    // Updates:
-    //  https://bintray.com/microsoftazuremobile/SDK/Mobile-Services-Android-SDK/view
-    //  https://github.com/Azure/azure-mobile-apps-android-client/tree/master/sdk
-    //compile 'com.microsoft.azure:azure-mobile-android:3.0'
-    //  https://github.com/Azure/azure-notificationhubs/tree/master/Android/notification-hubs-sdk
-    //compile 'com.microsoft.azure:azure-notifications-handler:1.0.1@jar'
+    //compile 'com.google.guava:guava:18.0'
+    //compile 'com.squareup.okhttp:okhttp:2.5.0'
 
-    //
-    // https://azure.microsoft.com/en-us/documentation/articles/iot-hub-java-java-getstarted/
-    // Updates:
-    //  https://github.com/Azure/azure-iot-sdks/tree/master/java
-    //compile 'com.microsoft.azure.iothub-java-client:iothub-java-service-client:1.0.0'
-    //compile project(':iothub-service-sdk')
-    //compile 'com.microsoft.azure.iothub-java-client:iothub-java-device-client:1.0.0'
-    //compile project(':iothub-java-client')
-    //compile 'com.microsoft.eventhubs.client:eventhubs-client:1.0'
 
-    //compile project(':smartfoo-android-lib-core')
-    compile 'com.smartfoo:smartfoo-android-lib-core:0.0.5'
-
-    //compile project(':pebblebee-lib-common')
-    //compile project(':pebblebee-lib-bluetooth')
+    if (getIsLocalDevelopmentBuild()) {
+        println 'dependencies: ' + archivesBaseName + ' using local project(s)'
+        compile project(':smartfoo-android-lib-core')
+    } else {
+        println 'dependencies: ' + archivesBaseName + ' using remote library(s)'
+        compile 'com.smartfoo:smartfoo-android-lib-core:+'
+    }
 }
 
 /*

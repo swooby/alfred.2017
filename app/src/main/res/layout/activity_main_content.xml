@@ -172,138 +172,198 @@
     </LinearLayout>
     -->
 
-    <TableLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         >
 
-        <TableRow
+        <TableLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
+            android:layout_height="wrap_content"
             >
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:text="Voice:"
-                />
+            <TableRow>
 
-            <Spinner
-                android:id="@+id/spinnerVoices"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:text="Voice:"
+                    />
+
+                <Spinner
+                    android:id="@+id/spinnerVoices"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    />
+
+                <!--
+                <ImageButton
+                    android:id="@+id/buttonVoicesFilter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_filter_list_black_24dp"
+                    />
+                    -->
+
+                <ImageButton
+                    android:id="@+id/buttonVoicesRefresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_refresh_black_24dp"
+                    />
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:text="Stream:"
+                    />
+
+                <Spinner
+                    android:id="@+id/spinnerVoiceAudioStreamType"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    />
+
+                <ImageButton
+                    android:id="@+id/buttonVoiceAudioStreamTypeTest"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_play_arrow_black_24dp"
+                    />
+
+            </TableRow>
+
+            <TableRow
+                android:paddingBottom="16dp"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_column="1"
+                    android:layout_gravity="center_vertical|end"
+                    android:paddingEnd="0dp"
+                    android:paddingStart="16dp"
+                    android:text="Volume:"
+                    />
+
+                <SeekBar
+                    android:id="@+id/seekbarVoiceAudioStreamVolume"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    />
+
+            </TableRow>
+
+            <TableRow>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:text="Profile:"
+                    />
+
+                <Spinner
+                    android:id="@+id/spinnerProfiles"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    />
+
+                <ImageButton
+                    android:id="@+id/buttonDevicesRefresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_refresh_black_24dp"
+                    />
+
+            </TableRow>
+
+            <TableRow>
+
+                <Switch
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_span="3"
+                    android:layout_weight="1"
+                    android:gravity="end|center_vertical"
+                    android:switchPadding="10dp"
+                    android:text="Announce time when activated"
+                    />
+
+            </TableRow>
+
+            <TableRow>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_span="2"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    >
+
+                    <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        >
+
+                        <EditText
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Activated phrase"
+                            />
+
+                    </android.support.design.widget.TextInputLayout>
+
+                </LinearLayout>
+
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_play_arrow_black_24dp"
+                    />
+
+            </TableRow>
 
             <!--
-            <ImageButton
-                android:id="@+id/buttonVoicesFilter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_filter_list_black_24dp"
-                />
-                -->
-
-            <ImageButton
-                android:id="@+id/buttonVoicesRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_refresh_black_24dp"
-                />
-
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:text="Stream:"
-                />
-
-            <Spinner
-                android:id="@+id/spinnerVoiceAudioStreamType"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                />
+                android:orientation="horizontal"
+                >
 
-            <ImageButton
-                android:id="@+id/buttonVoiceAudioStreamTypeTest"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_play_arrow_black_24dp"
-                />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:text="Time:"
+                    />
 
-        </TableRow>
+                <Spinner
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    />
 
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:paddingBottom="16dp"
-            >
+            </TableRow>
+            -->
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_column="1"
-                android:layout_gravity="center_vertical|end"
-                android:paddingEnd="0dp"
-                android:paddingStart="16dp"
-                android:text="Volume:"
-                />
+        </TableLayout>
 
-            <SeekBar
-                android:id="@+id/seekbarVoiceAudioStreamVolume"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                />
-
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:text="Profile:"
-                />
-
-            <Spinner
-                android:id="@+id/spinnerProfiles"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                />
-
-            <ImageButton
-                android:id="@+id/buttonDevicesRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_refresh_black_24dp"
-                />
-
-        </TableRow>
-
-    </TableLayout>
+    </LinearLayout>
 
 </ScrollView>
