@@ -2,7 +2,7 @@ language: android
 
 branches:
   only:
-  - m1
+  #- master
 
 android:
   components:
