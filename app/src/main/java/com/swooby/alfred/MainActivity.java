@@ -691,5 +691,4 @@ public class MainActivity
             }
         });
     }
-    }
 }
