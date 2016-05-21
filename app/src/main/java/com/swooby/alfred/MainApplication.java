@@ -277,5 +277,4 @@ public class MainApplication
 
         FooLog.i(TAG, "-onCreate()");
     }
-    }
 }
