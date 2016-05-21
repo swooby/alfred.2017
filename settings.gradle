@@ -1,4 +1,4 @@
-include ':smartfoo-android-lib-core'
+//include ':smartfoo-android-lib-core'
 //include ':pebblebee-lib-common'
 //include ':pebblebee-lib-bluetooth'
 //include ':qpid-proton'

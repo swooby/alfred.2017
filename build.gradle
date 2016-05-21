@@ -26,6 +26,9 @@ allprojects {
         maven {
             url 'http://build.pebblebee.com:8090/artifactory/libs-release/'
         }
+        maven {
+            url  "http://dl.bintray.com/smartfoo/maven"
+        }
         jcenter()
     }
 }

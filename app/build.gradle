@@ -55,7 +55,8 @@ dependencies {
     //compile project(':iothub-java-client')
     //compile 'com.microsoft.eventhubs.client:eventhubs-client:1.0'
 
-    compile project(':smartfoo-android-lib-core')
+    //compile project(':smartfoo-android-lib-core')
+    compile 'com.smartfoo:smartfoo-android-lib-core:0.0.5'
 
     //compile project(':pebblebee-lib-common')
     //compile project(':pebblebee-lib-bluetooth')
