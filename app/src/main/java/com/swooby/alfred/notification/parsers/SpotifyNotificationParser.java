@@ -137,7 +137,7 @@ public class SpotifyNotificationParser
             // TODO:(pv) Make this a user option...
             if (true)
             {
-                mute(true, "attenuating commercial");
+                mute(true, "attenuating " + mPackageAppSpokenName + " commercial");
             }
 
             return NotificationParseResult.ParsableIgnored;

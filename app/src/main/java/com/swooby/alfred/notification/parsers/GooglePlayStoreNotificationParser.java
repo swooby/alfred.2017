@@ -4,12 +4,12 @@ import android.service.notification.StatusBarNotification;
 
 import com.swooby.alfred.MainApplication;
 
-public class GoogleDialerNotificationParser
+public class GooglePlayStoreNotificationParser
         extends AbstractNotificationParser
 {
-    public GoogleDialerNotificationParser(MainApplication application)
+    public GooglePlayStoreNotificationParser(MainApplication application)
     {
-        super(application, "com.google.android.dialer");//, "Google Dialer");
+        super(application, "com.android.vending");//, "Google Play Store");
     }
 
     @Override
@@ -22,7 +22,7 @@ public class GoogleDialerNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        // TODO:(pv) This needs to better pronounce incoming phone numbers
+        // TODO:(pv) This needs to ignore app update incremental progress
         return super.onNotificationPosted(sbn);
     }
 }

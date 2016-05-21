@@ -365,7 +365,7 @@ public class PandoraNotificationParser
             // TODO:(pv) Make this a user option...
             if (true)
             {
-                mute(true, "attenuating commercial");
+                mute(true, "attenuating " + mPackageAppSpokenName + " commercial");
             }
 
             FooLog.w(TAG, "onNotificationPosted: isCommercial == true; ParsableIgnored");

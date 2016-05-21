@@ -10,9 +10,11 @@ import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
+import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleHangoutsNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleNowNotificationParser;
 import com.swooby.alfred.notification.parsers.GooglePhotosNotificationParser;
+import com.swooby.alfred.notification.parsers.GooglePlayStoreNotificationParser;
 import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
 import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
 
@@ -40,9 +42,11 @@ public class AppNotificationListener
         mApplication = application;
         mNotificationParsers = new HashMap<>();
 
+        addNotificationParser(new GoogleDialerNotificationParser(mApplication));
         addNotificationParser(new GoogleHangoutsNotificationParser(mApplication));
         addNotificationParser(new GoogleNowNotificationParser(mApplication));
         addNotificationParser(new GooglePhotosNotificationParser(mApplication));
+        addNotificationParser(new GooglePlayStoreNotificationParser(mApplication));
         addNotificationParser(new PandoraNotificationParser(mApplication));
         addNotificationParser(new SpotifyNotificationParser(mApplication));
     }
