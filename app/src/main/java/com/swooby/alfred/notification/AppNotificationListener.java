@@ -10,6 +10,7 @@ import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
+import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleHangoutsNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleNowNotificationParser;
@@ -42,6 +43,7 @@ public class AppNotificationListener
         mApplication = application;
         mNotificationParsers = new HashMap<>();
 
+        addNotificationParser(new GoogleCameraNotificationParser(mApplication));
         addNotificationParser(new GoogleDialerNotificationParser(mApplication));
         addNotificationParser(new GoogleHangoutsNotificationParser(mApplication));
         addNotificationParser(new GoogleNowNotificationParser(mApplication));
