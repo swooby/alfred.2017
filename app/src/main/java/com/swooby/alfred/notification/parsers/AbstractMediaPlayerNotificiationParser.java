@@ -71,10 +71,10 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
             if (speech == null)
             {
-                speech = "attenuating";
+                speech = mPackageAppSpokenName + " attenuating";
             }
 
-            mApplication.speak(mPackageAppSpokenName + ' ' + speech, runAfter);
+            mApplication.speak(speech, runAfter);
 
             if (voiceAudioStreamType != musicAudioStreamType)
             {
