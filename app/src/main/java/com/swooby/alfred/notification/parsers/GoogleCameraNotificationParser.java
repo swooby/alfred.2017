@@ -15,6 +15,10 @@ public class GoogleCameraNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
+        //
+        // Ignore non-useful camera taking picture notification
+        //
+
         // TODO:(pv) This one is annoying whenever a photo is taken!
         // TODO:(pv) Make this same something like "Google Camera, Picture Taken"...ONCE PER PICTURE
 /*

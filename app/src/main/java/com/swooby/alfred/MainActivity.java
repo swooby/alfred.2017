@@ -631,7 +631,7 @@ public class MainActivity
 
                                 mMainApplication.setVoice(voice);
 
-                                mMainApplication.speak("Voice Initialized");
+                                //mMainApplication.speak("Voice Initialized");
                             }
 
                             @Override

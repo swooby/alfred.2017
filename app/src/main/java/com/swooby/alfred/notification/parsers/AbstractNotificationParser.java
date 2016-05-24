@@ -142,8 +142,7 @@ public abstract class AbstractNotificationParser
             @NonNull
             String childName)
     {
-        //PbLog.e(TAG,
-        //        "getIdOfChildWithName(parent=" + parent + ", childName=" + PbStringUtils.quote(childName) + ')');
+        //FooLog.e(TAG, "getIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
 
         Resources resources = parent.getResources();
         String packageName = parent.getContext().getPackageName();

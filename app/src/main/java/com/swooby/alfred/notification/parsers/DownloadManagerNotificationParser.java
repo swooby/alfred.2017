@@ -13,16 +13,13 @@ public class DownloadManagerNotificationParser
     }
 
     @Override
-    protected boolean getSpeakDefaultNotification()
-    {
-        // TODO:(pv) return false once we implement custom handling below
-        return false;
-    }
-
-    @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        // TODO:(pv) This needs to ignore app update incremental progress
-        return super.onNotificationPosted(sbn);
+        //
+        // Ignore non-useful app update incremental progress notification
+        //
+        super.onNotificationPosted(sbn);
+
+        return NotificationParseResult.ParsableIgnored;
     }
 }
