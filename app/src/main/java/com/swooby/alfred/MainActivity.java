@@ -516,7 +516,7 @@ public class MainActivity
 
         public VoiceWrapper(
                 @NonNull
-                Voice voice)
+                        Voice voice)
         {
             mVoice = voice;
             mDisplayName = voice.getName().toLowerCase();
@@ -562,7 +562,7 @@ public class MainActivity
         @Override
         public int compareTo(
                 @NonNull
-                VoiceWrapper another)
+                        VoiceWrapper another)
         {
             return toString().compareTo(another.toString());
         }
