@@ -4,6 +4,11 @@
 
     <string name="notification_access_is_disabled_please_enable">Notification access is disabled.\nPlease enable notification access for the \"%1$s\" application.</string>
 
+    <string name="bluetooth_headset_X_connected">Bluetooth Headset %1$s connected</string>
+    <string name="bluetooth_headset_X_disconnected">Bluetooth Headset %1$s connected</string>
+    <string name="wired_headset_X_connected">Wired Headset %1$s connected</string>
+    <string name="wired_headset_X_disconnected">Wired Headset %1$s disconnected</string>
+
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 

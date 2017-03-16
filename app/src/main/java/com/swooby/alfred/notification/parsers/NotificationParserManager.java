@@ -144,7 +144,7 @@ public class NotificationParserManager
         addNotificationParser(new GoogleCameraNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GoogleDialerNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GoogleHangoutsNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GoogleMapsNotificationParser(mNotificationParserCallbacks));
+        //addNotificationParser(new GoogleMapsNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new GoogleMessengerNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GoogleNowNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GooglePhotosNotificationParser(mNotificationParserCallbacks));
