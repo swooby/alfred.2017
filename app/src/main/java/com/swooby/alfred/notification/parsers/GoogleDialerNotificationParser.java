@@ -1,15 +1,20 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
-
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class GoogleDialerNotificationParser
         extends AbstractNotificationParser
 {
-    public GoogleDialerNotificationParser(MainApplication application)
+    public GoogleDialerNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.google.android.dialer");//, "Google Dialer");
+        super(callbacks);//, "Google Dialer");
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.google.android.dialer";
     }
 
     @Override

@@ -9,9 +9,9 @@ public class Profile
 {
     public interface Tokens
     {
-        String DISABLED   = "profile.disabled";
-        String ALWAYS_ON  = "profile.always_on";
-        String HEADPHONES = "profile.headphones";
+        String DISABLED        = "profile.disabled";
+        String HEADPHONES_ONLY = "profile.headphones_only";
+        String ALWAYS_ON       = "profile.always_on";
     }
 
     public static Comparator<Profile> COMPARATOR = new Comparator<Profile>()
@@ -36,18 +36,12 @@ public class Profile
     private final String mName;
     private final String mToken;
 
-    public Profile(
-            @NonNull
-            BluetoothDevice bluetoothDevice)
+    public Profile(@NonNull BluetoothDevice bluetoothDevice)
     {
         this(-1, bluetoothDevice.getName(), bluetoothDevice.getAddress());
     }
 
-    public Profile(int forcedOrder,
-                   @NonNull
-                   String name,
-                   @NonNull
-                   String token)
+    public Profile(int forcedOrder, @NonNull String name, @NonNull String token)
     {
         mForcedOrder = forcedOrder;
         mName = name;

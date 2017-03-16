@@ -1,15 +1,20 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
-
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class GooglePlayStoreNotificationParser
         extends AbstractNotificationParser
 {
-    public GooglePlayStoreNotificationParser(MainApplication application)
+    public GooglePlayStoreNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.android.vending");//, "Google Play Store");
+        super(callbacks);//, "Google Play Store");
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.android.vending";
     }
 
     @Override

@@ -1,15 +1,20 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
-
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class GoogleMessengerNotificationParser
         extends AbstractNotificationParser
 {
-    public GoogleMessengerNotificationParser(MainApplication application)
+    public GoogleMessengerNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.google.android.apps.messaging");//, "Google Messenger");
+        super(callbacks);//, "Google Messenger");
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.google.android.apps.messaging";
     }
 
     @Override

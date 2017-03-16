@@ -2,92 +2,113 @@ package com.swooby.alfred;
 
 import android.app.Application;
 import android.bluetooth.BluetoothDevice;
-import android.os.Handler;
-import android.service.notification.StatusBarNotification;
-import android.speech.SpeechRecognizer;
-import android.speech.tts.Voice;
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener;
-import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectedCallbacks;
+import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectionCallbacks;
 import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
 import com.smartfoo.android.core.logging.FooLog;
-import com.smartfoo.android.core.media.FooAudioUtils;
-import com.smartfoo.android.core.notification.FooNotificationListener;
-import com.smartfoo.android.core.notification.FooNotificationListener.FooNotificationListenerCallbacks;
-import com.smartfoo.android.core.platform.FooPlatformUtils;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener;
+import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener.OnWiredHeadsetConnectionCallbacks;
 import com.swooby.alfred.Profile.Tokens;
-import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
-import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
-import com.swooby.alfred.notification.parsers.DownloadManagerNotificationParser;
-import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
-import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
-import com.swooby.alfred.notification.parsers.GoogleHangoutsNotificationParser;
-import com.swooby.alfred.notification.parsers.GoogleNowNotificationParser;
-import com.swooby.alfred.notification.parsers.GooglePhotosNotificationParser;
-import com.swooby.alfred.notification.parsers.GooglePlayStoreNotificationParser;
-import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
-import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import com.swooby.alfred.TextToSpeechManager.TextToSpeechCallbacks;
+import com.swooby.alfred.notification.parsers.NotificationParserManager;
+import com.swooby.alfred.notification.parsers.NotificationParserManager.NotificationParserManagerCallbacks;
 
 public class MainApplication
         extends Application
 {
     private static final String TAG = FooLog.TAG(MainApplication.class);
 
+    /*
+    public interface MainApplicationListener
+    {
+        boolean onNotificationListenerAccessDisabled();
+    }
 
-    private final Map<String, BluetoothDevice> mConnectedBluetoothHeadsets;
+    private final FooListenerManager<MainApplicationListener> mListenerManager;
+    */
+
+    private final TextToSpeechManager       mTextToSpeechManager;
+    private final NotificationParserManager mNotificationParserManager;
+
+    private final OnBluetoothHeadsetConnectionCallbacks mBluetoothHeadsetConnectionCallbacks;
+    private final OnWiredHeadsetConnectionCallbacks     mWiredHeadsetConnectionCallbacks;
 
     private AppPreferences      mAppPreferences;
     private FooBluetoothManager mBluetoothManager;
-    private FooTextToSpeech     mTextToSpeech;
 
-    private final FooNotificationListenerCallbacks        mFooNotificationListenerCallbacks;
-    private final Map<String, AbstractNotificationParser> mNotificationParsers;
+    private FooBluetoothHeadsetConnectionListener mBluetoothHeadsetConnectionListener;
+    private FooWiredHeadsetConnectionListener     mWiredHeadsetConnectionListener;
 
-    private final OnBluetoothHeadsetConnectedCallbacks mBluetoothHeadsetConnectedCallbacks;
+    private boolean mIsHeadsetConnected;
+    private boolean mIsEnabled;
 
 
     public MainApplication()
     {
-        mConnectedBluetoothHeadsets = new LinkedHashMap<>();
+        //mListenerManager = new FooListenerManager<>();
 
-        mFooNotificationListenerCallbacks = new FooNotificationListenerCallbacks()
+        mTextToSpeechManager = new TextToSpeechManager(new TextToSpeechCallbacks()
         {
+            @NonNull
             @Override
-            public void onNotificationListenerBound()
+            public Context getContext()
             {
-                MainApplication.this.onNotificationListenerBound();
+                return MainApplication.this;
             }
 
             @Override
-            public void onNotificationListenerUnbound()
+            public String getVoiceName()
             {
-                MainApplication.this.onNotificationListenerUnbound();
+                return mAppPreferences.getVoiceName();
             }
 
             @Override
-            public void onNotificationPosted(StatusBarNotification sbn)
+            public void onSetVoiceName(String voiceName)
             {
-                MainApplication.this.onNotificationPosted(sbn);
+                mAppPreferences.setVoiceName(voiceName);
             }
 
             @Override
-            public void onNotificationRemoved(StatusBarNotification sbn)
+            public int getVoiceAudioStreamType()
             {
-                MainApplication.this.onNotificationRemoved(sbn);
+                return mAppPreferences.getVoiceAudioStreamType();
             }
-        };
 
-        mNotificationParsers = new HashMap<>();
+            @Override
+            public boolean isEnabled()
+            {
+                return MainApplication.this.isEnabled();
+            }
+        });
 
-        mBluetoothHeadsetConnectedCallbacks = new OnBluetoothHeadsetConnectedCallbacks()
+        mNotificationParserManager = new NotificationParserManager(new NotificationParserManagerCallbacks()
+        {
+            @NonNull
+            @Override
+            public Context getContext()
+            {
+                return MainApplication.this;
+            }
+
+            @Override
+            public boolean isEnabled()
+            {
+                return MainApplication.this.isEnabled();
+            }
+
+            @NonNull
+            @Override
+            public TextToSpeechManager getTextToSpeech()
+            {
+                return mTextToSpeechManager;
+            }
+        });
+
+        mBluetoothHeadsetConnectionCallbacks = new OnBluetoothHeadsetConnectionCallbacks()
         {
             @Override
             public void onBluetoothHeadsetConnected(BluetoothDevice bluetoothDevice)
@@ -99,6 +120,21 @@ public class MainApplication
             public void onBluetoothHeadsetDisconnected(BluetoothDevice bluetoothDevice)
             {
                 MainApplication.this.onBluetoothHeadsetDisconnected(bluetoothDevice);
+            }
+        };
+
+        mWiredHeadsetConnectionCallbacks = new OnWiredHeadsetConnectionCallbacks()
+        {
+            @Override
+            public void onWiredHeadsetConnected(String name, boolean hasMicrophone)
+            {
+                MainApplication.this.onWiredHeadsetConnected(name, hasMicrophone);
+            }
+
+            @Override
+            public void onWiredHeadsetDisconnected(String name, boolean hasMicrophone)
+            {
+                MainApplication.this.onWiredHeadsetDisconnected(name, hasMicrophone);
             }
         };
     }
@@ -113,133 +149,80 @@ public class MainApplication
         return mBluetoothManager;
     }
 
-    public FooTextToSpeech getTextToSpeech()
+    public TextToSpeechManager getTextToSpeechManager()
     {
-        return mTextToSpeech;
+        return mTextToSpeechManager;
     }
 
-    public void setVoice(
-            @NonNull
-            Voice voice)
+    private boolean isEnabled()
     {
-        mAppPreferences.setVoice(voice);
-        mTextToSpeech.setVoice(voice);
+        return mIsEnabled;
     }
 
-    public int getVoiceAudioStreamType()
+    private boolean updateEnabledState()
     {
-        return mTextToSpeech.getAudioStreamType();
-    }
+        FooLog.v(TAG, "updateEnabledState()");
 
-    public void setVoiceAudioStreamType(int audioStreamType)
-    {
-        mTextToSpeech.setAudioStreamType(audioStreamType);
-    }
-
-    public void speak(String text)
-    {
-        if (isSpeechEnabled())
-        {
-            mTextToSpeech.speak(text);
-        }
-    }
-
-    public void speak(String text, boolean clear)
-    {
-        if (isSpeechEnabled())
-        {
-            mTextToSpeech.speak(text, clear, null);
-        }
-    }
-
-    public void speak(String text, Runnable runAfter)
-    {
-        if (isSpeechEnabled())
-        {
-            mTextToSpeech.speak(text, runAfter);
-        }
-    }
-
-    public void speak(
-            @NonNull
-            FooTextToSpeechBuilder builder)
-    {
-        if (isSpeechEnabled())
-        {
-            mTextToSpeech.speak(builder);
-        }
-    }
-
-    public void speak(
-            @NonNull
-            FooTextToSpeechBuilder builder, boolean clear)
-    {
-        if (isSpeechEnabled())
-        {
-            mTextToSpeech.speak(builder, clear, null);
-        }
-    }
-
-    /*
-    public void speak(String text)
-    {
-        speak(false, false, text, null);
-    }
-
-    public void speak(String text, Runnable runAfter)
-    {
-        speak(false, false, text, runAfter);
-    }
-    */
-
-    public void speak(boolean force, boolean toast, String text)
-    {
-        speak(force, toast, text, null);
-    }
-
-    public void speak(boolean force, boolean toast, String text, Runnable runAfter)
-    {
-        if (force || isSpeechEnabled())
-        {
-            if (toast)
-            {
-                FooPlatformUtils.toastLong(this, text);
-            }
-
-            mTextToSpeech.speak(text, runAfter);
-        }
-    }
-
-    public void silence(int durationInMs)
-    {
-        silence(false, durationInMs);
-    }
-
-    public void silence(boolean force, int durationInMs)
-    {
-        if (force || isSpeechEnabled())
-        {
-            mTextToSpeech.silence(durationInMs);
-        }
-    }
-
-    private boolean isSpeechEnabled()
-    {
+        boolean isEnabled;
         String profileToken = mAppPreferences.getProfileToken();
         switch (profileToken)
         {
             case Tokens.DISABLED:
-                return false;
+                isEnabled = false;
+                break;
             case Tokens.ALWAYS_ON:
-                return true;
-            case Tokens.HEADPHONES:
-                synchronized (mConnectedBluetoothHeadsets)
-                {
-                    return mConnectedBluetoothHeadsets.size() > 0;
-                }
+                isEnabled = true;
+                break;
+            case Tokens.HEADPHONES_ONLY:
+                isEnabled = mIsHeadsetConnected;
+                break;
             default:
                 throw new IllegalArgumentException("unhandled profileToken=" + FooString.quote(profileToken));
         }
+
+        if (mIsEnabled != isEnabled)
+        {
+            mIsEnabled = isEnabled;
+
+            //FooNotification notification = new FooNotification();
+
+            /*
+            if (mIsNotificationListenerBound2 == null)
+            {
+                boolean isNotificationListenerBound = FooNotificationListener.isNotificationListenerBound();
+                if ()
+                {
+                    mIsEnabled = isEnabled;
+
+                    if (mIsEnabled)
+                    {
+                        onEnabled();
+                    }
+                    else
+                    {
+                        onDisabled();
+                    }
+                }
+                else
+                {
+                    String appName = getString(R.string.app_name);
+                    String text = getString(R.string.notification_access_is_disabled_please_enable, appName);
+                    speak(true, true, text);
+                }
+            }
+            */
+        }
+
+        return mIsEnabled;
+    }
+
+    private void onEnabled()
+    {
+        mTextToSpeechManager.speak("Alfred enabled");
+    }
+
+    private void onDisabled()
+    {
     }
 
     @Override
@@ -250,154 +233,119 @@ public class MainApplication
 
         mAppPreferences = new AppPreferences(this);
 
-        initializeTextToSpeech();
-        initializeNotificationListener();
+        mTextToSpeechManager.initialize();
+
+        mNotificationParserManager.initialize();
 
         mBluetoothManager = new FooBluetoothManager(this);
 
-        initializeBluetoothHeadsetConnectionListener();
+        initializeHeadsetConnectionListeners();
+
+        /*
+        if (!updateHeadsetState())
+        {
+            updateEnabledState();
+        }
+        */
+
+        /*
+        if (!isRecognitionAvailable())
+        {
+            // TODO:(pv) Better place for initialization and indication of failure...
+            //speak(true, true, "Speech recognition is not available for this device.");
+            //speak(true, true, "Goodbye.");
+            return;
+        }
+        */
+
+        //mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
         FooLog.i(TAG, "-onCreate()");
     }
 
-    private void initializeTextToSpeech()
+    private void initializeHeadsetConnectionListeners()
     {
-        String voiceName = mAppPreferences.getVoiceName();
-        FooLog.i(TAG, "initializeTextToSpeech: voiceName=" + FooString.quote(voiceName));
+        mBluetoothHeadsetConnectionListener = mBluetoothManager.getBluetoothHeadsetConnectionListener();
+        mBluetoothHeadsetConnectionListener.attach(mBluetoothHeadsetConnectionCallbacks);
 
-        int voiceAudioStreamType = mAppPreferences.getVoiceAudioStreamType();
-        FooLog.i(TAG, "initializeTextToSpeech: voiceAudioStreamType=" +
-                      FooAudioUtils.audioStreamTypeToString(voiceAudioStreamType));
-
-        mTextToSpeech = FooTextToSpeech.getInstance();
-        mTextToSpeech.setVoiceName(voiceName);
-        mTextToSpeech.setAudioStreamType(voiceAudioStreamType);
-        mTextToSpeech.start(this);
+        mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(this);
+        mWiredHeadsetConnectionListener.attach(mWiredHeadsetConnectionCallbacks);
     }
 
-    private void initializeNotificationListener()
-    {
-        addNotificationParser(new DownloadManagerNotificationParser(this));
-        addNotificationParser(new GoogleCameraNotificationParser(this));
-        addNotificationParser(new GoogleDialerNotificationParser(this));
-        addNotificationParser(new GoogleHangoutsNotificationParser(this));
-        addNotificationParser(new GoogleNowNotificationParser(this));
-        addNotificationParser(new GooglePhotosNotificationParser(this));
-        addNotificationParser(new GooglePlayStoreNotificationParser(this));
-        addNotificationParser(new PandoraNotificationParser(this));
-        addNotificationParser(new SpotifyNotificationParser(this));
-
-        FooNotificationListener.addListener(mFooNotificationListenerCallbacks);
-        //
-        // HACK required to detect non-binding when re-installing app even if notification access is enabled:
-        //  http://stackoverflow.com/a/37081128/252308
-        //
-        new Handler().postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                if (!FooNotificationListener.isNotificationListenerBound())
-                {
-                    onNotificationListenerUnbound();
-                }
-            }
-        }, 250);
-    }
-
-    private void addNotificationParser(AbstractNotificationParser notificationParser)
-    {
-        mNotificationParsers.put(notificationParser.getPackageName(), notificationParser);
-    }
-
-    private void initializeBluetoothHeadsetConnectionListener()
-    {
-        FooBluetoothHeadsetConnectionListener bluetoothHeadsetConnectionListener = mBluetoothManager.getBluetoothHeadsetConnectionListener();
-        bluetoothHeadsetConnectionListener.attach(mBluetoothHeadsetConnectedCallbacks);
-    }
-
-    private void onNotificationListenerBound()
-    {
-    }
-
-    private void onNotificationListenerUnbound()
-    {
-        String appName = getString(R.string.app_name);
-        String text = getString(R.string.notification_access_is_disabled_please_enable, appName);
-        speak(text);
-    }
-
-    private void onNotificationPosted(StatusBarNotification sbn)
-    {
-        String packageName = AbstractNotificationParser.getPackageName(sbn);
-        FooLog.v(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
-
-        NotificationParseResult result;
-
-        AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
-        if (notificationParser != null)
-        {
-            result = notificationParser.onNotificationPosted(sbn);
-        }
-        else
-        {
-            result = AbstractNotificationParser.defaultOnNotificationPosted(true, this, sbn);
-        }
-
-        switch (result)
-        {
-            case DefaultWithTickerText:
-            case DefaultWithoutTickerText:
-                break;
-            case Unparsable:
-                FooLog.w(TAG, "onNotificationPosted: Unparsable StatusBarNotification");
-                break;
-            case ParsableHandled:
-            case ParsableIgnored:
-                break;
-        }
-    }
-
-    private void onNotificationRemoved(StatusBarNotification sbn)
-    {
-        String packageName = sbn.getPackageName();
-        FooLog.d(TAG, "onNotificationRemoved: packageName=" + FooString.quote(packageName));
-
-        AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
-        if (notificationParser != null)
-        {
-            notificationParser.onNotificationRemoved(sbn);
-        }
-    }
-
+    /*
     private boolean isProfileTokenHeadphones()
     {
-        return Tokens.HEADPHONES.equals(mAppPreferences.getProfileToken());
+        return Tokens.HEADPHONES_ONLY.equals(mAppPreferences.getProfileToken());
+    }
+    */
+
+    /**
+     * @return true if the state changed and updateEnabledState() was called, otherwise false
+     */
+    private boolean updateHeadsetState()
+    {
+        FooLog.v(TAG, "updateHeadsetState()");
+
+        boolean isHeadsetConnected = mWiredHeadsetConnectionListener.isWiredHeadsetConnected() ||
+                                     mBluetoothHeadsetConnectionListener.isBluetoothHeadsetConnected();
+        FooLog.i(TAG, "updateHeadsetState: isHeadsetConnected=" + isHeadsetConnected);
+        FooLog.i(TAG, "updateHeadsetState: mIsHeadsetConnected=" + mIsHeadsetConnected);
+
+        if (mIsHeadsetConnected != isHeadsetConnected)
+        {
+            mIsHeadsetConnected = isHeadsetConnected;
+
+            updateEnabledState();
+
+            return true;
+        }
+
+        return false;
     }
 
     private void onBluetoothHeadsetConnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.i(TAG, "onBluetoothHeadsetConnected(bluetoothDevice=" + bluetoothDevice + ')');
-        synchronized (mConnectedBluetoothHeadsets)
-        {
-            mConnectedBluetoothHeadsets.put(bluetoothDevice.getAddress(), bluetoothDevice);
-            if (mConnectedBluetoothHeadsets.size() == 1 && isProfileTokenHeadphones())
-            {
-                speak("Bluetooth Headset Connected");
-                if (FooNotificationListener.isNotificationListenerBound())
-                {
-                    onNotificationListenerBound();
-                }
-            }
-        }
+        updateHeadsetState();
+        String name = bluetoothDevice.getName();
+        speakHeadsetConnectionState(R.string.bluetooth_headset_X_connected, name);
     }
 
     private void onBluetoothHeadsetDisconnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.i(TAG, "onBluetoothHeadsetDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
-        synchronized (mConnectedBluetoothHeadsets)
-        {
-            mConnectedBluetoothHeadsets.remove(bluetoothDevice.getAddress());
-        }
+        updateHeadsetState();
     }
+
+    private void onWiredHeadsetConnected(String name, boolean hasMicrophone)
+    {
+        FooLog.i(TAG, "onWiredHeadsetConnected(name=" + FooString.quote(name) +
+                      ", hasMicrophone=" + hasMicrophone + ')');
+        updateHeadsetState();
+        speakHeadsetConnectionState(R.string.wired_headset_X_connected, name);
+    }
+
+    private void onWiredHeadsetDisconnected(String name, boolean hasMicrophone)
+    {
+        FooLog.i(TAG, "onWiredHeadsetDisconnected(name=" + FooString.quote(name) +
+                      ", hasMicrophone=" + hasMicrophone + ')');
+        updateHeadsetState();
+    }
+
+    private void speakHeadsetConnectionState(int resId, String headsetName)
+    {
+        if (headsetName == null)
+        {
+            headsetName = "";
+        }
+        String speech = getString(resId, headsetName);
+        mTextToSpeechManager.speak(speech);
+    }
+
+    /*
+    public boolean isRecognitionAvailable()
+    {
+        return SpeechRecognizer.isRecognitionAvailable(this);
+    }
+    */
 }

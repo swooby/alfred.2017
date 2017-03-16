@@ -1,15 +1,20 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
-
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class DownloadManagerNotificationParser
         extends AbstractNotificationParser
 {
-    public DownloadManagerNotificationParser(MainApplication application)
+    public DownloadManagerNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.android.providers.downloads");//, "Google Play Store");
+        super(callbacks);//, "Google Play Store");
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.android.providers.downloads";
     }
 
     @Override

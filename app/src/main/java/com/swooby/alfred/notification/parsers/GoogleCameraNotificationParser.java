@@ -1,15 +1,26 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
-
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class GoogleCameraNotificationParser
         extends AbstractNotificationParser
 {
-    public GoogleCameraNotificationParser(MainApplication application)
+    public GoogleCameraNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.google.android.GoogleCamera", "Google Camera");
+        super(callbacks);
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.google.android.GoogleCamera";
+    }
+
+    @Override
+    public String getPackageAppSpokenName()
+    {
+        return "Google Camera";//getString(...);
     }
 
     @Override

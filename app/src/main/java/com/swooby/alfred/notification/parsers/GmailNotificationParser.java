@@ -1,15 +1,20 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.service.notification.StatusBarNotification;
-
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class GmailNotificationParser
         extends AbstractNotificationParser
 {
-    public GmailNotificationParser(MainApplication application)
+    public GmailNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.google.android.gm");//, "G mail");
+        super(callbacks);//, "G mail");
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.google.android.gm";
     }
 
     @Override

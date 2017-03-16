@@ -1,7 +1,9 @@
 package com.swooby.alfred.notification.parsers;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RemoteViews;
@@ -12,7 +14,6 @@ import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
-import com.swooby.alfred.MainApplication;
 
 public class SpotifyNotificationParser
         extends AbstractMediaPlayerNotificiationParser
@@ -24,9 +25,15 @@ public class SpotifyNotificationParser
     private String  mLastTitle;
     private String  mLastAlbum;
 
-    public SpotifyNotificationParser(MainApplication application)
+    public SpotifyNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.spotify.music");//, application.getString(R.string.spotify_package_app_spoken_name));
+        super(callbacks);//, application.getString(R.string.spotify_package_app_spoken_name));
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.spotify.music";
     }
 
     @Override
@@ -55,7 +62,9 @@ public class SpotifyNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        View remoteView = inflateRemoteView(mApplication, bigContentView);
+        Context context = getContext();
+
+        View remoteView = inflateRemoteView(context, bigContentView);
         if (remoteView == null)
         {
             FooLog.w(TAG, "onNotificationPosted: remoteView == null; Unparsable");
@@ -137,15 +146,15 @@ public class SpotifyNotificationParser
             // TODO:(pv) Make this a user option...
             if (true)
             {
-                mute(true, "attenuating " + mPackageAppSpokenName + " commercial");
+                mute(true, "attenuating " + getPackageAppSpokenName() + " commercial");
             }
 
             return NotificationParseResult.ParsableIgnored;
         }
 
-        textArtist = unknownIfNullOrEmpty(mApplication, textArtist);
-        textTitle = unknownIfNullOrEmpty(mApplication, textTitle);
-        textAlbum = unknownIfNullOrEmpty(mApplication, textAlbum);
+        textArtist = unknownIfNullOrEmpty(context, textArtist);
+        textTitle = unknownIfNullOrEmpty(context, textTitle);
+        textAlbum = unknownIfNullOrEmpty(context, textAlbum);
 
         if (isPlaying == mLastIsPlaying &&
             textArtist.equals(mLastArtist) &&
@@ -166,7 +175,7 @@ public class SpotifyNotificationParser
 
         if (isPlaying)
         {
-            builder.appendSpeech(mPackageAppSpokenName + " playing");
+            builder.appendSpeech(getPackageAppSpokenName() + " playing");
             builder.appendSilence(500);
             builder.appendSpeech("artist " + textArtist);
             builder.appendSilence(500);
@@ -176,10 +185,10 @@ public class SpotifyNotificationParser
         }
         else
         {
-            builder.appendSpeech(mPackageAppSpokenName + " paused");
+            builder.appendSpeech(getPackageAppSpokenName() + " paused");
         }
 
-        mApplication.speak(builder);
+        getTextToSpeech().speak(builder);
 
         return NotificationParseResult.ParsableHandled;
     }

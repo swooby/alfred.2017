@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -16,7 +17,6 @@ import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
-import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 
 import java.util.Collections;
@@ -43,12 +43,19 @@ public class PandoraNotificationParser
     protected String  mLastTitle;
     protected String  mLastStation;
 
-    public PandoraNotificationParser(MainApplication application)
+    public PandoraNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.pandora.android");//, application.getString(R.string.pandora_package_app_name));
+        super(callbacks);//, application.getString(R.string.pandora_package_app_name));
 
-        mAdvertisementTitle = application.getString(R.string.pandora_advertisement_title);
-        mAdvertisementArtist = application.getString(R.string.pandora_advertisement_artist);
+        Context context = getContext();
+        mAdvertisementTitle = context.getString(R.string.pandora_advertisement_title);
+        mAdvertisementArtist = context.getString(R.string.pandora_advertisement_artist);
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.pandora.android";
     }
 
     @Override
@@ -89,7 +96,9 @@ public class PandoraNotificationParser
             17  2131821308 (0x7F1102FC) ?           setVisibility       8 (GONE)
         */
 
-        View remoteView = inflateRemoteView(mApplication, bigContentView);
+        Context context = getContext();
+
+        View remoteView = inflateRemoteView(context, bigContentView);
         if (remoteView == null)
         {
             FooLog.w(TAG, "onNotificationPosted: remoteView == null; Unparsable");
@@ -334,7 +343,7 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: textViewTitle == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
-        String textTitle = unknownIfNullOrEmpty(mApplication, textViewTitle.getText());
+        String textTitle = unknownIfNullOrEmpty(context, textViewTitle.getText());
         FooLog.v(TAG, "onNotificationPosted: textTitle=" + FooString.quote(textTitle));
 
         TextView textViewArtist = (TextView) remoteView.findViewById(idArtist);
@@ -343,7 +352,7 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: textViewArtist == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
-        String textArtist = unknownIfNullOrEmpty(mApplication, textViewArtist.getText());
+        String textArtist = unknownIfNullOrEmpty(context, textViewArtist.getText());
         FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
 
         TextView textViewStation = (TextView) remoteView.findViewById(idStation);
@@ -352,7 +361,7 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: textViewStation == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
-        String textStation = unknownIfNullOrEmpty(mApplication, textViewStation.getText());
+        String textStation = unknownIfNullOrEmpty(context, textViewStation.getText());
         FooLog.v(TAG, "onNotificationPosted: textStation=" + FooString.quote(textStation));
 
         boolean isCommercial = mAdvertisementTitle.equalsIgnoreCase(textTitle) &&
@@ -365,7 +374,7 @@ public class PandoraNotificationParser
             // TODO:(pv) Make this a user option...
             if (true)
             {
-                mute(true, "attenuating " + mPackageAppSpokenName + " commercial");
+                mute(true, "attenuating " + getPackageAppSpokenName() + " commercial");
             }
 
             FooLog.w(TAG, "onNotificationPosted: isCommercial == true; ParsableIgnored");
@@ -400,7 +409,7 @@ public class PandoraNotificationParser
         {
             FooLog.w(TAG, "onNotificationPosted: playing");
 
-            builder.appendSpeech(mPackageAppSpokenName + " playing")
+            builder.appendSpeech(getPackageAppSpokenName() + " playing")
                     .appendSilence(500)
                     .appendSpeech("artist " + textArtist)
                     .appendSilence(500)
@@ -412,10 +421,10 @@ public class PandoraNotificationParser
         {
             FooLog.w(TAG, "onNotificationPosted: paused");
 
-            builder.appendSpeech(mPackageAppSpokenName + " paused");
+            builder.appendSpeech(getPackageAppSpokenName() + " paused");
         }
 
-        mApplication.speak(builder);
+        getTextToSpeech().speak(builder);
 
         return NotificationParseResult.ParsableHandled;
     }

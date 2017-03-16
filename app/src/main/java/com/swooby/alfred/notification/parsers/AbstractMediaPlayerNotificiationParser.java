@@ -4,7 +4,7 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.support.annotation.NonNull;
 
-import com.swooby.alfred.MainApplication;
+import com.swooby.alfred.TextToSpeechManager;
 
 public abstract class AbstractMediaPlayerNotificiationParser
         extends AbstractNotificationParser
@@ -18,15 +18,11 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
     protected int mLastStreamMusicVolume = -1;
 
-    protected AbstractMediaPlayerNotificiationParser(
-            @NonNull
-            MainApplication application,
-            @NonNull
-            String packageName)
+    protected AbstractMediaPlayerNotificiationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, packageName);
+        super(callbacks);
 
-        mAudioManager = (AudioManager) application.getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
     }
 
     /*
@@ -56,7 +52,9 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 return;
             }
 
-            int voiceAudioStreamType = mApplication.getVoiceAudioStreamType();
+            TextToSpeechManager textToSpeechManager = getTextToSpeech();
+
+            int voiceAudioStreamType = textToSpeechManager.getVoiceAudioStreamType();
 
             mLastStreamMusicVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
 
@@ -71,10 +69,10 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
             if (speech == null)
             {
-                speech = mPackageAppSpokenName + " attenuating";
+                speech = getPackageAppSpokenName() + " attenuating";
             }
 
-            mApplication.speak(speech, runAfter);
+            textToSpeechManager.speak(speech, runAfter);
 
             if (voiceAudioStreamType != musicAudioStreamType)
             {

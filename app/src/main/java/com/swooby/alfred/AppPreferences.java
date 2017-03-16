@@ -2,14 +2,15 @@ package com.swooby.alfred;
 
 import android.content.Context;
 import android.media.AudioManager;
-import android.speech.tts.Voice;
 
+import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.content.FooPreferences;
+import com.swooby.alfred.Profile.Tokens;
 
 public class AppPreferences
         extends FooPreferences
 {
-    public static final String DEFAULT_VOICE_NAME = "en-GB-locale";
+    public static final String DEFAULT_VOICE_NAME = "en-GB-language";
 
     private static final String KEY_USER_VOICE_NAME              = "pref_user_voice_name";
     private static final String KEY_USER_VOICE_AUDIO_STREAM_TYPE = "pref_user_voice_audio_stream_type";
@@ -26,9 +27,9 @@ public class AppPreferences
         return getString(FILE_NAME_USER, KEY_USER_VOICE_NAME, DEFAULT_VOICE_NAME);
     }
 
-    public void setVoice(Voice value)
+    public void setVoiceName(String value)
     {
-        setString(FILE_NAME_USER, KEY_USER_VOICE_NAME, value != null ? value.getName() : DEFAULT_VOICE_NAME);
+        setString(FILE_NAME_USER, KEY_USER_VOICE_NAME, !FooString.isNullOrEmpty(value) ? value : DEFAULT_VOICE_NAME);
     }
 
     public int getVoiceAudioStreamType()
@@ -43,7 +44,7 @@ public class AppPreferences
 
     public String getProfileToken()
     {
-        return getString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, null);
+        return getString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, Tokens.HEADPHONES_ONLY);
     }
 
     public void setProfileToken(String value)

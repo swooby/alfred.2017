@@ -1,12 +1,14 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.app.Notification;
+import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
+import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
-import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
 
 import java.util.LinkedList;
@@ -52,11 +54,17 @@ public class GoogleHangoutsNotificationParser
 
     private final List<TextMessage> mTextMessages;
 
-    public GoogleHangoutsNotificationParser(MainApplication application)
+    public GoogleHangoutsNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.google.android.talk");//, application.getString(R.string.hangouts_package_app_spoken_name));
+        super(callbacks);//, application.getString(R.string.hangouts_package_app_spoken_name));
 
         mTextMessages = new LinkedList<>();
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.google.android.talk";
     }
 
     private TextMessage addTextMessage(String from, String message)
@@ -131,17 +139,20 @@ public class GoogleHangoutsNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        String title = mResources.getQuantityString(R.plurals.X_new_messages, count, count);
+        Context context = getContext();
+        Resources resources = context.getResources();
+        String title = resources.getQuantityString(R.plurals.X_new_messages, count, count);
         FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(title);
         for (TextMessage textMessage : textMessages)
         {
             builder.appendSilence(750);
-            builder.appendSpeech(mApplication.getString(R.string.X_says, textMessage.mFrom));
+            builder.appendSpeech(context.getString(R.string.X_says, textMessage.mFrom));
             //builder.appendSpeech("to " + to);
             builder.appendSilence(500);
             builder.appendSpeech(textMessage.mMessage);
         }
-        mApplication.speak(builder);
+
+        getTextToSpeech().speak(builder);
 
         return NotificationParseResult.ParsableHandled;
     }

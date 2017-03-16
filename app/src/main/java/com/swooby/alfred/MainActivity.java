@@ -36,7 +36,7 @@ import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStrea
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeech.FooTextToSpeechCallbacks;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 import com.swooby.alfred.Profile.Tokens;
 
@@ -53,6 +53,7 @@ public class MainActivity
     private static final int REQUEST_ACTION_CHECK_TTS_DATA = 100;
 
     private MainApplication     mMainApplication;
+    private TextToSpeechManager mTextToSpeechManager;
     private AppPreferences      mAppPreferences;
     private FooBluetoothManager mBluetoothManager;
 
@@ -73,19 +74,20 @@ public class MainActivity
         super.onCreate(savedInstanceState);
 
         mMainApplication = (MainApplication) getApplication();
+        mTextToSpeechManager = mMainApplication.getTextToSpeechManager();
         mAppPreferences = mMainApplication.getAppPreferences();
         mBluetoothManager = mMainApplication.getBluetoothManager();
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
-        int voiceAudioStreamType = mMainApplication.getVoiceAudioStreamType();
+        int voiceAudioStreamType = mTextToSpeechManager.getVoiceAudioStreamType();
         setVolumeControlStream(voiceAudioStreamType);
 
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
 
-        String action = intent.getAction();
-        FooLog.i(TAG, "onCreate: action=" + FooString.quote(action));
+        String intentAction = intent.getAction();
+        FooLog.i(TAG, "onCreate: intentAction=" + FooString.quote(intentAction));
 
         setContentView(R.layout.activity_main);
 
@@ -157,7 +159,7 @@ public class MainActivity
                 @Override
                 public void onClick(View v)
                 {
-                    mMainApplication.speak("Testing testing 1 2 3");
+                    mTextToSpeechManager.speak("Testing testing 1 2 3");
                 }
             });
         }
@@ -218,7 +220,22 @@ public class MainActivity
         {
             verifyRequirements();
 
-            FooTextToSpeechHelper.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
+            if (mTextToSpeechManager.isInitialized())
+            {
+                FooTextToSpeechHelper.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
+            }
+            else
+            {
+                mTextToSpeechManager.attach(new FooTextToSpeechCallbacks()
+                {
+                    @Override
+                    public void onInitialized()
+                    {
+                        mTextToSpeechManager.detach(this);
+                        FooTextToSpeechHelper.requestTextToSpeechData(MainActivity.this, REQUEST_ACTION_CHECK_TTS_DATA);
+                    }
+                });
+            }
         }
     }
 
@@ -416,8 +433,7 @@ public class MainActivity
 
     private void onVoiceAudioStreamTypeChanged(int audioStreamType)
     {
-        mAppPreferences.setVoiceAudioStreamType(audioStreamType);
-        mMainApplication.setVoiceAudioStreamType(audioStreamType);
+        mTextToSpeechManager.setVoiceAudioStreamType(audioStreamType);
 
         int percent = FooAudioUtils.getVolumePercent(mAudioManager, audioStreamType);
         onVoiceAudioStreamVolumeChanged(percent, true, false);
@@ -434,7 +450,7 @@ public class MainActivity
 
         if (updateStreamVolume)
         {
-            int voiceAudioStreamType = mMainApplication.getVoiceAudioStreamType();
+            int voiceAudioStreamType = mTextToSpeechManager.getVoiceAudioStreamType();
             int volume = FooAudioUtils.getVolumeAbsoluteFromPercent(mAudioManager, voiceAudioStreamType, percent);
             mAudioManager.setStreamVolume(voiceAudioStreamType, volume, 0);
         }
@@ -477,7 +493,7 @@ public class MainActivity
 
         profiles.add(profileCreate(0, R.string.profile_disabled, Tokens.DISABLED));
         profiles.add(profileCreate(1, R.string.profile_always_on, Tokens.ALWAYS_ON));
-        profiles.add(profileCreate(2, R.string.profile_headphones, Tokens.HEADPHONES));
+        profiles.add(profileCreate(2, R.string.profile_headphones, Tokens.HEADPHONES_ONLY));
 
         return profiles;
     }
@@ -514,9 +530,7 @@ public class MainActivity
         private final Voice  mVoice;
         private final String mDisplayName;
 
-        public VoiceWrapper(
-                @NonNull
-                        Voice voice)
+        public VoiceWrapper(@NonNull Voice voice)
         {
             mVoice = voice;
             mDisplayName = voice.getName().toLowerCase();
@@ -533,14 +547,19 @@ public class MainActivity
             return mDisplayName;
         }
 
-        public boolean equals(Voice another)
+        public boolean equals(VoiceWrapper o)
         {
-            return toString().equalsIgnoreCase(another.getName());
+            return compareTo(o) == 0;
         }
 
-        public boolean equals(VoiceWrapper another)
+        public boolean equals(Voice o)
         {
-            return compareTo(another) == 0;
+            return compareTo(o) == 0;
+        }
+
+        public boolean equals(String o)
+        {
+            return compareTo(o) == 0;
         }
 
         @Override
@@ -556,15 +575,31 @@ public class MainActivity
                 return equals((Voice) o);
             }
 
+            if (o instanceof String)
+            {
+                return equals((String) o);
+            }
+
             return super.equals(o);
         }
 
         @Override
-        public int compareTo(
-                @NonNull
-                        VoiceWrapper another)
+        public int compareTo(@NonNull VoiceWrapper other)
         {
-            return toString().compareTo(another.toString());
+            return compareTo(other.mDisplayName);
+        }
+
+        public int compareTo(@NonNull Voice other)
+        {
+            return compareTo(other.getName());
+        }
+
+        public int compareTo(@NonNull String other)
+        {
+            //noinspection UnnecessaryLocalVariable
+            int result = mDisplayName.compareTo(other.toLowerCase());
+            //FooLog.e(TAG, FooString.quote(mDisplayName) + ".compareTo(" + FooString.quote(other) + ") == " + result);
+            return result;
         }
     }
 
@@ -585,10 +620,8 @@ public class MainActivity
                         // We're initialize; start populating the UI
                         //
 
-                        FooTextToSpeech textToSpeech = mMainApplication.getTextToSpeech();
-
                         ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
-                        Set<Voice> voices = textToSpeech.getVoices();
+                        Set<Voice> voices = mTextToSpeechManager.getVoices();
                         if (voices != null)
                         {
                             for (Voice voice : voices)
@@ -606,12 +639,12 @@ public class MainActivity
                         }
                         Collections.sort(availableVoices);
 
-                        Voice currentVoice = textToSpeech.getVoice();
+                        String currentVoiceName = mTextToSpeechManager.getVoiceName();
                         int currentVoiceIndex = 0;
                         for (int i = 0; i < availableVoices.size(); i++)
                         {
                             VoiceWrapper voiceWrapper = availableVoices.get(i);
-                            if (voiceWrapper.equals(currentVoice))
+                            if (voiceWrapper.equals(currentVoiceName))
                             {
                                 currentVoiceIndex = i;
                                 break;
@@ -629,7 +662,7 @@ public class MainActivity
                                 VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
                                 Voice voice = voiceWrapper.getVoice();
 
-                                mMainApplication.setVoice(voice);
+                                mTextToSpeechManager.setVoice(voice);
 
                                 //mMainApplication.speak("Voice Initialized");
                             }

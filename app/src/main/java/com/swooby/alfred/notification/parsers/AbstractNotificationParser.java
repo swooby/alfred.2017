@@ -22,13 +22,15 @@ import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
+import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
-import com.swooby.alfred.MainApplication;
 import com.swooby.alfred.R;
+import com.swooby.alfred.TextToSpeechManager;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -138,9 +140,9 @@ public abstract class AbstractNotificationParser
 
     public static int getIdOfChildWithName(
             @NonNull
-            View parent,
+                    View parent,
             @NonNull
-            String childName)
+                    String childName)
     {
         //FooLog.e(TAG, "getIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
 
@@ -157,11 +159,11 @@ public abstract class AbstractNotificationParser
 
     public static int getIdentifier(
             @NonNull
-            Context context,
+                    Context context,
             @NonNull
-            ResourceType resourceType,
+                    ResourceType resourceType,
             @NonNull
-            String name)
+                    String name)
     {
         Resources resources = context.getResources();
         String packageName = context.getPackageName();
@@ -170,7 +172,7 @@ public abstract class AbstractNotificationParser
 
     public static int getImageResource(
             @NonNull
-            ImageView imageView)
+                    ImageView imageView)
     {
         //noinspection TryWithIdenticalCatches
         try
@@ -193,7 +195,7 @@ public abstract class AbstractNotificationParser
 
     public static BitmapDrawable getImageBitmap(
             @NonNull
-            ImageView imageView)
+                    ImageView imageView)
     {
         //noinspection TryWithIdenticalCatches
         try
@@ -644,7 +646,7 @@ public abstract class AbstractNotificationParser
         @Override
         public int compareTo(
                 @NonNull
-                KeyValue another)
+                        KeyValue another)
         {
             return Integer.compare(mViewId, another.mViewId);
         }
@@ -858,46 +860,46 @@ public abstract class AbstractNotificationParser
         return value;
     }
 
+    /**
+     * @param context
+     * @param sbn
+     * @param textToSpeechManager set to null suppress textToSpeech (helps when debugging parsing)
+     * @return NotificationParseResult
+     */
     public static NotificationParseResult defaultOnNotificationPosted(
-            boolean speak,
-            MainApplication mainApplication,
-            StatusBarNotification sbn)
+            Context context,
+            StatusBarNotification sbn,
+            TextToSpeechManager textToSpeechManager)
     {
-        return defaultOnNotificationPosted(speak, mainApplication, sbn, null);
+        return defaultOnNotificationPosted(context, sbn, textToSpeechManager, null);
     }
 
+    /**
+     * @param context
+     * @param sbn
+     * @param textToSpeechManager  set to null suppress textToSpeech (helps when debugging parsing)
+     * @param packageAppSpokenName
+     * @return NotificationParseResult
+     */
     public static NotificationParseResult defaultOnNotificationPosted(
-            boolean speak,
-            MainApplication mainApplication,
+            Context context,
             StatusBarNotification sbn,
+            TextToSpeechManager textToSpeechManager,
             String packageAppSpokenName)
     {
-        if (mainApplication == null)
-        {
-            throw new IllegalArgumentException("mainApplication must not be null");
-        }
-
-        if (sbn == null)
-        {
-            throw new IllegalArgumentException("sbn must not be null");
-        }
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+        FooRun.throwIllegalArgumentExceptionIfNull(sbn, "sbn");
 
         String packageName = getPackageName(sbn);
         FooLog.v(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
-        if (FooString.isNullOrEmpty(packageName))
-        {
-            throw new IllegalStateException("sbn.getPackageName() returned null");
-        }
+        FooRun.throwIllegalArgumentExceptionNullOrEmpty(packageName, "packageName");
 
         if (FooString.isNullOrEmpty(packageAppSpokenName))
         {
-            packageAppSpokenName = FooPlatformUtils.getApplicationName(mainApplication, packageName);
+            packageAppSpokenName = FooPlatformUtils.getApplicationName(context, packageName);
         }
         FooLog.v(TAG, "onNotificationPosted: packageAppSpokenName=" + FooString.quote(packageAppSpokenName));
-        if (FooString.isNullOrEmpty(packageAppSpokenName))
-        {
-            throw new IllegalStateException("FooPlatformUtils.getApplicationName(...) returned null");
-        }
+        FooRun.throwIllegalArgumentExceptionNullOrEmpty(packageAppSpokenName, "packageAppSpokenName");
 
         //String groupKey = sbn.getGroupKey();
         //String key = sbn.getKey();
@@ -949,7 +951,7 @@ public abstract class AbstractNotificationParser
 
         FooLog.v(TAG, "onNotificationPosted: ---- bigContentView ----");
         RemoteViews bigContentView = notification.bigContentView;
-        View inflatedBigContentView = inflateRemoteView(mainApplication, bigContentView);
+        View inflatedBigContentView = inflateRemoteView(context, bigContentView);
         walkView(inflatedBigContentView, null, walkViewCallbacks);
         //View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
         //Set<Integer> bigContentViewIds = new LinkedHashSet<>();
@@ -966,7 +968,7 @@ public abstract class AbstractNotificationParser
 
         FooLog.v(TAG, "onNotificationPosted: ---- contentView ----");
         RemoteViews contentView = notification.contentView;
-        View inflatedContentView = inflateRemoteView(mainApplication, contentView);
+        View inflatedContentView = inflateRemoteView(context, contentView);
         walkView(inflatedContentView, null, bigContentView != null ? null : walkViewCallbacks);
         //View mockContentView = mockRemoteView(mainApplication, contentView);
         //Set<Integer> contentViewIds = new LinkedHashSet<>();
@@ -987,7 +989,7 @@ public abstract class AbstractNotificationParser
 
         //String category = notification.category;
 
-        if (!speak)
+        if (textToSpeechManager == null)
         {
             return NotificationParseResult.ParsableIgnored;
         }
@@ -998,7 +1000,7 @@ public abstract class AbstractNotificationParser
                     .appendSpeech(tickerText.toString());
         }
 
-        mainApplication.speak(builder);
+        textToSpeechManager.speak(builder);
 
         return NotificationParseResult.DefaultWithTickerText;
     }
@@ -1012,47 +1014,37 @@ public abstract class AbstractNotificationParser
         ParsableHandled,
     }
 
-    protected final MainApplication mApplication;
-    protected final Resources       mResources;
-    protected final String          mPackageName;
-    protected final String          mPackageAppSpokenName;
-
-    protected AbstractNotificationParser(
-            MainApplication application,
-            String packageName)
+    public interface NotificationParserCallbacks
     {
-        this(application, packageName, FooPlatformUtils.getApplicationName(application, packageName));
+        Context getContext();
+
+        TextToSpeechManager getTextToSpeech();
     }
 
-    protected AbstractNotificationParser(
-            MainApplication application,
-            String packageName,
-            String packageAppSpokenName)
+    protected final NotificationParserCallbacks mCallbacks;
+
+    protected AbstractNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        if (application == null)
-        {
-            throw new IllegalArgumentException("application must not be null");
-        }
-
-        if (FooString.isNullOrEmpty(packageName))
-        {
-            throw new IllegalArgumentException("packageName must not be null/empty");
-        }
-
-        if (FooString.isNullOrEmpty(packageAppSpokenName))
-        {
-            throw new IllegalArgumentException("packageAppSpokenName must not be null/empty");
-        }
-
-        mApplication = application;
-        mResources = application.getResources();
-        mPackageName = packageName;
-        mPackageAppSpokenName = packageAppSpokenName;
+        FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
+        mCallbacks = callbacks;
     }
 
-    public String getPackageName()
+    @NonNullNonEmpty
+    public abstract String getPackageName();
+
+    public String getPackageAppSpokenName()
     {
-        return mPackageName;
+        return FooPlatformUtils.getApplicationName(getContext(), getPackageName());
+    }
+
+    protected Context getContext()
+    {
+        return mCallbacks.getContext();
+    }
+
+    protected TextToSpeechManager getTextToSpeech()
+    {
+        return mCallbacks.getTextToSpeech();
     }
 
     protected boolean getSpeakDefaultNotification()
@@ -1062,7 +1054,10 @@ public abstract class AbstractNotificationParser
 
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        return defaultOnNotificationPosted(getSpeakDefaultNotification(), mApplication, sbn, mPackageAppSpokenName);
+        return defaultOnNotificationPosted(getContext(),
+                sbn,
+                getSpeakDefaultNotification() ? getTextToSpeech() : null,
+                getPackageAppSpokenName());
     }
 
     public void onNotificationRemoved(StatusBarNotification sbn)

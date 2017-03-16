@@ -1,13 +1,25 @@
 package com.swooby.alfred.notification.parsers;
 
-import com.swooby.alfred.MainApplication;
+import android.support.annotation.NonNull;
 
 public class GoogleNowNotificationParser
         extends AbstractNotificationParser
 {
-    public GoogleNowNotificationParser(MainApplication application)
+    public GoogleNowNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(application, "com.google.android.googlequicksearchbox", "Google Now");
+        super(callbacks);
+    }
+
+    @Override
+    public String getPackageName()
+    {
+        return "com.google.android.googlequicksearchbox";
+    }
+
+    @Override
+    public String getPackageAppSpokenName()
+    {
+        return "Google Now";//getString(...);
     }
 
     @Override
