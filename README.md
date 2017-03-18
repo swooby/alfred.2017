@@ -1,3 +1,8 @@
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://raw.githubusercontent.com/swooby/alfred/m1/LICENSE)
+[![Stories in Ready](https://badge.waffle.io/swooby/alfred.svg?label=ready&title=Ready)](http://waffle.io/swooby/alfred)
+[![Build Status](https://travis-ci.org/swooby/alfred.svg?branch=master)](https://travis-ci.org/swooby/alfred)
+[![codecov](https://codecov.io/gh/swooby/alfred/branch/m1/graph/badge.svg)](https://codecov.io/gh/swooby/alfred)
+
 # Alfred: Personal Assistant [for Android]
 
 (aka: "If Mark Zuckerberg can attempt to do it, then why can't I?")
