@@ -193,7 +193,7 @@
                     />
 
                 <Spinner
-                    android:id="@+id/spinnerVoices"
+                    android:id="@+id/spinnerTextToSpeechVoices"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -201,7 +201,7 @@
 
                 <!--
                 <ImageButton
-                    android:id="@+id/buttonVoicesFilter"
+                    android:id="@+id/buttonTextToSpeechVoicesFilter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_filter_list_black_24dp"
@@ -209,7 +209,7 @@
                     -->
 
                 <ImageButton
-                    android:id="@+id/buttonVoicesRefresh"
+                    android:id="@+id/buttonTextToSpeechVoicesRefresh"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_refresh_black_24dp"
@@ -227,14 +227,14 @@
                     />
 
                 <Spinner
-                    android:id="@+id/spinnerVoiceAudioStreamType"
+                    android:id="@+id/spinnerTextToSpeechAudioStreamType"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     />
 
                 <ImageButton
-                    android:id="@+id/buttonVoiceAudioStreamTypeTest"
+                    android:id="@+id/buttonTextToSpeechAudioStreamTypeTest"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_play_arrow_black_24dp"
@@ -257,7 +257,7 @@
                     />
 
                 <SeekBar
-                    android:id="@+id/seekbarVoiceAudioStreamVolume"
+                    android:id="@+id/seekbarTextToSpeechAudioStreamVolume"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -290,6 +290,7 @@
 
             </TableRow>
 
+            <!--
             <TableRow>
 
                 <Switch
@@ -337,6 +338,7 @@
                     />
 
             </TableRow>
+            -->
 
             <!--
             <TableRow

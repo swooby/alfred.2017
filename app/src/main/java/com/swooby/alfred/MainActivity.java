@@ -29,16 +29,18 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
 import com.smartfoo.android.core.FooString;
-import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
+import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment;
+import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment.GenericPromptPositiveNegativeDialogFragmentCallbacks;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
 import com.smartfoo.android.core.media.FooAudioUtils;
-import com.smartfoo.android.core.notification.FooNotificationListener;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
-import com.smartfoo.android.core.texttospeech.FooTextToSpeech.FooTextToSpeechCallbacks;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
+import com.swooby.alfred.MainApplication.MainApplicationCallbacks;
 import com.swooby.alfred.Profile.Tokens;
+import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,16 +48,28 @@ import java.util.Set;
 
 public class MainActivity
         extends AppCompatActivity
-        implements OnNavigationItemSelectedListener
+        implements OnNavigationItemSelectedListener,
+        GenericPromptPositiveNegativeDialogFragmentCallbacks
 {
     private static final String TAG = FooLog.TAG(MainActivity.class);
 
     private static final int REQUEST_ACTION_CHECK_TTS_DATA = 100;
 
-    private MainApplication     mMainApplication;
-    private TextToSpeechManager mTextToSpeechManager;
-    private AppPreferences      mAppPreferences;
-    private FooBluetoothManager mBluetoothManager;
+    private static final String FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED = "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED";
+
+    private final MainApplicationCallbacks mMainApplicationCallbacks = new MainApplicationCallbacks()
+    {
+        @Override
+        public boolean onNotificationListenerAccessDisabled()
+        {
+            return MainActivity.this.onNotificationListenerAccessDisabled();
+        }
+    };
+
+    private MainApplication           mMainApplication;
+    private NotificationParserManager mNotificationParserManager;
+    private TextToSpeechManager       mTextToSpeechManager;
+    private AppPreferences            mAppPreferences;
 
     private AudioManager                 mAudioManager;
     private FooAudioStreamVolumeObserver mAudioStreamVolumeObserver;
@@ -63,9 +77,9 @@ public class MainActivity
     private DrawerLayout          mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
-    private Spinner mSpinnerVoices;
-    private Spinner mSpinnerVoiceAudioStreamType;
-    private SeekBar mSeekbarVoiceAudioStreamVolume;
+    private Spinner mSpinnerTextToSpeechVoices;
+    private Spinner mSpinnerTextToSpeechAudioStreamType;
+    private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
     private Spinner mSpinnerProfiles;
 
     @Override
@@ -74,14 +88,11 @@ public class MainActivity
         super.onCreate(savedInstanceState);
 
         mMainApplication = (MainApplication) getApplication();
+        mNotificationParserManager = mMainApplication.getNotificationParserManager();
         mTextToSpeechManager = mMainApplication.getTextToSpeechManager();
         mAppPreferences = mMainApplication.getAppPreferences();
-        mBluetoothManager = mMainApplication.getBluetoothManager();
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-
-        int voiceAudioStreamType = mTextToSpeechManager.getVoiceAudioStreamType();
-        setVolumeControlStream(voiceAudioStreamType);
 
         Intent intent = getIntent();
         FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
@@ -128,21 +139,21 @@ public class MainActivity
 
         }
 
-        mSpinnerVoices = (Spinner) findViewById(R.id.spinnerVoices);
+        mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
 
-        mSpinnerVoiceAudioStreamType = (Spinner) findViewById(R.id.spinnerVoiceAudioStreamType);
-        ArrayList<AudioStreamType> voiceAudioStreamTypes = AudioStreamType.getTypes(this);
-        ArrayAdapter voiceAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, voiceAudioStreamTypes);
-        mSpinnerVoiceAudioStreamType.setAdapter(voiceAudioStreamTypeAdapter);
-        mSpinnerVoiceAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
+        mSpinnerTextToSpeechAudioStreamType = (Spinner) findViewById(R.id.spinnerTextToSpeechAudioStreamType);
+        ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
+        ArrayAdapter textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
+        mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
+        mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
         {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
-                AudioStreamType voiceAudioStreamType = (AudioStreamType) parent.getAdapter().getItem(position);
-                int audioStreamType = voiceAudioStreamType.getAudioStreamType();
+                AudioStreamType audioStreamType = (AudioStreamType) parent.getAdapter().getItem(position);
+                int textToSpeechAudioStreamType = audioStreamType.getAudioStreamType();
 
-                onVoiceAudioStreamTypeChanged(audioStreamType);
+                onTextToSpeechAudioStreamTypeChanged(textToSpeechAudioStreamType);
             }
 
             @Override
@@ -151,10 +162,10 @@ public class MainActivity
             }
         });
 
-        ImageButton buttonVoiceAudioStreamTypeTest = (ImageButton) findViewById(R.id.buttonVoiceAudioStreamTypeTest);
-        if (buttonVoiceAudioStreamTypeTest != null)
+        ImageButton buttonTextToSpeechAudioStreamTypeTest = (ImageButton) findViewById(R.id.buttonTextToSpeechAudioStreamTypeTest);
+        if (buttonTextToSpeechAudioStreamTypeTest != null)
         {
-            buttonVoiceAudioStreamTypeTest.setOnClickListener(new OnClickListener()
+            buttonTextToSpeechAudioStreamTypeTest.setOnClickListener(new OnClickListener()
             {
                 @Override
                 public void onClick(View v)
@@ -164,13 +175,13 @@ public class MainActivity
             });
         }
 
-        mSeekbarVoiceAudioStreamVolume = (SeekBar) findViewById(R.id.seekbarVoiceAudioStreamVolume);
-        mSeekbarVoiceAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
+        mSeekbarTextToSpeechAudioStreamVolume = (SeekBar) findViewById(R.id.seekbarTextToSpeechAudioStreamVolume);
+        mSeekbarTextToSpeechAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
         {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
             {
-                onVoiceAudioStreamVolumeChanged(progress, false, fromUser);
+                onTextToSpeechAudioStreamVolumeChanged(progress, false, fromUser);
             }
 
             @Override
@@ -220,22 +231,7 @@ public class MainActivity
         {
             verifyRequirements();
 
-            if (mTextToSpeechManager.isInitialized())
-            {
-                FooTextToSpeechHelper.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
-            }
-            else
-            {
-                mTextToSpeechManager.attach(new FooTextToSpeechCallbacks()
-                {
-                    @Override
-                    public void onInitialized()
-                    {
-                        mTextToSpeechManager.detach(this);
-                        FooTextToSpeechHelper.requestTextToSpeechData(MainActivity.this, REQUEST_ACTION_CHECK_TTS_DATA);
-                    }
-                });
-            }
+            requestTextToSpeechData();
         }
     }
 
@@ -289,7 +285,7 @@ public class MainActivity
         MenuItem menuItem = menu.findItem(R.id.action_notification_access);
         if (menuItem != null)
         {
-            menuItem.setVisible(FooNotificationListener.supportsNotificationListenerSettings());
+            menuItem.setVisible(FooNotificationListenerManager.supportsNotificationListenerSettings());
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -317,7 +313,7 @@ public class MainActivity
                 FooPlatformUtils.showAppSettings(this);
                 return true;
             case R.id.action_notification_access:
-                startActivity(FooNotificationListener.getIntentNotificationListenerSettings());
+                mNotificationParserManager.startActivityNotificationListenerSettings(this);
                 return true;
             case R.id.action_text_to_speech:
                 startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
@@ -385,7 +381,9 @@ public class MainActivity
     {
         super.onResume();
 
-        voiceAudioStreamTypeUpdate();
+        mMainApplication.attach(mMainApplicationCallbacks);
+
+        textToSpeechAudioStreamTypeUpdate();
 
         profilesUpdate();
 
@@ -396,63 +394,71 @@ public class MainActivity
     {
         super.onPause();
 
+        mMainApplication.detach(mMainApplicationCallbacks);
+
         volumeObserverStop();
     }
 
-    private int voiceAudioStreamTypeUpdate()
+    private int textToSpeechAudioStreamTypeUpdate()
     {
         //noinspection unchecked
-        ArrayAdapter<AudioStreamType> voiceAudioStreamTypeAdapter = (ArrayAdapter<AudioStreamType>) mSpinnerVoiceAudioStreamType
+        ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = (ArrayAdapter<AudioStreamType>) mSpinnerTextToSpeechAudioStreamType
                 .getAdapter();
 
         int selectedIndex = -1;
 
-        int voiceAudioStreamType = mAppPreferences.getVoiceAudioStreamType();
-        FooLog.i(TAG, "voiceAudioStreamTypeUpdate: voiceAudioStreamType=" +
-                      FooAudioUtils.audioStreamTypeToString(voiceAudioStreamType));
+        int textToSpeechAudioStreamType = mAppPreferences.getTextToSpeechAudioStreamType();
+        FooLog.i(TAG, "textToSpeechAudioStreamTypeUpdate: textToSpeechAudioStreamType=" +
+                      FooAudioUtils.audioStreamTypeToString(textToSpeechAudioStreamType));
 
-        for (int i = 0; i < voiceAudioStreamTypeAdapter.getCount(); i++)
+        for (int i = 0; i < textToSpeechAudioStreamTypeAdapter.getCount(); i++)
         {
-            AudioStreamType audioStreamType = voiceAudioStreamTypeAdapter.getItem(i);
-            if (audioStreamType.getAudioStreamType() == voiceAudioStreamType)
+            AudioStreamType audioStreamType = textToSpeechAudioStreamTypeAdapter.getItem(i);
+            if (audioStreamType == null)
+            {
+                continue;
+            }
+            if (audioStreamType.getAudioStreamType() == textToSpeechAudioStreamType)
             {
                 selectedIndex = i;
                 break;
             }
         }
 
-        if (selectedIndex != -1 && selectedIndex != mSpinnerVoiceAudioStreamType.getSelectedItemPosition())
+        if (selectedIndex != -1 && selectedIndex != mSpinnerTextToSpeechAudioStreamType.getSelectedItemPosition())
         {
-            mSpinnerVoiceAudioStreamType.setSelection(selectedIndex);
+            mSpinnerTextToSpeechAudioStreamType.setSelection(selectedIndex);
         }
 
-        onVoiceAudioStreamTypeChanged(voiceAudioStreamType);
+        onTextToSpeechAudioStreamTypeChanged(textToSpeechAudioStreamType);
 
-        return voiceAudioStreamType;
+        return textToSpeechAudioStreamType;
     }
 
-    private void onVoiceAudioStreamTypeChanged(int audioStreamType)
+    private void onTextToSpeechAudioStreamTypeChanged(int textToSpeechAudioStreamType)
     {
-        mTextToSpeechManager.setVoiceAudioStreamType(audioStreamType);
+        setVolumeControlStream(textToSpeechAudioStreamType);
 
-        int percent = FooAudioUtils.getVolumePercent(mAudioManager, audioStreamType);
-        onVoiceAudioStreamVolumeChanged(percent, true, false);
+        mTextToSpeechManager.setAudioStreamType(textToSpeechAudioStreamType);
 
-        volumeObserverStart(audioStreamType);
+        int percent = FooAudioUtils.getVolumePercent(mAudioManager, textToSpeechAudioStreamType);
+        onTextToSpeechAudioStreamVolumeChanged(percent, true, false);
+
+        volumeObserverStart(textToSpeechAudioStreamType);
     }
 
-    private void onVoiceAudioStreamVolumeChanged(int percent, boolean updateSeekbar, boolean updateStreamVolume)
+    private void onTextToSpeechAudioStreamVolumeChanged(int percent, boolean updateSeekbar, boolean updateStreamVolume)
     {
         if (updateSeekbar)
         {
-            mSeekbarVoiceAudioStreamVolume.setProgress(percent);
+            mSeekbarTextToSpeechAudioStreamVolume.setProgress(percent);
         }
 
         if (updateStreamVolume)
         {
-            int voiceAudioStreamType = mTextToSpeechManager.getVoiceAudioStreamType();
-            int volume = FooAudioUtils.getVolumeAbsoluteFromPercent(mAudioManager, voiceAudioStreamType, percent);
-            mAudioManager.setStreamVolume(voiceAudioStreamType, volume, 0);
+            int textToSpeechAudioStreamType = mTextToSpeechManager.getAudioStreamType();
+            int volume = FooAudioUtils.getVolumeAbsoluteFromPercent(mAudioManager, textToSpeechAudioStreamType, percent);
+            mAudioManager.setStreamVolume(textToSpeechAudioStreamType, volume, 0);
         }
     }
 
@@ -476,7 +482,7 @@ public class MainActivity
             public void onAudioStreamVolumeChanged(int audioStreamType, int volume)
             {
                 int percent = FooAudioUtils.getVolumePercentFromAbsolute(mAudioManager, audioStreamType, volume);
-                onVoiceAudioStreamVolumeChanged(percent, true, false);
+                onTextToSpeechAudioStreamVolumeChanged(percent, true, false);
             }
         });
     }
@@ -492,8 +498,8 @@ public class MainActivity
         ArrayList<Profile> profiles = new ArrayList<>();
 
         profiles.add(profileCreate(0, R.string.profile_disabled, Tokens.DISABLED));
-        profiles.add(profileCreate(1, R.string.profile_always_on, Tokens.ALWAYS_ON));
-        profiles.add(profileCreate(2, R.string.profile_headphones, Tokens.HEADPHONES_ONLY));
+        profiles.add(profileCreate(1, R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
+        profiles.add(profileCreate(2, R.string.profile_always_on, Tokens.ALWAYS_ON));
 
         return profiles;
     }
@@ -616,62 +622,7 @@ public class MainActivity
                 {
                     case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
                     {
-                        //
-                        // We're initialize; start populating the UI
-                        //
-
-                        ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
-                        Set<Voice> voices = mTextToSpeechManager.getVoices();
-                        if (voices != null)
-                        {
-                            for (Voice voice : voices)
-                            {
-                                Set<String> voiceFeatures = voice.getFeatures();
-                                if (voiceFeatures.contains("notInstalled"))
-                                {
-                                    continue;
-                                }
-
-                                VoiceWrapper voiceWrapper = new VoiceWrapper(voice);
-
-                                availableVoices.add(voiceWrapper);
-                            }
-                        }
-                        Collections.sort(availableVoices);
-
-                        String currentVoiceName = mTextToSpeechManager.getVoiceName();
-                        int currentVoiceIndex = 0;
-                        for (int i = 0; i < availableVoices.size(); i++)
-                        {
-                            VoiceWrapper voiceWrapper = availableVoices.get(i);
-                            if (voiceWrapper.equals(currentVoiceName))
-                            {
-                                currentVoiceIndex = i;
-                                break;
-                            }
-                        }
-
-                        ArrayAdapter<VoiceWrapper> spinnerVoicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, availableVoices);
-                        mSpinnerVoices.setAdapter(spinnerVoicesAdapter);
-                        mSpinnerVoices.setSelection(currentVoiceIndex);
-                        mSpinnerVoices.setOnItemSelectedListener(new OnItemSelectedListener()
-                        {
-                            @Override
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
-                            {
-                                VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
-                                Voice voice = voiceWrapper.getVoice();
-
-                                mTextToSpeechManager.setVoice(voice);
-
-                                //mMainApplication.speak("Voice Initialized");
-                            }
-
-                            @Override
-                            public void onNothingSelected(AdapterView<?> parent)
-                            {
-                            }
-                        });
+                        updateTextToSpeechVoices();
                         break;
                     }
                 }
@@ -680,8 +631,98 @@ public class MainActivity
         }
     }
 
+    private void requestTextToSpeechData()
+    {
+        if (!mTextToSpeechManager.isInitialized())
+        {
+            mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
+            {
+                @Override
+                public void onTextToSpeechInitialized()
+                {
+                    mTextToSpeechManager.detach(this);
+                    requestTextToSpeechData();
+                }
+            });
+            return;
+        }
+
+        FooTextToSpeechHelper.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
+    }
+
+    private void updateTextToSpeechVoices()
+    {
+        ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
+        Set<Voice> voices = mTextToSpeechManager.getVoices();
+        if (voices != null)
+        {
+            for (Voice voice : voices)
+            {
+                Set<String> voiceFeatures = voice.getFeatures();
+                //FooLog.e(TAG, "onActivityResult: voiceFeatures=" + voiceFeatures);
+                if (voiceFeatures.contains("notInstalled"))
+                {
+                    continue;
+                }
+                VoiceWrapper voiceWrapper = new VoiceWrapper(voice);
+
+                availableVoices.add(voiceWrapper);
+            }
+        }
+        Collections.sort(availableVoices);
+
+        String currentVoiceName = mTextToSpeechManager.getVoiceName();
+        int currentVoiceIndex = 0;
+        for (int i = 0; i < availableVoices.size(); i++)
+        {
+            VoiceWrapper voiceWrapper = availableVoices.get(i);
+            if (voiceWrapper.equals(currentVoiceName))
+            {
+                currentVoiceIndex = i;
+                break;
+            }
+        }
+
+        ArrayAdapter<VoiceWrapper> spinnerVoicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, availableVoices);
+        mSpinnerTextToSpeechVoices.setAdapter(spinnerVoicesAdapter);
+        mSpinnerTextToSpeechVoices.setSelection(currentVoiceIndex);
+        mSpinnerTextToSpeechVoices.setOnItemSelectedListener(new OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            {
+                VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
+                Voice voice = voiceWrapper.getVoice();
+
+                mTextToSpeechManager.setVoice(voice);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent)
+            {
+            }
+        });
+    }
+
     private void verifyRequirements()
     {
+    }
+
+    private boolean onNotificationListenerAccessDisabled()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean onGenericPromptPositiveNegativeDialogFragmentResult(@NonNull GenericPromptPositiveNegativeDialogFragment dialogFragment)
+    {
+        switch (dialogFragment.getResult())
+        {
+            case Positive:
+                mNotificationParserManager.startActivityNotificationListenerSettings(this);
+                break;
+        }
+        return false;
     }
 
     private void onFloatingActionButtonClick()

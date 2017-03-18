@@ -13,7 +13,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,40 +46,34 @@ public abstract class AbstractNotificationParser
         return value == null ? "null" : Integer.toString(value) + "(0x" + Integer.toHexString(value) + ')';
     }
 
-    @Nullable
     public static String getPackageName(StatusBarNotification sbn)
     {
         return sbn != null ? sbn.getPackageName() : null;
     }
 
-    @Nullable
     public static Notification getNotification(StatusBarNotification sbn)
     {
         return sbn != null ? sbn.getNotification() : null;
     }
 
-    @Nullable
     public static RemoteViews getBigContentView(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
         return notification != null ? notification.bigContentView : null;
     }
 
-    @Nullable
     public static Bundle getExtras(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
         return notification != null ? notification.extras : null;
     }
 
-    @Nullable
     public static RemoteViews getContentView(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
         return notification != null ? notification.contentView : null;
     }
 
-    @Nullable
     public static Context createPackageContext(Context context, RemoteViews remoteView)
     {
         if (context == null)
@@ -105,7 +98,6 @@ public abstract class AbstractNotificationParser
         }
     }
 
-    @Nullable
     public static View inflateRemoteView(Context context, RemoteViews remoteViews)
     {
         if (context == null)
@@ -123,7 +115,6 @@ public abstract class AbstractNotificationParser
     }
 
     /*
-    @Nullable
     public static View mockRemoteView(Context context, RemoteViews remoteView)
     {
         Context otherAppContext = createPackageContext(context, remoteView);
@@ -138,11 +129,7 @@ public abstract class AbstractNotificationParser
     }
     */
 
-    public static int getIdOfChildWithName(
-            @NonNull
-                    View parent,
-            @NonNull
-                    String childName)
+    public static int getIdOfChildWithName(@NonNull View parent, @NonNull String childName)
     {
         //FooLog.e(TAG, "getIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
 
@@ -157,22 +144,14 @@ public abstract class AbstractNotificationParser
         drawable,
     }
 
-    public static int getIdentifier(
-            @NonNull
-                    Context context,
-            @NonNull
-                    ResourceType resourceType,
-            @NonNull
-                    String name)
+    public static int getIdentifier(@NonNull Context context, @NonNull ResourceType resourceType, @NonNull String name)
     {
         Resources resources = context.getResources();
         String packageName = context.getPackageName();
         return resources.getIdentifier(name, resourceType.name(), packageName);
     }
 
-    public static int getImageResource(
-            @NonNull
-                    ImageView imageView)
+    public static int getImageResource(@NonNull ImageView imageView)
     {
         //noinspection TryWithIdenticalCatches
         try
@@ -193,9 +172,7 @@ public abstract class AbstractNotificationParser
         return 0;
     }
 
-    public static BitmapDrawable getImageBitmap(
-            @NonNull
-                    ImageView imageView)
+    public static BitmapDrawable getImageBitmap(@NonNull ImageView imageView)
     {
         //noinspection TryWithIdenticalCatches
         try
@@ -217,10 +194,7 @@ public abstract class AbstractNotificationParser
     }
 
     /*
-    public static BitmapDrawable getImageBitmap(
-            @NonNull
-            RemoteViews remoteViews,
-            BitmapDrawable )
+    public static BitmapDrawable getImageBitmap(@NonNull RemoteViews remoteViews, BitmapDrawable )
     {
         //noinspection TryWithIdenticalCatches
         try
@@ -243,12 +217,7 @@ public abstract class AbstractNotificationParser
     */
 
     /*
-    @Nullable
-    public static View findViewByName(
-            @NonNull
-            View parent,
-            @NonNull
-            String childName)
+    public static View findViewByName(@NonNull View parent, @NonNull String childName)
     {
         FooLog.v(TAG, "findViewByName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
 
@@ -345,7 +314,6 @@ public abstract class AbstractNotificationParser
         }
     }
 
-    @Nullable
     public static Object getRemoteViewValueById(
             RemoteViews remoteViews, int viewId, int valueType)
     {
@@ -644,9 +612,7 @@ public abstract class AbstractNotificationParser
         }
 
         @Override
-        public int compareTo(
-                @NonNull
-                        KeyValue another)
+        public int compareTo(@NonNull KeyValue another)
         {
             return Integer.compare(mViewId, another.mViewId);
         }

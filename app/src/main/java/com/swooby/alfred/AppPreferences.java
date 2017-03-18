@@ -12,8 +12,8 @@ public class AppPreferences
 {
     public static final String DEFAULT_VOICE_NAME = "en-GB-language";
 
-    private static final String KEY_USER_VOICE_NAME              = "pref_user_voice_name";
-    private static final String KEY_USER_VOICE_AUDIO_STREAM_TYPE = "pref_user_voice_audio_stream_type";
+    private static final String KEY_USER_VOICE_NAME              = "pref_user_tts_voice_name";
+    private static final String KEY_USER_VOICE_AUDIO_STREAM_TYPE = "pref_user_tts_voice_audio_stream_type";
     private static final String KEY_USER_PROFILE_TOKEN           = "pref_user_profile_token";
     private static final String KEY_USER_KEYPHRASE               = "pref_user_keyphrase";
 
@@ -22,22 +22,22 @@ public class AppPreferences
         super(applicationContext);
     }
 
-    public String getVoiceName()
+    public String getTextToSpeechVoiceName()
     {
         return getString(FILE_NAME_USER, KEY_USER_VOICE_NAME, DEFAULT_VOICE_NAME);
     }
 
-    public void setVoiceName(String value)
+    public void setTextToSpeechVoiceName(String value)
     {
         setString(FILE_NAME_USER, KEY_USER_VOICE_NAME, !FooString.isNullOrEmpty(value) ? value : DEFAULT_VOICE_NAME);
     }
 
-    public int getVoiceAudioStreamType()
+    public int getTextToSpeechAudioStreamType()
     {
         return getInt(FILE_NAME_USER, KEY_USER_VOICE_AUDIO_STREAM_TYPE, AudioManager.STREAM_MUSIC);
     }
 
-    public void setVoiceAudioStreamType(int value)
+    public void setTextToSpeechAudioStreamType(int value)
     {
         setInt(FILE_NAME_USER, KEY_USER_VOICE_AUDIO_STREAM_TYPE, value);
     }

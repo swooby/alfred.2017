@@ -54,7 +54,6 @@ dependencies {
     //compile 'com.google.guava:guava:18.0'
     //compile 'com.squareup.okhttp:okhttp:2.5.0'
 
-
     if (getIsLocalDevelopmentBuild()) {
         println 'dependencies: ' + archivesBaseName + ' using local project(s)'
         compile project(':smartfoo-android-lib-core')

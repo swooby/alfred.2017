@@ -19,7 +19,7 @@ public class Profile
         @Override
         public int compare(Profile lhs, Profile rhs)
         {
-            if (lhs.mForcedOrder != -1)
+            if (lhs.mForcedOrder != Integer.MAX_VALUE)
             {
                 int compare = Integer.compare(lhs.mForcedOrder, rhs.mForcedOrder);
                 if (compare != 0)
@@ -38,7 +38,7 @@ public class Profile
 
     public Profile(@NonNull BluetoothDevice bluetoothDevice)
     {
-        this(-1, bluetoothDevice.getName(), bluetoothDevice.getAddress());
+        this(Integer.MAX_VALUE, bluetoothDevice.getName(), bluetoothDevice.getAddress());
     }
 
     public Profile(int forcedOrder, @NonNull String name, @NonNull String token)

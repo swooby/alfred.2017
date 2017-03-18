@@ -32,8 +32,8 @@
     <string name="X_says">%1$s says</string>
 
     <string name="profile_disabled">Disabled</string>
+    <string name="profile_headphones_only">Headphones Only</string>
     <string name="profile_always_on">Always On</string>
-    <string name="profile_headphones">Headphones</string>
 
     <string name="audio_stream_notification">Notification</string>
     <string name="audio_stream_media">Media</string>

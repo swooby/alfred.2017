@@ -1,26 +1,27 @@
-package com.swooby.alfred.notification.parsers;
+package com.swooby.alfred;
 
-import android.app.PendingIntent;
 import android.content.Context;
-import android.os.Bundle;
-import android.os.Handler;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 
+import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
-import com.smartfoo.android.core.notification.FooNotification;
-import com.smartfoo.android.core.notification.FooNotificationBuilder;
-import com.smartfoo.android.core.notification.FooNotificationListener;
-import com.smartfoo.android.core.notification.FooNotificationListener.FooNotificationListenerCallbacks;
-import com.smartfoo.android.core.notification.FooNotificationReceiver;
-import com.swooby.alfred.MainActivity;
-import com.swooby.alfred.R;
-import com.swooby.alfred.TextToSpeechManager;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.FooNotificationListenerManagerCallbacks;
+import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParserCallbacks;
+import com.swooby.alfred.notification.parsers.DownloadManagerNotificationParser;
+import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
+import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
+import com.swooby.alfred.notification.parsers.GoogleHangoutsNotificationParser;
+import com.swooby.alfred.notification.parsers.GoogleNowNotificationParser;
+import com.swooby.alfred.notification.parsers.GooglePhotosNotificationParser;
+import com.swooby.alfred.notification.parsers.GooglePlayStoreNotificationParser;
+import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
+import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class NotificationParserManager
 {
     private static final String TAG = FooLog.TAG(NotificationParserManager.class);
 
-    public interface NotificationParserManagerCallbacks
+    public interface NotificationParserManagerConfiguration
     {
         @NonNull
         Context getContext();
@@ -40,19 +41,31 @@ public class NotificationParserManager
         TextToSpeechManager getTextToSpeech();
     }
 
-    private final FooNotificationListenerCallbacks        mFooNotificationListenerCallbacks;
-    private final NotificationParserCallbacks             mNotificationParserCallbacks;
-    private final Map<String, AbstractNotificationParser> mNotificationParsers;
-
-    private NotificationParserManagerCallbacks mCallbacks;
-
-    public NotificationParserManager(@NonNull NotificationParserManagerCallbacks callbacks)
+    public interface NotificationParserManagerCallbacks
     {
-        FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
+        void onNotificationListenerBound();
 
-        mCallbacks = callbacks;
+        void onNotificationListenerAccessDisabled();
+    }
 
-        mFooNotificationListenerCallbacks = new FooNotificationListenerCallbacks()
+    private final NotificationParserManagerConfiguration                 mConfiguration;
+    private final FooListenerManager<NotificationParserManagerCallbacks> mListenerManager;
+    private final FooNotificationListenerManager                         mFooNotificationListenerManager;
+    private final FooNotificationListenerManagerCallbacks                mFooNotificationListenerManagerCallbacks;
+    private final NotificationParserCallbacks                            mNotificationParserCallbacks;
+    private final Map<String, AbstractNotificationParser>                mNotificationParsers;
+
+    public NotificationParserManager(@NonNull NotificationParserManagerConfiguration configuration)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
+
+        mConfiguration = configuration;
+
+        mListenerManager = new FooListenerManager<>();
+
+        mFooNotificationListenerManager = FooNotificationListenerManager.getInstance();
+
+        mFooNotificationListenerManagerCallbacks = new FooNotificationListenerManagerCallbacks()
         {
             @Override
             public void onNotificationListenerBound()
@@ -98,20 +111,51 @@ public class NotificationParserManager
     }
 
     @NonNull
-    protected Context getContext()
+    private Context getContext()
     {
-        return mCallbacks.getContext();
+        return mConfiguration.getContext();
     }
 
     @NonNull
-    protected TextToSpeechManager getTextToSpeech()
+    private TextToSpeechManager getTextToSpeech()
     {
-        return mCallbacks.getTextToSpeech();
+        return mConfiguration.getTextToSpeech();
     }
 
-    public boolean isEnabled()
+    private boolean isEnabled()
     {
-        return mCallbacks.isEnabled();
+        return mConfiguration.isEnabled();
+    }
+
+    public boolean isNotificationAccessSettingEnabled()
+    {
+        return FooNotificationListenerManager.isNotificationAccessSettingEnabled(getContext());
+    }
+
+    public void startActivityNotificationListenerSettings(@NonNull Context context)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+        mFooNotificationListenerManager.startActivityNotificationListenerSettings(context);
+    }
+
+    public boolean isNotificationListenerBound()
+    {
+        return mFooNotificationListenerManager.isNotificationListenerBound();
+    }
+
+    public void attach(NotificationParserManagerCallbacks callbacks)
+    {
+        mListenerManager.attach(callbacks);
+
+        if (mListenerManager.size() == 1 && mNotificationParsers.size() == 0)
+        {
+            start();
+        }
+    }
+
+    public void detach(NotificationParserManagerCallbacks callbacks)
+    {
+        mListenerManager.detach(callbacks);
     }
 
     private void addNotificationParser(@NonNull AbstractNotificationParser notificationParser)
@@ -119,7 +163,7 @@ public class NotificationParserManager
         mNotificationParsers.put(notificationParser.getPackageName(), notificationParser);
     }
 
-    public void initialize()
+    private void start()
     {
         //
         // We can't just blindly initialize all AbstractNotificationParsers.
@@ -153,111 +197,34 @@ public class NotificationParserManager
         //addNotificationParser(new RedboxNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new SpotifyNotificationParser(mNotificationParserCallbacks));
 
-        FooNotificationListener.addListener(mFooNotificationListenerCallbacks);
-
-        //
-        // MainApplication always starts first, before FooNotificationListener has any chance to bind.
-        // After MainApplication, if FooNotificationListener binds then it will call onNotificationListenerBound().
-        // On first run it will not bind because the user has not enabled the settings.
-        // Normally we would just directly call FooNotificationListener.isNotificationAccessSettingEnabled(Context context).
-        // Unfortunately, sometimes NotificationAccess is configured to be enabled, but FooNotificationListener never binds.
-        // This almost always happens when re-installing the app between development builds.
-        // NOTE:(pv) It is unknown if this is also an issue when the app does production updates through Google Play.
-        // Since we cannot reliably test for isNotificationAccessSettingEnabled, the next best thing is to timeout if
-        // FooNotificationListener does not bind within a small amount of time (we are using 250ms).
-        // If FooNotificationListener does not bind and call onNotificationListenerBound() within 250ms then we need to
-        // prompt the user to enable Notification Access.
-        //
-
-        // HACK required to detect non-binding when re-installing app even if notification access is enabled:
-        //  http://stackoverflow.com/a/37081128/252308
-        //
-        new Handler().postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                if (!FooNotificationListener.isNotificationListenerBound())
-                {
-                    onNotificationListenerUnbound();
-                }
-            }
-        }, 250);
+        mFooNotificationListenerManager.attach(mFooNotificationListenerManagerCallbacks);
     }
 
     private void onNotificationListenerBound()
     {
-        // TODO:(pv) This is where the real app logic actually starts!
         FooLog.i(TAG, "onNotificationListenerBound()");
-        ///updateEnabledState();
+        for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onNotificationListenerBound();
+        }
+        mListenerManager.endTraversing();
     }
 
     private void onNotificationListenerUnbound()
     {
         FooLog.i(TAG, "onNotificationListenerUnbound()");
-
-        //updateEnabledState();
-
-        boolean handled = false;
-
-        /*
-        Set<MainApplicationListener> listeners = mListenerManager.beginTraversing();
-        for (MainApplicationListener listener : listeners)
+        for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            handled = listener.onNotificationListenerAccessDisabled();
-            if (handled)
-            {
-                break;
-            }
+            callbacks.onNotificationListenerAccessDisabled();
         }
         mListenerManager.endTraversing();
-        */
-
-        if (!handled)
-        {
-            // TODO:(pv) show notification
-
-            Context context = getContext();
-
-            int notificationRequestCode = 100;
-            String contentTitle = context.getString(R.string.app_name);
-            String notificationContentText = "Testing 1 2 3...";
-
-            Bundle extras = new Bundle();
-            //extras.putString(FooNotificationReceiver.EXTRA_DEVICE_MAC_ADDRESS, macAddress);
-            PendingIntent deleteIntent = FooNotification.createPendingIntent(context, notificationRequestCode, FooNotificationReceiver.class, 0, 0, null);
-
-            FooNotificationBuilder builder = new FooNotificationBuilder(context)
-                    .setContentIntent(FooNotification.createPendingIntent(context, notificationRequestCode, MainActivity.class))
-                    .setSmallIcon(R.drawable.ic_warning_white_18dp)
-                    .setAutoCancel(true)
-                    .setContentTitle(contentTitle)
-                    .setContentText(notificationContentText)
-                    .setDeleteIntent(deleteIntent);
-
-            // TODO:(pv) Experimental Android Wear notification...
-            //noinspection ConstantConditions
-            if (false)
-            {
-                NotificationCompat.WearableExtender extender = new NotificationCompat.WearableExtender();
-                NotificationCompat.Action actionDelete = new NotificationCompat.Action.Builder(R.drawable.ic_warning_white_18dp, "Snooze", deleteIntent)
-                        .build();
-                extender.addAction(actionDelete);
-                builder.extend(extender);
-            }
-
-            FooNotification notification = new FooNotification(notificationRequestCode, builder);
-
-            FooLog.v(TAG, "onNotificationListenerUnbound: notification=" + notification + ')');
-            notification.show(context);
-        }
     }
 
     private void onNotificationPosted(StatusBarNotification sbn)
     {
         if (!isEnabled())
         {
-            FooLog.w(TAG, "onNotificationPosted: mIsEnabled == false; ignoring");
+            FooLog.w(TAG, "onNotificationPosted: isEnabled() == false; ignoring");
             return;
         }
 
@@ -267,13 +234,13 @@ public class NotificationParserManager
         NotificationParseResult result;
 
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
-        if (notificationParser != null)
+        if (notificationParser == null)
         {
-            result = notificationParser.onNotificationPosted(sbn);
+            result = AbstractNotificationParser.defaultOnNotificationPosted(getContext(), sbn, getTextToSpeech());
         }
         else
         {
-            result = AbstractNotificationParser.defaultOnNotificationPosted(getContext(), sbn, mCallbacks.getTextToSpeech());
+            result = notificationParser.onNotificationPosted(sbn);
         }
 
         switch (result)
@@ -294,7 +261,7 @@ public class NotificationParserManager
     {
         if (!isEnabled())
         {
-            FooLog.w(TAG, "onNotificationRemoved: mIsEnabled == false; ignoring");
+            FooLog.w(TAG, "onNotificationRemoved: isEnabled() == false; ignoring");
             return;
         }
 
@@ -302,10 +269,12 @@ public class NotificationParserManager
         FooLog.d(TAG, "onNotificationRemoved: packageName=" + FooString.quote(packageName));
 
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
-        if (notificationParser != null)
+        if (notificationParser == null)
         {
-            // TODO:(pv) Reset any cache in the parser
-            notificationParser.onNotificationRemoved(sbn);
+            return;
         }
+
+        // TODO:(pv) Reset any cache in the parser...
+        notificationParser.onNotificationRemoved(sbn);
     }
 }

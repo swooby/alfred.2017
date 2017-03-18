@@ -4,6 +4,7 @@ import android.content.Context;
 import android.speech.tts.Voice;
 import android.support.annotation.NonNull;
 
+import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.annotations.NonNullNonEmpty;
@@ -20,7 +21,7 @@ public class TextToSpeechManager
 {
     private static final String TAG = FooLog.TAG(TextToSpeechManager.class);
 
-    public interface TextToSpeechCallbacks
+    public interface TextToSpeechManagerConfiguration
     {
         @NonNull
         Context getContext();
@@ -28,30 +29,54 @@ public class TextToSpeechManager
         @NonNullNonEmpty
         String getVoiceName();
 
-        void onSetVoiceName(String voiceName);
-
-        int getVoiceAudioStreamType();
+        int getAudioStreamType();
 
         boolean isEnabled();
     }
 
-    private final TextToSpeechCallbacks mCallbacks;
-
-    private FooTextToSpeech mTextToSpeech;
-
-    public TextToSpeechManager(@NonNull TextToSpeechCallbacks callbacks)
+    public static class TextToSpeechManagerCallbacks
+            implements FooTextToSpeechCallbacks
     {
-        FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
+        @Override
+        public void onTextToSpeechInitialized()
+        {
+            //ignore
+        }
 
-        mCallbacks = callbacks;
+        public void onTextToSpeechVoiceNameSet(String voiceName)
+        {
+            // ignore
+        }
     }
 
-    public int getVoiceAudioStreamType()
+    private final TextToSpeechManagerConfiguration                 mConfiguration;
+    private final FooListenerManager<TextToSpeechManagerCallbacks> mListenerManager;
+    private final FooTextToSpeech                                  mTextToSpeech;
+
+    public TextToSpeechManager(@NonNull TextToSpeechManagerConfiguration configuration)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
+
+        mConfiguration = configuration;
+
+        mListenerManager = new FooListenerManager<>();
+        mTextToSpeech = FooTextToSpeech.getInstance();
+        mTextToSpeech.attach(new FooTextToSpeechCallbacks()
+        {
+            @Override
+            public void onTextToSpeechInitialized()
+            {
+                TextToSpeechManager.this.onTextToSpeechInitialized();
+            }
+        });
+    }
+
+    public int getAudioStreamType()
     {
         return mTextToSpeech.getAudioStreamType();
     }
 
-    public void setVoiceAudioStreamType(int audioStreamType)
+    public void setAudioStreamType(int audioStreamType)
     {
         mTextToSpeech.setAudioStreamType(audioStreamType);
     }
@@ -59,12 +84,12 @@ public class TextToSpeechManager
     @NonNull
     protected Context getContext()
     {
-        return mCallbacks.getContext();
+        return mConfiguration.getContext();
     }
 
     public boolean isEnabled()
     {
-        return mCallbacks.isEnabled();
+        return mConfiguration.isEnabled();
     }
 
     public boolean isInitialized()
@@ -72,14 +97,19 @@ public class TextToSpeechManager
         return mTextToSpeech.isInitialized();
     }
 
-    public void attach(FooTextToSpeechCallbacks listener)
+    public void attach(TextToSpeechManagerCallbacks listener)
     {
-        mTextToSpeech.attach(listener);
+        mListenerManager.attach(listener);
+
+        if (mListenerManager.size() == 1 && !mTextToSpeech.isStartingOrStarted())
+        {
+            start();
+        }
     }
 
-    public void detach(FooTextToSpeechCallbacks listener)
+    public void detach(TextToSpeechManagerCallbacks listener)
     {
-        mTextToSpeech.detach(listener);
+        mListenerManager.detach(listener);
     }
 
     public Set<Voice> getVoices()
@@ -99,69 +129,90 @@ public class TextToSpeechManager
 
     public void setVoiceName(String voiceName)
     {
-        if (mTextToSpeech.setVoiceName(voiceName))
+        if (!mTextToSpeech.setVoiceName(voiceName))
         {
-            mCallbacks.onSetVoiceName(voiceName);
+            return;
         }
+
+        for (TextToSpeechManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onTextToSpeechVoiceNameSet(voiceName);
+        }
+        mListenerManager.endTraversing();
     }
 
-    public void initialize()
+    private void start()
     {
-        String voiceName = mCallbacks.getVoiceName();
-        FooLog.i(TAG, "initialize: voiceName=" + FooString.quote(voiceName));
+        String voiceName = mConfiguration.getVoiceName();
+        FooLog.i(TAG, "start: voiceName=" +
+                      FooString.quote(voiceName));
 
-        int voiceAudioStreamType = mCallbacks.getVoiceAudioStreamType();
-        FooLog.i(TAG, "initialize: voiceAudioStreamType=" +
-                      FooAudioUtils.audioStreamTypeToString(voiceAudioStreamType));
+        int audioStreamType = mConfiguration.getAudioStreamType();
+        FooLog.i(TAG, "start: audioStreamType=" +
+                      FooAudioUtils.audioStreamTypeToString(audioStreamType));
 
-        mTextToSpeech = FooTextToSpeech.getInstance();
         mTextToSpeech.setVoiceName(voiceName);
-        mTextToSpeech.setAudioStreamType(voiceAudioStreamType);
+        mTextToSpeech.setAudioStreamType(audioStreamType);
         mTextToSpeech.start(getContext());
+    }
+
+    private void onTextToSpeechInitialized()
+    {
+        for (TextToSpeechManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onTextToSpeechInitialized();
+        }
+        mListenerManager.endTraversing();
     }
 
     public void speak(String text)
     {
-        if (isEnabled())
+        if (!isEnabled())
         {
-            mTextToSpeech.speak(text);
+            return;
         }
+
+        mTextToSpeech.speak(text);
     }
 
     public void speak(String text, boolean clear)
     {
-        if (isEnabled())
+        if (!isEnabled())
         {
-            mTextToSpeech.speak(text, clear, null);
+            return;
         }
+
+        mTextToSpeech.speak(text, clear, null);
     }
 
     public void speak(String text, Runnable runAfter)
     {
-        if (isEnabled())
+        if (!isEnabled())
         {
-            mTextToSpeech.speak(text, runAfter);
+            return;
         }
+
+        mTextToSpeech.speak(text, runAfter);
     }
 
-    public void speak(
-            @NonNull
-                    FooTextToSpeechBuilder builder)
+    public void speak(@NonNull FooTextToSpeechBuilder builder)
     {
-        if (isEnabled())
+        if (!isEnabled())
         {
-            mTextToSpeech.speak(builder);
+            return;
         }
+
+        mTextToSpeech.speak(builder);
     }
 
-    public void speak(
-            @NonNull
-                    FooTextToSpeechBuilder builder, boolean clear)
+    public void speak(@NonNull FooTextToSpeechBuilder builder, boolean clear)
     {
-        if (isEnabled())
+        if (!isEnabled())
         {
-            mTextToSpeech.speak(builder, clear, null);
+            return;
         }
+
+        mTextToSpeech.speak(builder, clear, null);
     }
 
     /*
@@ -183,15 +234,17 @@ public class TextToSpeechManager
 
     public void speak(boolean force, boolean toast, String text, Runnable runAfter)
     {
-        if (force || isEnabled())
+        if (!force && !isEnabled())
         {
-            if (toast)
-            {
-                FooPlatformUtils.toastLong(getContext(), text);
-            }
-
-            mTextToSpeech.speak(text, runAfter);
+            return;
         }
+
+        if (toast)
+        {
+            FooPlatformUtils.toastLong(getContext(), text);
+        }
+
+        mTextToSpeech.speak(text, runAfter);
     }
 
     public void silence(int durationInMs)
@@ -201,9 +254,11 @@ public class TextToSpeechManager
 
     public void silence(boolean force, int durationInMs)
     {
-        if (force || isEnabled())
+        if (!force && !isEnabled())
         {
-            mTextToSpeech.silence(durationInMs);
+            return;
         }
+
+        mTextToSpeech.silence(durationInMs);
     }
 }

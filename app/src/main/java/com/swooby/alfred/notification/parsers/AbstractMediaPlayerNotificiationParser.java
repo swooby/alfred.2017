@@ -27,12 +27,9 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
     /*
     protected AbstractMediaPlayerNotificiationParser(
-            @NonNull
-            MainApplication application,
-            @NonNull
-            String packageName,
-            @NonNull
-            String packageAppSpokenName)
+            @NonNull MainApplication application,
+            @NonNull String packageName,
+            @NonNull String packageAppSpokenName)
     {
         super(application, packageName, packageAppSpokenName);
 
@@ -54,7 +51,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
             TextToSpeechManager textToSpeechManager = getTextToSpeech();
 
-            int voiceAudioStreamType = textToSpeechManager.getVoiceAudioStreamType();
+            int textToSpeechAudioStreamType = textToSpeechManager.getAudioStreamType();
 
             mLastStreamMusicVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
 
@@ -74,7 +71,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
             textToSpeechManager.speak(speech, runAfter);
 
-            if (voiceAudioStreamType != musicAudioStreamType)
+            if (textToSpeechAudioStreamType != musicAudioStreamType)
             {
                 runAfter.run();
             }
