@@ -175,6 +175,11 @@ public class NotificationParserManager
         mFooNotificationListenerManager.startActivityNotificationListenerSettings(context);
     }
 
+    public void refresh()
+    {
+        mFooNotificationListenerManager.refresh();
+    }
+
     public void attach(NotificationParserManagerCallbacks callbacks)
     {
         mListenerManager.attach(callbacks);

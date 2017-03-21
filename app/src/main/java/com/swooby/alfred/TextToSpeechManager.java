@@ -31,6 +31,8 @@ public class TextToSpeechManager
         @NonNullNonEmpty
         String getVoiceName();
 
+        void setVoiceName(String voiceName);
+
         int getAudioStreamType();
 
         boolean isEnabled();
@@ -119,6 +121,8 @@ public class TextToSpeechManager
         {
             return;
         }
+
+        mConfiguration.setVoiceName(voiceName);
 
         for (TextToSpeechManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {

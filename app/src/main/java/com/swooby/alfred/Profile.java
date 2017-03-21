@@ -7,11 +7,22 @@ import java.util.Comparator;
 
 public class Profile
 {
-    public interface Tokens
+    public static abstract class Tokens
     {
-        String DISABLED        = "profile.disabled";
-        String HEADPHONES_ONLY = "profile.headphones_only";
-        String ALWAYS_ON       = "profile.always_on";
+        public static final String DISABLED              = "profile.disabled";
+        public static final String WIRED_HEADPHONES_ONLY = "profile.wired_headphones_only";
+        //public static final String HEADPHONES_ONLY       = "profile.headphones_only";
+        public static final String ALWAYS_ON             = "profile.always_on";
+
+        public static boolean isDisabled(String value)
+        {
+            return value == null || value.equals(DISABLED);
+        }
+
+        public static boolean isNotDisabled(String value)
+        {
+            return value != null && !value.equals(DISABLED);
+        }
     }
 
     public static Comparator<Profile> COMPARATOR = new Comparator<Profile>()

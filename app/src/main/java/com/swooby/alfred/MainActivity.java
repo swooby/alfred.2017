@@ -43,7 +43,6 @@ import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 import com.swooby.alfred.MainApplication.MainApplicationCallbacks;
-import com.swooby.alfred.Profile.Tokens;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 
 import java.util.ArrayList;
@@ -87,9 +86,9 @@ public class MainActivity
     };
 
     private MainApplication           mMainApplication;
-    private NotificationParserManager mNotificationParserManager;
     private TextToSpeechManager       mTextToSpeechManager;
-    private AppPreferences            mAppPreferences;
+    private ProfileManager            mProfileManager;
+    private NotificationParserManager mNotificationParserManager;
 
     private AudioManager                 mAudioManager;
     private FooAudioStreamVolumeObserver mAudioStreamVolumeObserver;
@@ -103,6 +102,7 @@ public class MainActivity
     private Spinner mSpinnerTextToSpeechAudioStreamType;
     private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
     private Spinner mSpinnerProfiles;
+    private Button  mButtonProcessNotifications;
 
     private boolean mRequestedTextToSpeechData;
 
@@ -112,9 +112,9 @@ public class MainActivity
         super.onCreate(savedInstanceState);
 
         mMainApplication = (MainApplication) getApplication();
-        mNotificationParserManager = mMainApplication.getNotificationParserManager();
         mTextToSpeechManager = mMainApplication.getTextToSpeechManager();
-        mAppPreferences = mMainApplication.getAppPreferences();
+        mProfileManager = mMainApplication.getProfileManager();
+        mNotificationParserManager = mMainApplication.getNotificationParserManager();
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
@@ -230,7 +230,7 @@ public class MainActivity
         });
 
         mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
-        ArrayList<Profile> profiles = profilesCreate();
+        ArrayList<Profile> profiles = mProfileManager.getProfiles();
         ArrayAdapter profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
@@ -239,12 +239,22 @@ public class MainActivity
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
             {
                 Profile profile = (Profile) parent.getAdapter().getItem(position);
-                mAppPreferences.setProfileToken(profile.getToken());
+                mProfileManager.setProfileToken(profile.getToken());
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent)
             {
+            }
+        });
+
+        mButtonProcessNotifications = (Button) findViewById(R.id.buttonProcessNotifications);
+        mButtonProcessNotifications.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                mNotificationParserManager.refresh();
             }
         });
 
@@ -473,7 +483,7 @@ public class MainActivity
 
         int selectedIndex = -1;
 
-        int textToSpeechAudioStreamType = mAppPreferences.getTextToSpeechAudioStreamType();
+        int textToSpeechAudioStreamType = mTextToSpeechManager.getAudioStreamType();
         FooLog.v(TAG, "textToSpeechAudioStreamTypeUpdate: textToSpeechAudioStreamType=" +
                       FooAudioUtils.audioStreamTypeToString(textToSpeechAudioStreamType));
 
@@ -553,23 +563,6 @@ public class MainActivity
         });
     }
 
-    private Profile profileCreate(int index, int resIdName, String token)
-    {
-        String name = getString(resIdName);
-        return new Profile(index, name, token);
-    }
-
-    private ArrayList<Profile> profilesCreate()
-    {
-        ArrayList<Profile> profiles = new ArrayList<>();
-
-        profiles.add(profileCreate(0, R.string.profile_disabled, Tokens.DISABLED));
-        profiles.add(profileCreate(1, R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
-        profiles.add(profileCreate(2, R.string.profile_always_on, Tokens.ALWAYS_ON));
-
-        return profiles;
-    }
-
     private void profilesUpdate()
     {
         //noinspection unchecked
@@ -578,7 +571,7 @@ public class MainActivity
 
         int selectedIndex = -1;
 
-        String profileToken = mAppPreferences.getProfileToken();
+        String profileToken = mProfileManager.getProfileToken();
 
         for (int i = 0; i < profileAdapter.getCount(); i++)
         {

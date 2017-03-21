@@ -7,19 +7,24 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 
+import com.smartfoo.android.core.FooBoolean;
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotification;
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
-import com.swooby.alfred.HeadsetManager.HeadsetManagerCallbacks;
-import com.swooby.alfred.HeadsetManager.HeadsetManagerConfiguration;
+import com.smartfoo.android.core.platform.FooScreenListener;
+import com.smartfoo.android.core.platform.FooScreenListener.FooScreenListenerCallbacks;
 import com.swooby.alfred.NotificationParserManager.NotificationParserManagerCallbacks;
 import com.swooby.alfred.NotificationParserManager.NotificationParserManagerConfiguration;
-import com.swooby.alfred.Profile.Tokens;
+import com.swooby.alfred.ProfileManager.HeadsetType;
+import com.swooby.alfred.ProfileManager.ProfileManagerCallbacks;
+import com.swooby.alfred.ProfileManager.ProfileManagerConfiguration;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerConfiguration;
+
+import java.util.concurrent.TimeUnit;
 
 public class MainApplication
         extends Application
@@ -33,21 +38,55 @@ public class MainApplication
         boolean onNotificationListenerAccessDisabled();
     }
 
-    private final FooListenerManager<MainApplicationCallbacks> mListenerManager;
-    private final TextToSpeechManager                          mTextToSpeechManager;
-    private final TextToSpeechManagerCallbacks                 mTextToSpeechManagerCallbacks;
-    private final NotificationParserManager                    mNotificationParserManager;
-    private final NotificationParserManagerCallbacks           mNotificationParserManagerCallbacks;
-    private final HeadsetManager                               mHeadsetManager;
-    private final HeadsetManagerCallbacks                      mHeadsetManagerCallbacks;
-
-    private AppPreferences mAppPreferences;
+    private AppPreferences                               mAppPreferences;
+    private FooListenerManager<MainApplicationCallbacks> mListenerManager;
+    private TextToSpeechManager                          mTextToSpeechManager;
+    private ProfileManager                               mProfileManager;
+    private NotificationParserManager                    mNotificationParserManager;
+    private FooScreenListener                            mScreenListener;
 
     private Boolean mIsEnabled;
 
-    public MainApplication()
+    @NonNull
+    public TextToSpeechManager getTextToSpeechManager()
     {
-        FooLog.v(TAG, "+MainApplication()");
+        return mTextToSpeechManager;
+    }
+
+    @NonNull
+    public ProfileManager getProfileManager()
+    {
+        return mProfileManager;
+    }
+
+    @NonNull
+    public NotificationParserManager getNotificationParserManager()
+    {
+        return mNotificationParserManager;
+    }
+
+    private boolean isEnabled()
+    {
+        return FooBoolean.toBoolean(mIsEnabled);
+    }
+
+    public void attach(MainApplicationCallbacks callbacks)
+    {
+        mListenerManager.attach(callbacks);
+    }
+
+    public void detach(MainApplicationCallbacks callbacks)
+    {
+        mListenerManager.detach(callbacks);
+    }
+
+    @Override
+    public void onCreate()
+    {
+        FooLog.v(TAG, "+onCreate()");
+        super.onCreate();
+
+        mAppPreferences = new AppPreferences(this);
 
         mListenerManager = new FooListenerManager<>();
 
@@ -67,6 +106,12 @@ public class MainApplication
             }
 
             @Override
+            public void setVoiceName(String voiceName)
+            {
+                mAppPreferences.setTextToSpeechVoiceName(voiceName);
+            }
+
+            @Override
             public int getAudioStreamType()
             {
                 return mAppPreferences.getTextToSpeechAudioStreamType();
@@ -78,14 +123,7 @@ public class MainApplication
                 return MainApplication.this.isEnabled();
             }
         });
-        mTextToSpeechManagerCallbacks = new TextToSpeechManagerCallbacks()
-        {
-            @Override
-            public void onTextToSpeechVoiceNameSet(String voiceName)
-            {
-                mAppPreferences.setTextToSpeechVoiceName(voiceName);
-            }
-        };
+        mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks());
 
         mNotificationParserManager = new NotificationParserManager(new NotificationParserManagerConfiguration()
         {
@@ -109,7 +147,7 @@ public class MainApplication
                 return MainApplication.this.getTextToSpeechManager();
             }
         });
-        mNotificationParserManagerCallbacks = new NotificationParserManagerCallbacks()
+        mNotificationParserManager.attach(new NotificationParserManagerCallbacks()
         {
             @Override
             public void onNotificationListenerBound()
@@ -122,98 +160,52 @@ public class MainApplication
             {
                 MainApplication.this.onNotificationListenerAccessDisabled();
             }
-        };
+        });
 
-        mHeadsetManager = new HeadsetManager(new HeadsetManagerConfiguration()
+        mScreenListener = new FooScreenListener(this);
+        mScreenListener.attach(new FooScreenListenerCallbacks()
         {
-            @NonNull
             @Override
-            public Context getContext()
+            public void onScreenOff()
             {
-                return MainApplication.this;
+                MainApplication.this.onScreenOff();
             }
 
-            @NonNull
             @Override
-            public TextToSpeechManager getTextToSpeech()
+            public void onScreenOn()
             {
-                return MainApplication.this.getTextToSpeechManager();
+                MainApplication.this.onScreenOn();
             }
         });
-        mHeadsetManagerCallbacks = new HeadsetManagerCallbacks()
+
+        mProfileManager = new ProfileManager(this, new ProfileManagerConfiguration()
         {
             @Override
-            public void onHeadsetConnectionChanged(boolean isConnected)
+            public String getProfileToken()
             {
-                MainApplication.this.onHeadsetConnectionChanged(isConnected);
+                return mAppPreferences.getProfileToken();
             }
-        };
 
-        FooLog.v(TAG, "-MainApplication()");
-    }
+            @Override
+            public void setProfileToken(String profileToken)
+            {
+                mAppPreferences.setProfileToken(profileToken);
+            }
+        });
+        mProfileManager.attach(new ProfileManagerCallbacks()
+        {
+            @Override
+            public void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
+            {
+                MainApplication.this.onHeadsetConnectionChanged(headsetType, headsetName, isConnected);
+            }
 
-    @NonNull
-    public TextToSpeechManager getTextToSpeechManager()
-    {
-        return mTextToSpeechManager;
-    }
-
-    @NonNull
-    public NotificationParserManager getNotificationParserManager()
-    {
-        return mNotificationParserManager;
-    }
-
-    @NonNull
-    public HeadsetManager getHeadsetManager()
-    {
-        return mHeadsetManager;
-    }
-
-    public AppPreferences getAppPreferences()
-    {
-        return mAppPreferences;
-    }
-
-    /*
-    public FooBluetoothManager getBluetoothManager()
-    {
-        return mBluetoothManager;
-    }
-    */
-
-    private boolean isEnabled()
-    {
-        return mIsEnabled != null && mIsEnabled;
-    }
-
-    public void attach(MainApplicationCallbacks callbacks)
-    {
-        mListenerManager.attach(callbacks);
-    }
-
-    public void detach(MainApplicationCallbacks callbacks)
-    {
-        mListenerManager.detach(callbacks);
-    }
-
-    @Override
-    public void onCreate()
-    {
-        FooLog.v(TAG, "+onCreate()");
-        super.onCreate();
-
-        //
-        // Initialize Context dependent dependencies first
-        //
-        mAppPreferences = new AppPreferences(this);
-
-        //
-        // Initialize dependants of the above
-        //
-        mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks);
-        mHeadsetManager.attach(mHeadsetManagerCallbacks);
-        mNotificationParserManager.attach(mNotificationParserManagerCallbacks);
+            @Override
+            public void onProfileStateChanged(String profileName, boolean enabled)
+            {
+                MainApplication.this.onProfileStateChanged(profileName, enabled);
+            }
+        });
 
         /*
         if (!updateHeadsetState())
@@ -249,51 +241,74 @@ public class MainApplication
         updateEnabledState("onNotificationListenerAccessDisabled");
     }
 
-    private void onHeadsetConnectionChanged(boolean isConnected)
+    private void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
     {
-        FooLog.i(TAG, "onHeadsetConnectionChanged(isConnected=" + isConnected + ')');
-        updateEnabledState("onHeadsetConnectionChanged");
+        FooLog.i(TAG, "onHeadsetConnectionChanged(headsetType=" + headsetType +
+                      ", headsetName=" + FooString.quote(headsetName) +
+                      ", isConnected=" + isConnected + ')');
+        if (headsetName == null)
+        {
+            headsetName = "";
+        }
+
+        int resId;
+        switch (headsetType)
+        {
+            case Bluetooth:
+                resId = isConnected ? R.string.bluetooth_headset_X_connected : R.string.bluetooth_headset_X_disconnected;
+                break;
+            case Wired:
+                resId = isConnected ? R.string.wired_headset_X_connected : R.string.wired_headset_X_disconnected;
+                break;
+            default:
+                throw new IllegalArgumentException("Unhandled headsetType == " + headsetType);
+        }
+
+        String speech = getString(resId, headsetName);
+        mTextToSpeechManager.speak(speech);
+    }
+
+    private void onProfileStateChanged(String profileName, boolean enabled)
+    {
+        FooLog.i(TAG, "onProfileStateChanged(profileName=" + FooString.quote(profileName) +
+                      ", enabled=" + enabled + ')');
+        updateEnabledState("onProfileStateChanged");
     }
 
     private boolean updateEnabledState(String debugInfo)
     {
         FooLog.v(TAG, "updateEnabledState(debugInfo=" + FooString.quote(debugInfo) + ')');
 
+        /*
         if (!mNotificationParserManager.isInitialized())
         {
             return false;
         }
+        */
 
+        boolean isProfileEnabled = mProfileManager.isEnabled();
+        FooLog.v(TAG, "updateEnabledState: isProfileEnabled == " + isProfileEnabled);
+
+        //noinspection UnnecessaryLocalVariable
+        boolean isEnabled = isProfileEnabled;
+
+        /*
         boolean isNotificationListenerBound = mNotificationParserManager.isNotificationListenerBound();
         FooLog.v(TAG, "updateEnabledState: isNotificationListenerBound == " + isNotificationListenerBound);
 
-        String profileToken = mAppPreferences.getProfileToken();
-        FooLog.v(TAG, "updateEnabledState: profileToken == " + FooString.quote(profileToken));
+        isEnabled &= isNotificationListenerBound;
+        */
 
-        boolean isProfileEnabled;
-        switch (profileToken)
-        {
-            case Tokens.ALWAYS_ON:
-                isProfileEnabled = true;
-                break;
-            case Tokens.HEADPHONES_ONLY:
-                isProfileEnabled = mHeadsetManager.isHeadsetConnected();
-                break;
-            case Tokens.DISABLED:
-            default:
-                isProfileEnabled = false;
-                break;
-        }
-        FooLog.v(TAG, "updateEnabledState: isProfileEnabled == " + isProfileEnabled);
+        FooLog.v(TAG, "updateEnabledState: isEnabled == " + isEnabled);
 
-        boolean isEnabled = isNotificationListenerBound && isProfileEnabled;
-
+        FooLog.v(TAG, "updateEnabledState: mIsEnabled == " + mIsEnabled);
         if (mIsEnabled != null && mIsEnabled == isEnabled)
         {
+            FooLog.v(TAG, "updateEnabledState: mIsEnabled == isEnabled; ignoring");
             return false;
         }
 
-        FooLog.i(TAG, "updateEnabledState: mIsEnabled != isEnabled; " + (isEnabled ? "ENABLING" : "DISABLING"));
+        FooLog.i(TAG, "updateEnabledState: mIsEnabled != isEnabled; updating");
 
         mIsEnabled = isEnabled;
 
@@ -313,6 +328,10 @@ public class MainApplication
     {
         String text = getString(R.string.alfred_enabled);
         mTextToSpeechManager.speak(text);
+
+        // !!!!!!THIS IS WHERE THE REAL APP LOGIC ACTUALLY STARTS!!!!!!
+
+        updateScreenInfo();
 
         //...
     }
@@ -346,6 +365,10 @@ public class MainApplication
             String message = getNotificationAccessMessage();
             String separator = getString(R.string.sentence_separator);
             String text = FooString.join(separator, title, message);
+
+            //
+            // Always speak this, even if profile is disabled
+            //
             mTextToSpeechManager.speak(true, headless, text);
         }
 
@@ -423,16 +446,54 @@ public class MainApplication
     }
 
     /*
-    private boolean isProfileTokenHeadphones()
-    {
-        return Tokens.HEADPHONES_ONLY.equals(mAppPreferences.getProfileToken());
-    }
-    */
-
-    /*
     public boolean isRecognitionAvailable()
     {
         return SpeechRecognizer.isRecognitionAvailable(this);
     }
     */
+
+    //
+    //
+    //
+
+    private void onScreenOff()
+    {
+        FooLog.i(TAG, "onScreenOff()");
+        updateScreenInfo();
+    }
+
+    private void onScreenOn()
+    {
+        FooLog.i(TAG, "onScreenOn()");
+        updateScreenInfo();
+    }
+
+    private long mTimeScreenOffMs = -1;
+
+    private void updateScreenInfo()
+    {
+        String speech;
+        if (mScreenListener.isScreenOn())
+        {
+            if (mTimeScreenOffMs != -1)
+            {
+                long durationMs = System.currentTimeMillis() - mTimeScreenOffMs;
+
+                mTimeScreenOffMs = -1;
+
+                speech = getString(R.string.screen_on_screen_was_off_for_X, FooString.getTimeDurationString(this, durationMs, TimeUnit.SECONDS));
+            }
+            else
+            {
+                speech = getString(R.string.screen_on);
+            }
+        }
+        else
+        {
+            mTimeScreenOffMs = System.currentTimeMillis();
+
+            speech = getString(R.string.screen_off);
+        }
+        mTextToSpeechManager.speak(speech);
+    }
 }

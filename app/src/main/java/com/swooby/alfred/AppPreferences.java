@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.content.FooPreferences;
-import com.swooby.alfred.Profile.Tokens;
 
 public class AppPreferences
         extends FooPreferences
@@ -47,11 +46,15 @@ public class AppPreferences
     @NonNull
     public String getProfileToken()
     {
-        return getString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, Tokens.HEADPHONES_ONLY);
+        return getString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, ProfileManager.DEFAULT_PROFILE_TOKEN);
     }
 
     public void setProfileToken(String value)
     {
+        if (FooString.isNullOrEmpty(value))
+        {
+            value = ProfileManager.DEFAULT_PROFILE_TOKEN;
+        }
         setString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, value);
     }
 
