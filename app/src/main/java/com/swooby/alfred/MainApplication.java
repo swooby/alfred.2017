@@ -1,9 +1,10 @@
 package com.swooby.alfred;
 
+import android.app.Activity;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.os.Bundle;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooListenerManager;
@@ -11,6 +12,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotification;
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.swooby.alfred.HeadsetManager.HeadsetManagerCallbacks;
 import com.swooby.alfred.HeadsetManager.HeadsetManagerConfiguration;
 import com.swooby.alfred.NotificationParserManager.NotificationParserManagerCallbacks;
@@ -26,6 +28,8 @@ public class MainApplication
 
     public interface MainApplicationCallbacks
     {
+        Activity getActivity();
+
         boolean onNotificationListenerAccessDisabled();
     }
 
@@ -39,11 +43,12 @@ public class MainApplication
 
     private AppPreferences mAppPreferences;
 
-    private boolean mIsEnabled;
-
+    private Boolean mIsEnabled;
 
     public MainApplication()
     {
+        FooLog.v(TAG, "+MainApplication()");
+
         mListenerManager = new FooListenerManager<>();
 
         mTextToSpeechManager = new TextToSpeechManager(new TextToSpeechManagerConfiguration()
@@ -143,6 +148,8 @@ public class MainApplication
                 MainApplication.this.onHeadsetConnectionChanged(isConnected);
             }
         };
+
+        FooLog.v(TAG, "-MainApplication()");
     }
 
     @NonNull
@@ -177,7 +184,7 @@ public class MainApplication
 
     private boolean isEnabled()
     {
-        return mIsEnabled;
+        return mIsEnabled != null && mIsEnabled;
     }
 
     public void attach(MainApplicationCallbacks callbacks)
@@ -193,7 +200,7 @@ public class MainApplication
     @Override
     public void onCreate()
     {
-        FooLog.i(TAG, "+onCreate()");
+        FooLog.v(TAG, "+onCreate()");
         super.onCreate();
 
         //
@@ -227,30 +234,120 @@ public class MainApplication
 
         //mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
 
-        FooLog.i(TAG, "-onCreate()");
+        FooLog.v(TAG, "-onCreate()");
     }
 
     private void onNotificationListenerBound()
     {
-        //updateEnabledState();
-
+        FooLog.i(TAG, "onNotificationListenerBound()");
+        updateEnabledState("onNotificationListenerBound");
     }
 
     private void onNotificationListenerAccessDisabled()
     {
-        //updateEnabledState();
+        FooLog.w(TAG, "onNotificationListenerAccessDisabled()");
+        updateEnabledState("onNotificationListenerAccessDisabled");
+    }
 
+    private void onHeadsetConnectionChanged(boolean isConnected)
+    {
+        FooLog.i(TAG, "onHeadsetConnectionChanged(isConnected=" + isConnected + ')');
+        updateEnabledState("onHeadsetConnectionChanged");
+    }
+
+    private boolean updateEnabledState(String debugInfo)
+    {
+        FooLog.v(TAG, "updateEnabledState(debugInfo=" + FooString.quote(debugInfo) + ')');
+
+        if (!mNotificationParserManager.isInitialized())
+        {
+            return false;
+        }
+
+        boolean isNotificationListenerBound = mNotificationParserManager.isNotificationListenerBound();
+        FooLog.v(TAG, "updateEnabledState: isNotificationListenerBound == " + isNotificationListenerBound);
+
+        String profileToken = mAppPreferences.getProfileToken();
+        FooLog.v(TAG, "updateEnabledState: profileToken == " + FooString.quote(profileToken));
+
+        boolean isProfileEnabled;
+        switch (profileToken)
+        {
+            case Tokens.ALWAYS_ON:
+                isProfileEnabled = true;
+                break;
+            case Tokens.HEADPHONES_ONLY:
+                isProfileEnabled = mHeadsetManager.isHeadsetConnected();
+                break;
+            case Tokens.DISABLED:
+            default:
+                isProfileEnabled = false;
+                break;
+        }
+        FooLog.v(TAG, "updateEnabledState: isProfileEnabled == " + isProfileEnabled);
+
+        boolean isEnabled = isNotificationListenerBound && isProfileEnabled;
+
+        if (mIsEnabled != null && mIsEnabled == isEnabled)
+        {
+            return false;
+        }
+
+        FooLog.i(TAG, "updateEnabledState: mIsEnabled != isEnabled; " + (isEnabled ? "ENABLING" : "DISABLING"));
+
+        mIsEnabled = isEnabled;
+
+        if (mIsEnabled)
+        {
+            onEnabled();
+        }
+        else
+        {
+            onDisabled();
+        }
+
+        return true;
+    }
+
+    private void onEnabled()
+    {
+        String text = getString(R.string.alfred_enabled);
+        mTextToSpeechManager.speak(text);
+
+        //...
+    }
+
+    private void onDisabled()
+    {
+        //
+        // Allow the UI to optionally report on its own...
+        //
+
+        boolean headless = true;
         boolean handled = false;
 
         for (MainApplicationCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            handled = callbacks.onNotificationListenerAccessDisabled();
-            if (handled)
-            {
-                break;
-            }
+            headless &= callbacks.getActivity() == null;
+            handled |= callbacks.onNotificationListenerAccessDisabled();
         }
         mListenerManager.endTraversing();
+
+        boolean isNotificationListenerBound = mNotificationParserManager.isNotificationListenerBound();
+        FooLog.v(TAG, "onDisabled: isNotificationListenerBound == " + isNotificationListenerBound);
+
+        //
+        // Always speak some things [if enabled]...
+        //
+
+        if (!isNotificationListenerBound)
+        {
+            String title = getNotificationAccessTitle();
+            String message = getNotificationAccessMessage();
+            String separator = getString(R.string.sentence_separator);
+            String text = FooString.join(separator, title, message);
+            mTextToSpeechManager.speak(true, headless, text);
+        }
 
         if (handled)
         {
@@ -258,88 +355,49 @@ public class MainApplication
         }
 
         //
-        // Show notification...
+        // Report if not aborted by the UI...
         //
 
-        int notificationRequestCode = 100;
-        String contentTitle = getString(R.string.app_name);
-        String notificationContentText = "Notification Access Disabled: Touch to enable...";
-
-        PendingIntent contentIntent = FooNotification.createPendingIntent(this, notificationRequestCode, MainActivity.class);
-
-        FooNotificationBuilder builder = new FooNotificationBuilder(this)
-                .setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.ic_warning_white_18dp)
-                .setAutoCancel(true)
-                .setContentTitle(contentTitle)
-                .setContentText(notificationContentText);
-
-        /*
-        // TODO:(pv) Experimental Android Wear notification...
-        //noinspection ConstantConditions
-        if (false)
+        if (!isNotificationListenerBound)
         {
-            NotificationCompat.WearableExtender extender = new NotificationCompat.WearableExtender();
-            NotificationCompat.Action actionDelete = new NotificationCompat.Action.Builder(R.drawable.ic_warning_white_18dp, "Snooze", deleteIntent)
-                    .build();
-            extender.addAction(actionDelete);
-            builder.extend(extender);
-        }
-        */
 
-        FooNotification notification = new FooNotification(notificationRequestCode, builder);
-
-        FooLog.v(TAG, "onNotificationListenerUnbound: notification=" + notification + ')');
-        notification.show(this);
-    }
-
-    private void onHeadsetConnectionChanged(boolean isConnected)
-    {
-        updateEnabledState();
-    }
-
-    private boolean updateEnabledState()
-    {
-        FooLog.v(TAG, "updateEnabledState()");
-
-        boolean isEnabled = mNotificationParserManager.isNotificationListenerBound();
-        if (isEnabled)
-        {
-            String profileToken = mAppPreferences.getProfileToken();
-            switch (profileToken)
-            {
-                case Tokens.DISABLED:
-                    isEnabled = false;
-                    break;
-                case Tokens.ALWAYS_ON:
-                    isEnabled = true;
-                    break;
-                case Tokens.HEADPHONES_ONLY:
-                    isEnabled = mHeadsetManager.isHeadsetConnected();
-                    break;
-                default:
-                    throw new IllegalArgumentException("unhandled profileToken=" + FooString.quote(profileToken));
-            }
+            //...
+            
+            return;
         }
 
-        if (mIsEnabled != isEnabled)
-        {
-            FooLog.w(TAG, "updateEnabledState: mIsEnabled != isEnabled; " +
-                          (isEnabled ? "ENABLING" : "DISABLING"));
+        //...
+    }
 
-            mIsEnabled = isEnabled;
+    public String getNotificationAccessTitle()
+    {
+        int resId;
+        if (mNotificationParserManager.isNotificationAccessSettingEnabledAndNotBound())
+        {
+            resId = R.string.notification_access_mismatch;
+        }
+        else
+        {
+            resId = R.string.notification_access_disabled;
+        }
+        return getString(resId);
+    }
+
+    public String getNotificationAccessMessage()
+    {
+        int resId;
+        if (mNotificationParserManager.isNotificationAccessSettingEnabledAndNotBound())
+        {
+            resId = R.string.please_reenable_notification_access_for_the_X_application;
+        }
+        else
+        {
+            resId = R.string.please_enable_notification_access_for_the_X_application;
         }
 
-        return mIsEnabled;
-    }
+        String appName = getString(R.string.app_name);
 
-    private void onEnabled()
-    {
-        mTextToSpeechManager.speak("Alfred enabled");
-    }
-
-    private void onDisabled()
-    {
+        return getString(resId, appName);
     }
 
     /*

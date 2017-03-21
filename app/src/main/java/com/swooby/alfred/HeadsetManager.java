@@ -38,6 +38,8 @@ public class HeadsetManager
 
     public HeadsetManager(@NonNull HeadsetManagerConfiguration configuration)
     {
+        FooLog.v(TAG, "+HeadsetManager(...)");
+
         FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
 
         mConfiguration = configuration;
@@ -70,6 +72,8 @@ public class HeadsetManager
                 HeadsetManager.this.onWiredHeadsetDisconnected(name, hasMicrophone);
             }
         };
+
+        FooLog.v(TAG, "-HeadsetManager(...)");
     }
 
     public boolean isHeadsetConnected()

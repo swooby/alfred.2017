@@ -2,6 +2,7 @@ package com.swooby.alfred;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.content.FooPreferences;
@@ -22,6 +23,7 @@ public class AppPreferences
         super(applicationContext);
     }
 
+    @NonNull
     public String getTextToSpeechVoiceName()
     {
         return getString(FILE_NAME_USER, KEY_USER_VOICE_NAME, DEFAULT_VOICE_NAME);
@@ -42,6 +44,7 @@ public class AppPreferences
         setInt(FILE_NAME_USER, KEY_USER_VOICE_AUDIO_STREAM_TYPE, value);
     }
 
+    @NonNull
     public String getProfileToken()
     {
         return getString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, Tokens.HEADPHONES_ONLY);
@@ -52,6 +55,7 @@ public class AppPreferences
         setString(FILE_NAME_USER, KEY_USER_PROFILE_TOKEN, value);
     }
 
+    @NonNull
     public String getKeyphrase()
     {
         return getString(FILE_NAME_USER, KEY_USER_KEYPHRASE, "alfred");

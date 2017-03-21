@@ -1,5 +1,6 @@
 package com.swooby.alfred;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.AudioManager;
@@ -10,6 +11,8 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -23,6 +26,7 @@ import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -60,9 +64,25 @@ public class MainActivity
     private final MainApplicationCallbacks mMainApplicationCallbacks = new MainApplicationCallbacks()
     {
         @Override
+        public Activity getActivity()
+        {
+            return MainActivity.this;
+        }
+
+        @Override
         public boolean onNotificationListenerAccessDisabled()
         {
             return MainActivity.this.onNotificationListenerAccessDisabled();
+        }
+    };
+
+    private final TextToSpeechManagerCallbacks mTextToSpeechManagerCallbacks = new TextToSpeechManagerCallbacks()
+    {
+        @Override
+        public void onTextToSpeechInitialized()
+        {
+            super.onTextToSpeechInitialized();
+            MainActivity.this.onTextToSpeechInitialized();
         }
     };
 
@@ -77,10 +97,14 @@ public class MainActivity
     private DrawerLayout          mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
+
+    private Button  mButtonNotificationListenerSettings;
     private Spinner mSpinnerTextToSpeechVoices;
     private Spinner mSpinnerTextToSpeechAudioStreamType;
     private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
     private Spinner mSpinnerProfiles;
+
+    private boolean mRequestedTextToSpeechData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -95,10 +119,10 @@ public class MainActivity
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         Intent intent = getIntent();
-        FooLog.i(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
+        FooLog.v(TAG, "onCreate: intent=" + FooPlatformUtils.toString(intent));
 
         String intentAction = intent.getAction();
-        FooLog.i(TAG, "onCreate: intentAction=" + FooString.quote(intentAction));
+        FooLog.v(TAG, "onCreate: intentAction=" + FooString.quote(intentAction));
 
         setContentView(R.layout.activity_main);
 
@@ -138,6 +162,16 @@ public class MainActivity
             mNavigationView.setNavigationItemSelectedListener(this);
 
         }
+
+        mButtonNotificationListenerSettings = (Button) findViewById(R.id.buttonNotificationListenerSettings);
+        mButtonNotificationListenerSettings.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                startActivityNotificationListenerSettings();
+            }
+        });
 
         mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
 
@@ -230,8 +264,6 @@ public class MainActivity
         if (savedInstanceState == null)
         {
             verifyRequirements();
-
-            requestTextToSpeechData();
         }
     }
 
@@ -313,7 +345,7 @@ public class MainActivity
                 FooPlatformUtils.showAppSettings(this);
                 return true;
             case R.id.action_notification_access:
-                mNotificationParserManager.startActivityNotificationListenerSettings(this);
+                startActivityNotificationListenerSettings();
                 return true;
             case R.id.action_text_to_speech:
                 startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
@@ -379,24 +411,58 @@ public class MainActivity
     @Override
     protected void onResume()
     {
+        FooLog.v(TAG, "+onResume()");
         super.onResume();
 
+        int visibility;
+        if (mNotificationParserManager.isNotificationListenerBound())
+        {
+            visibility = View.GONE;
+        }
+        else
+        {
+            visibility = View.VISIBLE;
+        }
+        mButtonNotificationListenerSettings.setVisibility(visibility);
+
         mMainApplication.attach(mMainApplicationCallbacks);
+        mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks);
 
         textToSpeechAudioStreamTypeUpdate();
 
         profilesUpdate();
 
+        FooLog.v(TAG, "-onResume()");
     }
 
     @Override
     protected void onPause()
     {
+        FooLog.v(TAG, "+onPause()");
         super.onPause();
 
         mMainApplication.detach(mMainApplicationCallbacks);
+        mTextToSpeechManager.detach(mTextToSpeechManagerCallbacks);
 
         volumeObserverStop();
+
+        FooLog.v(TAG, "-onPause()");
+    }
+
+    private void onTextToSpeechInitialized()
+    {
+        FooLog.v(TAG, "onTextToSpeechInitialized()");
+        if (mRequestedTextToSpeechData)
+        {
+            return;
+        }
+        mRequestedTextToSpeechData = true;
+        mTextToSpeechManager.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
+    }
+
+    private void startActivityNotificationListenerSettings()
+    {
+        mNotificationParserManager.startActivityNotificationListenerSettings(this);
     }
 
     private int textToSpeechAudioStreamTypeUpdate()
@@ -408,7 +474,7 @@ public class MainActivity
         int selectedIndex = -1;
 
         int textToSpeechAudioStreamType = mAppPreferences.getTextToSpeechAudioStreamType();
-        FooLog.i(TAG, "textToSpeechAudioStreamTypeUpdate: textToSpeechAudioStreamType=" +
+        FooLog.v(TAG, "textToSpeechAudioStreamTypeUpdate: textToSpeechAudioStreamType=" +
                       FooAudioUtils.audioStreamTypeToString(textToSpeechAudioStreamType));
 
         for (int i = 0; i < textToSpeechAudioStreamTypeAdapter.getCount(); i++)
@@ -517,6 +583,7 @@ public class MainActivity
         for (int i = 0; i < profileAdapter.getCount(); i++)
         {
             Profile profile = profileAdapter.getItem(i);
+            //noinspection ConstantConditions
             if (profile.getToken().equals(profileToken))
             {
                 selectedIndex = i;
@@ -527,6 +594,29 @@ public class MainActivity
         if (selectedIndex != -1)
         {
             mSpinnerProfiles.setSelection(selectedIndex);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        FooLog.v(TAG, "onActivityResult(...)");
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode)
+        {
+            case REQUEST_ACTION_CHECK_TTS_DATA:
+            {
+                switch (resultCode)
+                {
+                    case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
+                    {
+                        updateTextToSpeechVoices();
+                        break;
+                    }
+                }
+                break;
+            }
         }
     }
 
@@ -609,47 +699,6 @@ public class MainActivity
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode)
-        {
-            case REQUEST_ACTION_CHECK_TTS_DATA:
-            {
-                switch (resultCode)
-                {
-                    case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
-                    {
-                        updateTextToSpeechVoices();
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-    }
-
-    private void requestTextToSpeechData()
-    {
-        if (!mTextToSpeechManager.isInitialized())
-        {
-            mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
-            {
-                @Override
-                public void onTextToSpeechInitialized()
-                {
-                    mTextToSpeechManager.detach(this);
-                    requestTextToSpeechData();
-                }
-            });
-            return;
-        }
-
-        FooTextToSpeechHelper.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA);
-    }
-
     private void updateTextToSpeechVoices()
     {
         ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
@@ -710,6 +759,23 @@ public class MainActivity
 
     private boolean onNotificationListenerAccessDisabled()
     {
+        mButtonNotificationListenerSettings.setVisibility(View.VISIBLE);
+
+        if (true)
+        {
+            FragmentManager fm = getSupportFragmentManager();
+            DialogFragment dialogFragment = (GenericPromptPositiveNegativeDialogFragment) fm.findFragmentByTag(FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
+            if (dialogFragment == null)
+            {
+                String title = mMainApplication.getNotificationAccessTitle();
+                String message = mMainApplication.getNotificationAccessMessage();
+
+                dialogFragment = GenericPromptPositiveNegativeDialogFragment.newInstance(title, message);
+                dialogFragment.show(fm, FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
+            }
+            return true;
+        }
+
         return false;
     }
 

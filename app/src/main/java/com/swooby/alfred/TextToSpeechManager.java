@@ -1,5 +1,6 @@
 package com.swooby.alfred;
 
+import android.app.Activity;
 import android.content.Context;
 import android.speech.tts.Voice;
 import android.support.annotation.NonNull;
@@ -14,6 +15,7 @@ import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech.FooTextToSpeechCallbacks;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 
 import java.util.Set;
 
@@ -40,7 +42,7 @@ public class TextToSpeechManager
         @Override
         public void onTextToSpeechInitialized()
         {
-            //ignore
+            // ignore
         }
 
         public void onTextToSpeechVoiceNameSet(String voiceName)
@@ -55,6 +57,8 @@ public class TextToSpeechManager
 
     public TextToSpeechManager(@NonNull TextToSpeechManagerConfiguration configuration)
     {
+        FooLog.v(TAG, "+TextToSpeechManager(...)");
+
         FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
 
         mConfiguration = configuration;
@@ -69,6 +73,8 @@ public class TextToSpeechManager
                 TextToSpeechManager.this.onTextToSpeechInitialized();
             }
         });
+
+        FooLog.v(TAG, "-TextToSpeechManager(...)");
     }
 
     public int getAudioStreamType()
@@ -90,26 +96,6 @@ public class TextToSpeechManager
     public boolean isEnabled()
     {
         return mConfiguration.isEnabled();
-    }
-
-    public boolean isInitialized()
-    {
-        return mTextToSpeech.isInitialized();
-    }
-
-    public void attach(TextToSpeechManagerCallbacks listener)
-    {
-        mListenerManager.attach(listener);
-
-        if (mListenerManager.size() == 1 && !mTextToSpeech.isStartingOrStarted())
-        {
-            start();
-        }
-    }
-
-    public void detach(TextToSpeechManagerCallbacks listener)
-    {
-        mListenerManager.detach(listener);
     }
 
     public Set<Voice> getVoices()
@@ -141,20 +127,12 @@ public class TextToSpeechManager
         mListenerManager.endTraversing();
     }
 
-    private void start()
+    /*
+    public boolean isInitialized()
     {
-        String voiceName = mConfiguration.getVoiceName();
-        FooLog.i(TAG, "start: voiceName=" +
-                      FooString.quote(voiceName));
-
-        int audioStreamType = mConfiguration.getAudioStreamType();
-        FooLog.i(TAG, "start: audioStreamType=" +
-                      FooAudioUtils.audioStreamTypeToString(audioStreamType));
-
-        mTextToSpeech.setVoiceName(voiceName);
-        mTextToSpeech.setAudioStreamType(audioStreamType);
-        mTextToSpeech.start(getContext());
+        return mTextToSpeech.isInitialized();
     }
+    */
 
     private void onTextToSpeechInitialized()
     {
@@ -164,6 +142,60 @@ public class TextToSpeechManager
         }
         mListenerManager.endTraversing();
     }
+
+    public void attach(TextToSpeechManagerCallbacks listener)
+    {
+        mListenerManager.attach(listener);
+
+        if (mTextToSpeech.isStarted())
+        {
+            if (mTextToSpeech.isInitialized())
+            {
+                onTextToSpeechInitialized();
+            }
+        }
+        else
+        {
+            if (mListenerManager.size() == 1)
+            {
+                String voiceName = mConfiguration.getVoiceName();
+                FooLog.v(TAG, "attach: voiceName=" + FooString.quote(voiceName));
+
+                int audioStreamType = mConfiguration.getAudioStreamType();
+                FooLog.v(TAG, "attach: audioStreamType=" + FooAudioUtils.audioStreamTypeToString(audioStreamType));
+
+                mTextToSpeech.setVoiceName(voiceName);
+                mTextToSpeech.setAudioStreamType(audioStreamType);
+                mTextToSpeech.start(getContext());
+            }
+        }
+    }
+
+    public void detach(TextToSpeechManagerCallbacks listener)
+    {
+        mListenerManager.detach(listener);
+    }
+
+    public boolean requestTextToSpeechData(Activity activity, int requestCode)
+    {
+        if (!mTextToSpeech.isStarted())
+        {
+            return false;
+        }
+
+        if (!mTextToSpeech.isInitialized())
+        {
+            return false;
+        }
+
+        FooTextToSpeechHelper.requestTextToSpeechData(activity, requestCode);
+
+        return true;
+    }
+
+    //
+    //
+    //
 
     public void speak(String text)
     {

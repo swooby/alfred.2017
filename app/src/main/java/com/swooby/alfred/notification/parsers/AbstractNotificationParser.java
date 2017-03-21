@@ -857,14 +857,14 @@ public abstract class AbstractNotificationParser
         FooRun.throwIllegalArgumentExceptionIfNull(sbn, "sbn");
 
         String packageName = getPackageName(sbn);
-        FooLog.v(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
+        FooLog.v(TAG, "defaultOnNotificationPosted: packageName=" + FooString.quote(packageName));
         FooRun.throwIllegalArgumentExceptionNullOrEmpty(packageName, "packageName");
 
         if (FooString.isNullOrEmpty(packageAppSpokenName))
         {
             packageAppSpokenName = FooPlatformUtils.getApplicationName(context, packageName);
         }
-        FooLog.v(TAG, "onNotificationPosted: packageAppSpokenName=" + FooString.quote(packageAppSpokenName));
+        FooLog.v(TAG, "defaultOnNotificationPosted: packageAppSpokenName=" + FooString.quote(packageAppSpokenName));
         FooRun.throwIllegalArgumentExceptionNullOrEmpty(packageAppSpokenName, "packageAppSpokenName");
 
         //String groupKey = sbn.getGroupKey();
@@ -875,18 +875,18 @@ public abstract class AbstractNotificationParser
         //String tag = sbn.getTag();
 
         Notification notification = getNotification(sbn);
-        FooLog.v(TAG, "onNotificationPosted: notification=" + notification);
+        FooLog.v(TAG, "defaultOnNotificationPosted: notification=" + notification);
         if (notification == null)
         {
-            FooLog.v(TAG, "onNotificationPosted: notification == null; Unparsable");
+            FooLog.v(TAG, "defaultOnNotificationPosted: notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Bundle extras = notification.extras;
-        FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
+        FooLog.v(TAG, "defaultOnNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
 
         CharSequence tickerText = notification.tickerText;
-        FooLog.v(TAG, "onNotificationPosted: tickerText=" + FooString.quote(tickerText));
+        FooLog.v(TAG, "defaultOnNotificationPosted: tickerText=" + FooString.quote(tickerText));
 
         // TODO:(pv) Seriously, introspect and walk all StatusBarNotification fields, especially:
         //  Notification.tickerText
@@ -915,7 +915,7 @@ public abstract class AbstractNotificationParser
             }
         };
 
-        FooLog.v(TAG, "onNotificationPosted: ---- bigContentView ----");
+        FooLog.v(TAG, "defaultOnNotificationPosted: ---- bigContentView ----");
         RemoteViews bigContentView = notification.bigContentView;
         View inflatedBigContentView = inflateRemoteView(context, bigContentView);
         walkView(inflatedBigContentView, null, walkViewCallbacks);
@@ -932,7 +932,7 @@ public abstract class AbstractNotificationParser
         }
         */
 
-        FooLog.v(TAG, "onNotificationPosted: ---- contentView ----");
+        FooLog.v(TAG, "defaultOnNotificationPosted: ---- contentView ----");
         RemoteViews contentView = notification.contentView;
         View inflatedContentView = inflateRemoteView(context, contentView);
         walkView(inflatedContentView, null, bigContentView != null ? null : walkViewCallbacks);
@@ -960,10 +960,14 @@ public abstract class AbstractNotificationParser
             return NotificationParseResult.ParsableIgnored;
         }
 
-        if (builder.getNumberOfParts() == 1)
+        if (builder.getNumberOfParts() == 1 && tickerText != null)
         {
-            builder.appendSilence(500)
-                    .appendSpeech(tickerText.toString());
+            String tickerString = tickerText.toString();
+            if (!FooString.isNullOrEmpty(tickerString))
+            {
+                builder.appendSilence(500)
+                        .appendSpeech(tickerString);
+            }
         }
 
         textToSpeechManager.speak(builder);

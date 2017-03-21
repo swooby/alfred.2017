@@ -55,8 +55,12 @@ public class NotificationParserManager
     private final NotificationParserCallbacks                            mNotificationParserCallbacks;
     private final Map<String, AbstractNotificationParser>                mNotificationParsers;
 
+    private boolean mIsInitialized;
+
     public NotificationParserManager(@NonNull NotificationParserManagerConfiguration configuration)
     {
+        FooLog.v(TAG, "+NotificationParserManager(...)");
+
         FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
 
         mConfiguration = configuration;
@@ -108,6 +112,8 @@ public class NotificationParserManager
         };
 
         mNotificationParsers = new HashMap<>();
+
+        FooLog.v(TAG, "-NotificationParserManager(...)");
     }
 
     @NonNull
@@ -127,20 +133,46 @@ public class NotificationParserManager
         return mConfiguration.isEnabled();
     }
 
-    public boolean isNotificationAccessSettingEnabled()
+    public boolean isInitialized()
     {
-        return FooNotificationListenerManager.isNotificationAccessSettingEnabled(getContext());
+        return mIsInitialized;
+    }
+
+    /**
+     * NOTE:(pv) USE CAUTIOUSLY! The Notification Listener can still fail to bind [due to
+     * http://stackoverflow.com/a/37081128/252308] even if the setting is AND SHOWS as enabled.
+     *
+     * @return true if the OS Notification Access Setting is enable for this app's context
+     */
+    public boolean isNotificationAccessSettingUnverifiedEnabled()
+    {
+        return FooNotificationListenerManager.isNotificationAccessSettingUnverifiedEnabled(getContext());
+    }
+
+    /**
+     * @return true if the Notification Listener successfully bound
+     */
+    public boolean isNotificationListenerBound()
+    {
+        return mFooNotificationListenerManager.isNotificationListenerBound();
+    }
+
+    /**
+     * NOTE: Used to determine if the Notification Access Setting is enabled but mismatches its actual state [due to
+     * issue http://stackoverflow.com/a/37081128/252308]
+     *
+     * @return true if the Notification Access Setting is enabled for the context *AND* this Notification Listener
+     * successfully bound
+     */
+    public boolean isNotificationAccessSettingEnabledAndNotBound()
+    {
+        return isNotificationAccessSettingUnverifiedEnabled() && !isNotificationListenerBound();
     }
 
     public void startActivityNotificationListenerSettings(@NonNull Context context)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
         mFooNotificationListenerManager.startActivityNotificationListenerSettings(context);
-    }
-
-    public boolean isNotificationListenerBound()
-    {
-        return mFooNotificationListenerManager.isNotificationListenerBound();
     }
 
     public void attach(NotificationParserManagerCallbacks callbacks)
@@ -203,6 +235,7 @@ public class NotificationParserManager
     private void onNotificationListenerBound()
     {
         FooLog.i(TAG, "onNotificationListenerBound()");
+        mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
             callbacks.onNotificationListenerBound();
@@ -213,6 +246,7 @@ public class NotificationParserManager
     private void onNotificationListenerUnbound()
     {
         FooLog.i(TAG, "onNotificationListenerUnbound()");
+        mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
             callbacks.onNotificationListenerAccessDisabled();
@@ -265,7 +299,7 @@ public class NotificationParserManager
             return;
         }
 
-        String packageName = sbn.getPackageName();
+        String packageName = AbstractNotificationParser.getPackageName(sbn);
         FooLog.d(TAG, "onNotificationRemoved: packageName=" + FooString.quote(packageName));
 
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);

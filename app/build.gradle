@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId 'com.swooby.alfred'
-        minSdkVersion 25
+        minSdkVersion 24
         targetSdkVersion 25
         versionCode 1
         versionName '1.0'
@@ -30,6 +30,11 @@ android {
             debuggable true
             minifyEnabled false
             shrinkResources false
+
+            //
+            // NOTE:(pv) Setting this to true can mess up debugging by hiding method parameters (especially anonymous methods)
+            // If you are seeing weird missing variables when debugging, set this to false.
+            testCoverageEnabled false
         }
     }
 

@@ -2,7 +2,15 @@
 
     <string name="app_name">Alfred for Android</string>
 
-    <string name="notification_access_is_disabled_please_enable">Notification access is disabled.\nPlease enable notification access for the \"%1$s\" application.</string>
+    <string name="sentence_separator">.\u0020</string>
+
+    <string name="alfred_enabled">Alfred enabled</string>
+
+    <string name="notification_access_disabled">Notification access disabled</string>
+    <string name="notification_access_mismatch">Notification access mismatch</string>
+    <string name="please_enable_notification_access_for_the_X_application">Please enable notification access for the \"%1$s\" application.</string>
+    <string name="please_reenable_notification_access_for_the_X_application">Please re-enable notification access for the \"%1$s\" application.</string>
+    <string name="tap_to_configure">Tap to configure.</string>
 
     <string name="bluetooth_headset_X_connected">Bluetooth Headset %1$s connected</string>
     <string name="bluetooth_headset_X_disconnected">Bluetooth Headset %1$s connected</string>
@@ -16,6 +24,13 @@
     <string name="action_application_info">Application Info</string>
     <string name="action_notification_access">Notification Access</string>
     <string name="action_text_to_speech">Text-To-Speech</string>
+
+    <!-- MainActivity -->
+    <string name="enable_notification_access">Enable Notification Access</string>
+    <string name="voice">Voice:</string>
+    <string name="stream">Stream:</string>
+    <string name="volume">Volume:</string>
+    <string name="profile">Profile:</string>
 
     <string name="pandora_package_app_name">Pandora</string>
     <string name="pandora_advertisement_title">Advertisement</string>
