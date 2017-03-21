@@ -88,7 +88,7 @@ public class GoogleHangoutsNotificationParser
         Notification notification = sbn.getNotification();
         if (notification == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: textViewStation == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 

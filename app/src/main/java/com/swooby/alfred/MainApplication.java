@@ -360,9 +360,31 @@ public class MainApplication
 
         if (!isNotificationListenerBound)
         {
+            //
+            // Show notification...
+            //
 
-            //...
-            
+            int notificationRequestCode = 100;
+            String contentTitle = getString(R.string.app_name);
+            String contentText = getNotificationAccessTitle();
+            String subText = getString(R.string.tap_to_configure);
+
+            Intent intentNotificationListenerSettings = FooNotificationListenerManager.getIntentNotificationListenerSettings();
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 1, intentNotificationListenerSettings, 0);
+
+            FooNotificationBuilder builder = new FooNotificationBuilder(this)
+                    .setContentIntent(contentIntent)
+                    .setSmallIcon(R.drawable.ic_warning_white_18dp)
+                    .setAutoCancel(true)
+                    .setContentTitle(contentTitle)
+                    .setContentText(contentText)
+                    .setSubText(subText);
+
+            FooNotification notification = new FooNotification(notificationRequestCode, builder);
+
+            FooLog.v(TAG, "onNotificationListenerUnbound: notification=" + notification + ')');
+            notification.show(this);
+
             return;
         }
 

@@ -1,11 +1,27 @@
 package com.swooby.alfred.notification.parsers;
 
+import android.app.Notification;
+import android.app.Notification.BigTextStyle;
+import android.app.Notification.InboxStyle;
+import android.content.pm.ApplicationInfo;
+import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
+import android.text.Spannable;
+import android.text.style.TextAppearanceSpan;
+
+import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.swooby.alfred.BuildConfig;
+
+import java.util.Arrays;
 
 public class GmailNotificationParser
         extends AbstractNotificationParser
 {
+    private static final String TAG = FooLog.TAG(GmailNotificationParser.class);
+
     public GmailNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
         super(callbacks);//, "G mail");
@@ -20,7 +36,27 @@ public class GmailNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        /*
+        if (BuildConfig.DEBUG)
+        {
+            super.onNotificationPosted(sbn);
+        }
+
+        Notification notification = sbn.getNotification();
+        if (notification == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: notification == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+
+        Bundle extras = notification.extras;
+        if (extras == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+
+/*
+example1:
 onNotificationPosted: notification=Notification(pri=0 contentView=com.google.android.gm/0x1090085 vibrate=null sound=null tick defaults=0x4 flags=0x19 color=0xffdb4437 category=email actions=2 vis=PRIVATE publicVersion=Notification(pri=0 contentView=com.google.android.gm/0x1090085 vibrate=null sound=null defaults=0x0 flags=0x0 color=0xffdb4437 category=email vis=PUBLIC))
 onNotificationPosted: bigContentView
 walkView: view=android.widget.FrameLayout{c4cb098 V.E...... ......I. 0,0-0,0 #102036c android:id/status_bar_latest_event_content}
@@ -93,7 +129,136 @@ onNotificationPosted: extras={"android.title"="TheLadders", "android.subText"="p
     © 2014 TheLadders | Privacy | Terms of Use | Affiliates | Contact | Employers | Site Map
     TheLadders.com, Inc. | 137 Varick St., 8th Floor | New York, NY 10013, "android.infoText"=null, "android.wearable.EXTENSIONS"={"background"=android.graphics.Bitmap@ea87228, "actions"=[android.app.Notification$Action@370fb41, android.app.Notification$Action@8eef8e6, android.app.Notification$Action@57a3e27]}, "android.originatingUserId"=0, "android.progressIndeterminate"=false}
 
-         */
-        return super.onNotificationPosted(sbn);
+example2:
+packageName="com.google.android.gm"
+packageAppSpokenName="Gmail"
+notification=Notification(pri=0 contentView=null vibrate=null sound=content://settings/system/notification_sound tick defaults=0x4 flags=0x219 color=0xffdb4437 category=email groupKey=content://com.android.gmail.ui/account%3A1872741928/account/content://com.android.gmail.ui/account%3A1872741928/label/%5Esq_ig_i_personal vis=PRIVATE publicVersion=Notification(pri=0 contentView=null vibrate=null sound=null defaults=0x0 flags=0x200 color=0xffdb4437 category=email groupKey=content://com.android.gmail.ui/account%3A1872741928/account/content://com.android.gmail.ui/account%3A1872741928/label/%5Esq_ig_i_personal vis=PUBLIC))
+extras={"android.title"="4 new messages",
+        "android.textLines"=[Ljava.lang.CharSequence;@e2b02bc,
+        "android.subText"="pv@swooby.com",
+        "android.template"="android.app.Notification$InboxStyle",
+        "android.showChronometer"=false,
+        "android.icon"=2130837932,
+        "android.text"=null,
+        "android.progress"=0,
+        "android.progressMax"=0,
+        "android.appInfo"=ApplicationInfo{c8da245 com.google.android.gm},
+        "android.showWhen"=true,
+        "android.people"=[Ljava.lang.String;@61d4d9a,
+        "android.largeIcon"=null,
+        "android.infoText"=null,
+        "android.wearable.EXTENSIONS"={"background"=android.graphics.Bitmap@73b26cb},
+        "android.originatingUserId"=0,
+        "android.progressIndeterminate"=false,
+        "android.remoteInputHistory"=null}
+tickerText="pv@swooby.com"
+---- bigContentView ----
+walkView: view=null
+---- contentView ----
+walkView: view=null
+*/
+        CharSequence androidTitle = extras.getCharSequence("android.title");
+        FooLog.v(TAG, "onNotificationPosted: androidTitle == " + FooString.quote(androidTitle));
+        CharSequence[] androidTextLines = extras.getCharSequenceArray("android.textLines");
+        FooLog.v(TAG, "onNotificationPosted: androidTextLines == " + Arrays.toString(androidTextLines));
+        CharSequence androidSubText = extras.getCharSequence("android.subText");
+        FooLog.v(TAG, "onNotificationPosted: androidSubText == " + FooString.quote(androidSubText));
+        String[] androidPeople = extras.getStringArray("android.people");
+        FooLog.v(TAG, "onNotificationPosted: androidPeople == " + Arrays.toString(androidPeople));
+        ApplicationInfo androidAppInfo = extras.getParcelable("android.appInfo");
+        FooLog.v(TAG, "onNotificationPosted: androidAppInfo == " + FooString.repr(androidAppInfo));
+        String androidInfoText = extras.getString("android.infoText");
+        FooLog.v(TAG, "onNotificationPosted: androidInfoText == " + FooString.quote(androidInfoText));
+        String androidTemplate = extras.getString("android.template");
+        FooLog.v(TAG, "onNotificationPosted: androidTemplate == " + FooString.quote(androidTemplate));
+        CharSequence androidText = extras.getCharSequence("android.text");
+        FooLog.v(TAG, "onNotificationPosted: androidText == " + FooString.quote(androidText));
+        CharSequence androidBigText = extras.getCharSequence("android.bigText");
+        FooLog.v(TAG, "onNotificationPosted: androidBigText == " + FooString.quote(androidBigText));
+
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder();
+
+        //
+        // Account name...
+        //
+        if (androidSubText == null)
+        {
+            FooLog.w(TAG, "onNotificationPosted: accountName == null; Unparsable");
+            return NotificationParseResult.Unparsable;
+        }
+        builder.appendSpeech(androidSubText.toString());
+
+        //
+        // Notification type/style...
+        //
+        Class notificationClass = null;
+        if (androidTemplate != null)
+        {
+            if (InboxStyle.class.getName().equals(androidTemplate))
+            {
+                notificationClass = InboxStyle.class;
+            }
+            else if (BigTextStyle.class.getName().equals(androidTemplate))
+            {
+                notificationClass = BigTextStyle.class;
+            }
+        }
+
+        if (notificationClass == BigTextStyle.class)
+        {
+            return NotificationParseResult.ParsableIgnored;
+        }
+        else if (notificationClass == InboxStyle.class)
+        {
+            //
+            // X New Messages...
+            //
+            if (androidTitle != null)
+            {
+                builder.appendSpeech(androidTitle.toString());
+            }
+
+            //
+            // From + Subject...
+            //
+            if (androidTextLines != null)
+            {
+                for (CharSequence textLine : androidTextLines)
+                {
+                    FooLog.v(TAG, "onNotificationPosted: textLine=" + textLine);
+                    boolean appended = false;
+
+                    if (textLine instanceof Spannable)
+                    {
+                        Spannable spannable = (Spannable) textLine;
+                        int next;
+                        for (int i = 0, spannableLength = spannable.length(); i < spannableLength; i = next)
+                        {
+                            next = spannable.nextSpanTransition(i, spannableLength, TextAppearanceSpan.class);
+                            CharSequence spanText = spannable.subSequence(i, next);
+                            String text = spanText.toString().trim();
+                            if (!FooString.isNullOrEmpty(text))
+                            {
+                                builder.appendSpeech(text);
+                                appended = true;
+                            }
+                        }
+                    }
+
+                    if (!appended)
+                    {
+                        builder.appendSpeech(textLine.toString());
+                    }
+                }
+            }
+        }
+        else
+        {
+            return NotificationParseResult.Unparsable;
+        }
+
+        getTextToSpeech().speak(builder);
+
+        return NotificationParseResult.ParsableHandled;
     }
 }
