@@ -960,13 +960,36 @@ public abstract class AbstractNotificationParser
             return NotificationParseResult.ParsableIgnored;
         }
 
-        if (builder.getNumberOfParts() == 1 && tickerText != null)
+        if (builder.getNumberOfParts() == 1)
         {
-            String tickerString = tickerText.toString();
-            if (!FooString.isNullOrEmpty(tickerString))
+            if (tickerText != null)
             {
                 builder.appendSilence(500)
-                        .appendSpeech(tickerString);
+                        .appendSpeech(tickerText.toString());
+            }
+            else
+            {
+                boolean appended = false;
+
+                CharSequence androidTitle = extras.getCharSequence("android.title");
+                FooLog.v(TAG, "defaultOnNotificationPosted: androidTitle == " + FooString.quote(androidTitle));
+                if (androidTitle != null)
+                {
+                    builder.appendSilence(500)
+                            .appendSpeech(androidTitle.toString());
+                    appended = true;
+                }
+
+                CharSequence androidText = extras.getCharSequence("android.text");
+                FooLog.v(TAG, "defaultOnNotificationPosted: androidText == " + FooString.quote(androidText));
+                if (androidText != null)
+                {
+                    if (!appended)
+                    {
+                        builder.appendSilence(500);
+                    }
+                    builder.appendSpeech(androidText.toString());
+                }
             }
         }
 
