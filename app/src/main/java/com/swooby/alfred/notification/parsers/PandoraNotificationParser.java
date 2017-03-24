@@ -48,8 +48,8 @@ public class PandoraNotificationParser
         super(callbacks);//, application.getString(R.string.pandora_package_app_name));
 
         Context context = getContext();
-        mAdvertisementTitle = context.getString(R.string.pandora_advertisement_title);
-        mAdvertisementArtist = context.getString(R.string.pandora_advertisement_artist);
+        mAdvertisementTitle = context.getString(R.string.alfred_pandora_advertisement_title);
+        mAdvertisementArtist = context.getString(R.string.alfred_pandora_advertisement_artist);
     }
 
     @Override
@@ -410,9 +410,9 @@ public class PandoraNotificationParser
             FooLog.w(TAG, "onNotificationPosted: playing");
 
             builder.appendSpeech(getPackageAppSpokenName() + " playing")
-                    .appendSilence(500)
+                    .appendSilenceWordBreak()
                     .appendSpeech("artist " + textArtist)
-                    .appendSilence(500)
+                    .appendSilenceWordBreak()
                     .appendSpeech("title " + textTitle);
             //.appendSilence(500)
             //.appendSpeech("station " + textStation);

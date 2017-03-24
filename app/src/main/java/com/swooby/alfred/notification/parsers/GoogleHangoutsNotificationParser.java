@@ -101,9 +101,9 @@ public class GoogleHangoutsNotificationParser
 
         List<TextMessage> textMessages = new LinkedList<>();
 
-        CharSequence androidTitle = extras.getCharSequence("android.title", "Unknown User");
-        CharSequence androidText = extras.getCharSequence("android.text", "Unknown Text");
-        CharSequence[] androidTextLines = extras.getCharSequenceArray("android.textLines");
+        CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE, "Unknown User");
+        CharSequence androidText = extras.getCharSequence(Notification.EXTRA_TEXT, "Unknown Text");
+        CharSequence[] androidTextLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
 
         if (androidTextLines != null)
         {
@@ -141,14 +141,14 @@ public class GoogleHangoutsNotificationParser
 
         Context context = getContext();
         Resources resources = context.getResources();
-        String title = resources.getQuantityString(R.plurals.X_new_messages, count, count);
-        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(title);
+        String title = resources.getQuantityString(R.plurals.alfred_X_new_messages, count, count);
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(context, title);
         for (TextMessage textMessage : textMessages)
         {
-            builder.appendSilence(750);
-            builder.appendSpeech(context.getString(R.string.X_says, textMessage.mFrom));
+            builder.appendSilenceParagraphBreak();
+            builder.appendSpeech(R.string.alfred_X_says, textMessage.mFrom);
             //builder.appendSpeech("to " + to);
-            builder.appendSilence(500);
+            builder.appendSilenceSentenceBreak();
             builder.appendSpeech(textMessage.mMessage);
         }
 

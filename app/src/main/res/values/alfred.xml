@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Visual/Text & Audio/Phonetic representation of spoken phrases -->
+    <string name="alfred_app_name">@string/app_name</string>
+
+    <string name="alfred_initializing">Initializing</string>
+    <string name="alfred_speak_alfred_running2">Alfred Running</string>
+    <string name="alfred_running">Running</string>
+    <string name="alfred_reading_notifications">Reading Notifications</string>
+    <string name="alfred_speak_alfred_paused">Alfred Paused</string>
+    <string name="alfred_paused">Paused</string>
+    <string name="alfred_A_colon_B">%1$s: %2$s</string>
+
+    <string name="alfred_manually_disabled">Manually Disabled</string>
+    <string name="alfred_waiting_for_X">Waiting for %1$s</string>
+    <string name="alfred_wired_headphone">Wired Headphone</string>
+
+    <string name="alfred_bluetooth_headphone_X_connected">Bluetooth Headphone %1$s connected</string>
+    <string name="alfred_bluetooth_headphone_X_disconnected">Bluetooth Headphone %1$s connected</string>
+    <string name="alfred_wired_headphone_X_connected">Wired Headphone %1$s connected</string>
+    <string name="alfred_wired_headphone_X_disconnected">Wired Headphone %1$s disconnected</string>
+
+    <string name="alfred_screen_on">Screen On</string>
+    <string name="alfred_screen_on_screen_was_off_for_X">Screen On; Screen Was Off For %1$s</string>
+    <string name="alfred_screen_off">Screen Off</string>
+    <string name="alfred_screen_off_screen_was_on_for_X">Screen Off; Screen Was On For %1$s</string>
+
+    <string name="alfred_charger_connected">Charger Connected</string>
+    <string name="alfred_charger_connected_charger_was_disconnected_for_X">Charger Connected; Charger Was Disconnected For %1$s</string>
+    <string name="alfred_charger_disconnected">Charger Disconnected</string>
+    <string name="alfred_charger_disconnected_charger_was_connected_for_X">Charger Disconnected; Charger Was Connected For %1$s</string>
+
+    <string name="alfred_waiting_for_notification_access">Waiting For Notification Access</string>
+    <string name="alfred_notification_access_enabled">Notification Access Enabled</string>
+    <string name="alfred_notification_access_not_enabled">Notification Access Not Enabled</string>
+    <string name="alfred_notification_access_bind_timeout">Notification Access Bind Timeout</string>
+    <string name="alfred_please_enable_notification_access_for_the_X_application">Please enable Notification Access for the \"%1$s\" application.</string>
+    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, reboot your device.</string>
+    <string name="alfred_visual_only_tap_to_configure">Tap to configure.</string>
+
+    <!-- TODO:(pv) Better sentence concatenation strategy... -->
+    <string name="alfred_sentence_separator">.\u0020</string>
+    <string name="alfred_line_separator">\n</string>
+
+    <!-- Notification Parsers... -->
+    <string name="alfred_unknown">Unknown</string>
+
+    <string name="alfred_pandora_package_app_name">Pandora</string>
+    <string name="alfred_pandora_advertisement_title">Advertisement</string>
+    <string name="alfred_pandora_advertisement_artist">Your station will be right back…</string>
+
+    <string name="alfred_spotify_package_app_name">Spotify</string>
+
+    <string name="alfred_hangouts_package_app_name">Hangouts</string>
+    <plurals name="alfred_X_new_messages">
+        <item quantity="one">%1$d new message</item>
+        <item quantity="other">%1$d new messages</item>
+    </plurals>
+    <string name="alfred_X_says">%1$s says</string>
+
+</resources>

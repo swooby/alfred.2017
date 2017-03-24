@@ -36,7 +36,12 @@ public class ProfileManager
             // ignore
         }
 
-        void onProfileStateChanged(String profileName, boolean isEnabled)
+        void onProfileEnabled(String profileToken)
+        {
+            // ignore
+        }
+
+        void onProfileDisabled(String profileToken)
         {
             // ignore
         }
@@ -130,6 +135,11 @@ public class ProfileManager
         return new Profile(index, name, token);
     }
 
+    public boolean isEnabled()
+    {
+        return Tokens.isNotDisabled(mProfileTokenEnabled);
+    }
+
     public String getProfileToken()
     {
         return mConfiguration.getProfileToken();
@@ -157,20 +167,15 @@ public class ProfileManager
 
         mConfiguration.setProfileToken(value);
 
+        updateProfileTokenEnabled();
+
         for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
             callbacks.onProfileTokenSet(value);
         }
         mListenerManager.endTraversing();
 
-        updateProfileTokenEnabled();
-
         return true;
-    }
-
-    public boolean isEnabled()
-    {
-        return Tokens.isNotDisabled(mProfileTokenEnabled);
     }
 
     public boolean isHeadsetConnected()
@@ -194,13 +199,24 @@ public class ProfileManager
         return mBluetoothHeadsetConnectionListener.getConnectedBluetoothHeadsets();
     }
 
-    public void attach(ProfileManagerCallbacks callbacks)
+    public void attach(@NonNull ProfileManagerCallbacks callbacks)
     {
+        FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
         mListenerManager.attach(callbacks);
+        String profileToken = getProfileToken();
+        if (isEnabled())
+        {
+            callbacks.onProfileEnabled(profileToken);
+        }
+        else
+        {
+            callbacks.onProfileDisabled(profileToken);
+        }
     }
 
-    public void detach(ProfileManagerCallbacks callbacks)
+    public void detach(@NonNull ProfileManagerCallbacks callbacks)
     {
+        FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
         mListenerManager.detach(callbacks);
     }
 
@@ -238,13 +254,13 @@ public class ProfileManager
                       ", headsetName=" + FooString.quote(headsetName) +
                       ", isConnected=" + isConnected + ')');
 
+        updateProfileTokenEnabled();
+
         for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
             callbacks.onHeadsetConnectionChanged(headsetType, headsetName, isConnected);
         }
         mListenerManager.endTraversing();
-
-        updateProfileTokenEnabled();
     }
 
     private void updateProfileTokenEnabled()
@@ -290,20 +306,19 @@ public class ProfileManager
 
         mProfileTokenEnabled = newProfileTokenEnabled;
 
-        if (Tokens.isDisabled(newProfileTokenEnabled) && Tokens.isNotDisabled(oldProfileTokenEnabled))
+        if (Tokens.isDisabled(newProfileTokenEnabled))
         {
             for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
             {
-                callbacks.onProfileStateChanged(oldProfileTokenEnabled, false);
+                callbacks.onProfileDisabled(profileToken);
             }
             mListenerManager.endTraversing();
         }
-
-        if (Tokens.isNotDisabled(newProfileTokenEnabled) && Tokens.isDisabled(oldProfileTokenEnabled))
+        else
         {
             for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
             {
-                callbacks.onProfileStateChanged(newProfileTokenEnabled, true);
+                callbacks.onProfileEnabled(profileToken);
             }
             mListenerManager.endTraversing();
         }

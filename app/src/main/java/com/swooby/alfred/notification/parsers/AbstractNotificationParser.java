@@ -811,17 +811,18 @@ public abstract class AbstractNotificationParser
     }
 
     @NonNull
-    public static String unknownIfNullOrEmpty(Context context, CharSequence value)
+    public static String unknownIfNullOrEmpty(@NonNull Context context, CharSequence value)
     {
         return unknownIfNullOrEmpty(context, value != null ? value.toString() : null);
     }
 
     @NonNull
-    public static String unknownIfNullOrEmpty(Context context, String value)
+    public static String unknownIfNullOrEmpty(@NonNull Context context, String value)
     {
         if (FooString.isNullOrEmpty(value))
         {
-            value = context.getString(R.string.unknown);
+            FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+            value = context.getString(R.string.alfred_unknown);
         }
         return value;
     }
@@ -858,14 +859,14 @@ public abstract class AbstractNotificationParser
 
         String packageName = getPackageName(sbn);
         FooLog.v(TAG, "defaultOnNotificationPosted: packageName=" + FooString.quote(packageName));
-        FooRun.throwIllegalArgumentExceptionNullOrEmpty(packageName, "packageName");
+        FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(packageName, "packageName");
 
         if (FooString.isNullOrEmpty(packageAppSpokenName))
         {
             packageAppSpokenName = FooPlatformUtils.getApplicationName(context, packageName);
         }
         FooLog.v(TAG, "defaultOnNotificationPosted: packageAppSpokenName=" + FooString.quote(packageAppSpokenName));
-        FooRun.throwIllegalArgumentExceptionNullOrEmpty(packageAppSpokenName, "packageAppSpokenName");
+        FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(packageAppSpokenName, "packageAppSpokenName");
 
         //String groupKey = sbn.getGroupKey();
         //String key = sbn.getKey();
@@ -964,29 +965,29 @@ public abstract class AbstractNotificationParser
         {
             if (tickerText != null)
             {
-                builder.appendSilence(500)
+                builder.appendSilenceSentenceBreak()
                         .appendSpeech(tickerText.toString());
             }
             else
             {
                 boolean appended = false;
 
-                CharSequence androidTitle = extras.getCharSequence("android.title");
+                CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
                 FooLog.v(TAG, "defaultOnNotificationPosted: androidTitle == " + FooString.quote(androidTitle));
                 if (androidTitle != null)
                 {
-                    builder.appendSilence(500)
+                    builder.appendSilenceSentenceBreak()
                             .appendSpeech(androidTitle.toString());
                     appended = true;
                 }
 
-                CharSequence androidText = extras.getCharSequence("android.text");
+                CharSequence androidText = extras.getCharSequence(Notification.EXTRA_TEXT);
                 FooLog.v(TAG, "defaultOnNotificationPosted: androidText == " + FooString.quote(androidText));
                 if (androidText != null)
                 {
                     if (!appended)
                     {
-                        builder.appendSilence(500);
+                        builder.appendSilenceSentenceBreak();
                     }
                     builder.appendSpeech(androidText.toString());
                 }

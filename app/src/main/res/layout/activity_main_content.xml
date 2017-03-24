@@ -187,19 +187,6 @@
 
             <TableRow>
 
-                <Button
-                    android:id="@+id/buttonNotificationListenerSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_span="3"
-                    android:layout_weight="1"
-                    android:text="@string/enable_notification_access"
-                    />
-
-            </TableRow>
-
-            <TableRow>
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -306,6 +293,19 @@
                     android:layout_height="wrap_content"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_refresh_black_24dp"
+                    />
+
+            </TableRow>
+
+            <TableRow>
+
+                <Button
+                    android:id="@+id/buttonNotificationListenerSettings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_span="3"
+                    android:layout_weight="1"
+                    android:text="@string/enable_notification_access"
                     />
 
             </TableRow>

@@ -51,7 +51,7 @@ public class SpotifyNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        String androidTitle = extras.getString("android.title");
+        String androidTitle = extras.getString(Notification.EXTRA_TITLE);
         FooLog.v(TAG, "onNotificationPosted: androidTitle=" + FooString.quote(androidTitle));
         */
 
@@ -176,11 +176,11 @@ public class SpotifyNotificationParser
         if (isPlaying)
         {
             builder.appendSpeech(getPackageAppSpokenName() + " playing");
-            builder.appendSilence(500);
+            builder.appendSilenceWordBreak();
             builder.appendSpeech("artist " + textArtist);
-            builder.appendSilence(500);
+            builder.appendSilenceWordBreak();
             builder.appendSpeech("title " + textTitle);
-            builder.appendSilence(500);
+            builder.appendSilenceWordBreak();
             builder.appendSpeech("album " + textAlbum);
         }
         else

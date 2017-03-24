@@ -54,6 +54,12 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name="com.smartfoo.android.core.notification.FooNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            />
+
     </application>
 
 </manifest>

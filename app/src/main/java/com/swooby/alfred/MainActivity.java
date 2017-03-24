@@ -40,9 +40,10 @@ import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.DisabledCause;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
-import com.swooby.alfred.MainApplication.MainApplicationCallbacks;
+import com.swooby.alfred.AlfredManager.AlfredManagerCallbacks;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class MainActivity
 
     private static final String FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED = "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED";
 
-    private final MainApplicationCallbacks mMainApplicationCallbacks = new MainApplicationCallbacks()
+    private final AlfredManagerCallbacks mMainApplicationCallbacks = new AlfredManagerCallbacks()
     {
         @Override
         public Activity getActivity()
@@ -69,23 +70,40 @@ public class MainActivity
         }
 
         @Override
-        public boolean onNotificationListenerAccessDisabled()
+        public void onNotificationAccessSettingConfirmedEnabled()
         {
-            return MainActivity.this.onNotificationListenerAccessDisabled();
+            MainActivity.this.onNotificationAccessSettingConfirmedEnabled();
+        }
+
+        @Override
+        public boolean onNotificationAccessSettingDisabled(DisabledCause disabledCause)
+        {
+            return MainActivity.this.onNotificationAccessSettingDisabled(disabledCause, true);
+        }
+
+        @Override
+        public void onProfileEnabled(String profileToken)
+        {
+        }
+
+        @Override
+        public void onProfileDisabled(String profileToken)
+        {
         }
     };
 
     private final TextToSpeechManagerCallbacks mTextToSpeechManagerCallbacks = new TextToSpeechManagerCallbacks()
     {
         @Override
-        public void onTextToSpeechInitialized()
+        public void onTextToSpeechInitialized(int status)
         {
-            super.onTextToSpeechInitialized();
-            MainActivity.this.onTextToSpeechInitialized();
+            super.onTextToSpeechInitialized(status);
+            MainActivity.this.onTextToSpeechInitialized(status);
         }
     };
 
     private MainApplication           mMainApplication;
+    private AlfredManager             mAlfredManager;
     private TextToSpeechManager       mTextToSpeechManager;
     private ProfileManager            mProfileManager;
     private NotificationParserManager mNotificationParserManager;
@@ -112,9 +130,10 @@ public class MainActivity
         super.onCreate(savedInstanceState);
 
         mMainApplication = (MainApplication) getApplication();
-        mTextToSpeechManager = mMainApplication.getTextToSpeechManager();
-        mProfileManager = mMainApplication.getProfileManager();
-        mNotificationParserManager = mMainApplication.getNotificationParserManager();
+        mAlfredManager = mMainApplication.getAlfredManager();
+        mTextToSpeechManager = mAlfredManager.getTextToSpeechManager();
+        mProfileManager = mAlfredManager.getProfileManager();
+        mNotificationParserManager = mAlfredManager.getNotificationParserManager();
 
         mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
@@ -424,19 +443,17 @@ public class MainActivity
         FooLog.v(TAG, "+onResume()");
         super.onResume();
 
-        int visibility;
-        if (mNotificationParserManager.isNotificationListenerBound())
-        {
-            visibility = View.GONE;
-        }
-        else
-        {
-            visibility = View.VISIBLE;
-        }
-        mButtonNotificationListenerSettings.setVisibility(visibility);
-
-        mMainApplication.attach(mMainApplicationCallbacks);
+        mAlfredManager.attach(mMainApplicationCallbacks);
         mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks);
+
+        if (mNotificationParserManager.isNotificationAccessSettingConfirmedNotEnabled())
+        {
+            onNotificationAccessSettingDisabled(DisabledCause.ConfirmedNotEnabled, false);
+        }
+        else if (mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled())
+        {
+            onNotificationAccessSettingConfirmedEnabled();
+        }
 
         textToSpeechAudioStreamTypeUpdate();
 
@@ -451,7 +468,7 @@ public class MainActivity
         FooLog.v(TAG, "+onPause()");
         super.onPause();
 
-        mMainApplication.detach(mMainApplicationCallbacks);
+        mAlfredManager.detach(mMainApplicationCallbacks);
         mTextToSpeechManager.detach(mTextToSpeechManagerCallbacks);
 
         volumeObserverStop();
@@ -459,9 +476,14 @@ public class MainActivity
         FooLog.v(TAG, "-onPause()");
     }
 
-    private void onTextToSpeechInitialized()
+    private void onTextToSpeechInitialized(int status)
     {
-        FooLog.v(TAG, "onTextToSpeechInitialized()");
+        FooLog.v(TAG, "onTextToSpeechInitialized(status=" + status + ')');
+        if (status != TextToSpeech.SUCCESS)
+        {
+            FooLog.e(TAG, "TODO:(pv) Report error and exit the app");
+            return;
+        }
         if (mRequestedTextToSpeechData)
         {
             return;
@@ -472,7 +494,7 @@ public class MainActivity
 
     private void startActivityNotificationListenerSettings()
     {
-        mNotificationParserManager.startActivityNotificationListenerSettings(this);
+        mNotificationParserManager.startActivityNotificationListenerSettings();
     }
 
     private int textToSpeechAudioStreamTypeUpdate()
@@ -706,6 +728,7 @@ public class MainActivity
                 {
                     continue;
                 }
+
                 VoiceWrapper voiceWrapper = new VoiceWrapper(voice);
 
                 availableVoices.add(voiceWrapper);
@@ -750,26 +773,56 @@ public class MainActivity
     {
     }
 
-    private boolean onNotificationListenerAccessDisabled()
+    private void onNotificationAccessSettingConfirmedEnabled()
     {
+        FooLog.i(TAG, "onNotificationAccessSettingConfirmedEnabled()");
+
+        mButtonNotificationListenerSettings.setVisibility(View.GONE);
+
+        FragmentManager fm = getSupportFragmentManager();
+        DialogFragment dialogFragment = (DialogFragment) fm.findFragmentByTag(FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
+        if (dialogFragment != null)
+        {
+            dialogFragment.dismiss();
+        }
+    }
+
+    private boolean onNotificationAccessSettingDisabled(DisabledCause disabledCause, boolean showDialog)
+    {
+        FooLog.w(TAG, "onNotificationAccessSettingDisabled(disabledCause=" + disabledCause +
+                      ", showDialog=" + showDialog + ')');
+
         mButtonNotificationListenerSettings.setVisibility(View.VISIBLE);
 
-        if (true)
+        if (!showDialog)
         {
-            FragmentManager fm = getSupportFragmentManager();
-            DialogFragment dialogFragment = (GenericPromptPositiveNegativeDialogFragment) fm.findFragmentByTag(FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
-            if (dialogFragment == null)
-            {
-                String title = mMainApplication.getNotificationAccessTitle();
-                String message = mMainApplication.getNotificationAccessMessage();
-
-                dialogFragment = GenericPromptPositiveNegativeDialogFragment.newInstance(title, message);
-                dialogFragment.show(fm, FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
-            }
-            return true;
+            return false;
         }
 
-        return false;
+        String title = mAlfredManager.getNotificationAccessNotEnabledTitle(disabledCause);
+        String message = mAlfredManager.getNotificationAccessNotEnabledMessage(disabledCause);
+
+        FragmentManager fm = getSupportFragmentManager();
+        GenericPromptPositiveNegativeDialogFragment dialogFragment = (GenericPromptPositiveNegativeDialogFragment) fm
+                .findFragmentByTag(FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
+        if (dialogFragment != null)
+        {
+            if (!title.equals(dialogFragment.getTitle()) || !message.equals(dialogFragment.getMessage()))
+            {
+                dialogFragment.dismiss();
+                dialogFragment = null;
+            }
+        }
+
+        if (dialogFragment == null)
+        {
+            // TODO:(pv) 3rd button to immediately reboot phone...
+
+            dialogFragment = GenericPromptPositiveNegativeDialogFragment.newInstance(title, message);
+            dialogFragment.show(fm, FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
+        }
+
+        return true;
     }
 
     @Override
@@ -778,7 +831,7 @@ public class MainActivity
         switch (dialogFragment.getResult())
         {
             case Positive:
-                mNotificationParserManager.startActivityNotificationListenerSettings(this);
+                mNotificationParserManager.startActivityNotificationListenerSettings();
                 break;
         }
         return false;

@@ -9,6 +9,7 @@ import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.DisabledCause;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.FooNotificationListenerManagerCallbacks;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
@@ -32,9 +33,6 @@ public class NotificationParserManager
 
     public interface NotificationParserManagerConfiguration
     {
-        @NonNull
-        Context getContext();
-
         boolean isEnabled();
 
         @NonNull
@@ -43,11 +41,12 @@ public class NotificationParserManager
 
     public interface NotificationParserManagerCallbacks
     {
-        void onNotificationListenerBound();
+        boolean onNotificationAccessSettingConfirmedEnabled();
 
-        void onNotificationListenerAccessDisabled();
+        void onNotificationAccessSettingDisabled(DisabledCause disabledCause);
     }
 
+    private final Context                                                mContext;
     private final NotificationParserManagerConfiguration                 mConfiguration;
     private final FooListenerManager<NotificationParserManagerCallbacks> mListenerManager;
     private final FooNotificationListenerManager                         mFooNotificationListenerManager;
@@ -57,12 +56,14 @@ public class NotificationParserManager
 
     private boolean mIsInitialized;
 
-    public NotificationParserManager(@NonNull NotificationParserManagerConfiguration configuration)
+    public NotificationParserManager(@NonNull Context context, @NonNull NotificationParserManagerConfiguration configuration)
     {
         FooLog.v(TAG, "+NotificationParserManager(...)");
 
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
         FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
 
+        mContext = context;
         mConfiguration = configuration;
 
         mListenerManager = new FooListenerManager<>();
@@ -72,15 +73,15 @@ public class NotificationParserManager
         mFooNotificationListenerManagerCallbacks = new FooNotificationListenerManagerCallbacks()
         {
             @Override
-            public void onNotificationListenerBound()
+            public boolean onNotificationAccessSettingConfirmedEnabled()
             {
-                NotificationParserManager.this.onNotificationListenerBound();
+                return NotificationParserManager.this.onNotificationAccessSettingConfirmedEnabled();
             }
 
             @Override
-            public void onNotificationListenerUnbound()
+            public void onNotificationAccessSettingDisabled(DisabledCause disabledCause)
             {
-                NotificationParserManager.this.onNotificationListenerUnbound();
+                NotificationParserManager.this.onNotificationAccessSettingDisabled(disabledCause);
             }
 
             @Override
@@ -101,7 +102,7 @@ public class NotificationParserManager
             @Override
             public Context getContext()
             {
-                return NotificationParserManager.this.getContext();
+                return mContext;
             }
 
             @Override
@@ -114,12 +115,6 @@ public class NotificationParserManager
         mNotificationParsers = new HashMap<>();
 
         FooLog.v(TAG, "-NotificationParserManager(...)");
-    }
-
-    @NonNull
-    private Context getContext()
-    {
-        return mConfiguration.getContext();
     }
 
     @NonNull
@@ -138,46 +133,27 @@ public class NotificationParserManager
         return mIsInitialized;
     }
 
-    /**
-     * NOTE:(pv) USE CAUTIOUSLY! The Notification Listener can still fail to bind [due to
-     * http://stackoverflow.com/a/37081128/252308] even if the setting is AND SHOWS as enabled.
-     *
-     * @return true if the OS Notification Access Setting is enable for this app's context
-     */
-    public boolean isNotificationAccessSettingUnverifiedEnabled()
+    public boolean isNotificationAccessSettingConfirmedNotEnabled()
     {
-        return FooNotificationListenerManager.isNotificationAccessSettingUnverifiedEnabled(getContext());
+        return FooNotificationListenerManager.isNotificationAccessSettingConfirmedNotEnabled(mContext);
     }
 
     /**
-     * @return true if the Notification Listener successfully bound
+     * @return true if Notification Access is confirmed enabled (ie: FooNotificationListener successfully bound)
      */
-    public boolean isNotificationListenerBound()
+    public boolean isNotificationAccessSettingConfirmedEnabled()
     {
-        return mFooNotificationListenerManager.isNotificationListenerBound();
+        return mFooNotificationListenerManager.isNotificationAccessSettingConfirmedEnabled();
     }
 
-    /**
-     * NOTE: Used to determine if the Notification Access Setting is enabled but mismatches its actual state [due to
-     * issue http://stackoverflow.com/a/37081128/252308]
-     *
-     * @return true if the Notification Access Setting is enabled for the context *AND* this Notification Listener
-     * successfully bound
-     */
-    public boolean isNotificationAccessSettingEnabledAndNotBound()
+    public void startActivityNotificationListenerSettings()
     {
-        return isNotificationAccessSettingUnverifiedEnabled() && !isNotificationListenerBound();
-    }
-
-    public void startActivityNotificationListenerSettings(@NonNull Context context)
-    {
-        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
-        mFooNotificationListenerManager.startActivityNotificationListenerSettings(context);
+        FooNotificationListenerManager.startActivityNotificationListenerSettings(mContext);
     }
 
     public void refresh()
     {
-        mFooNotificationListenerManager.refresh();
+        mFooNotificationListenerManager.initializeActiveNotifications();
     }
 
     public void attach(NotificationParserManagerCallbacks callbacks)
@@ -234,27 +210,30 @@ public class NotificationParserManager
         //addNotificationParser(new RedboxNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new SpotifyNotificationParser(mNotificationParserCallbacks));
 
-        mFooNotificationListenerManager.attach(mFooNotificationListenerManagerCallbacks);
+        mFooNotificationListenerManager.attach(mContext, mFooNotificationListenerManagerCallbacks);
     }
 
-    private void onNotificationListenerBound()
+    private boolean onNotificationAccessSettingConfirmedEnabled()
     {
-        FooLog.i(TAG, "onNotificationListenerBound()");
+        FooLog.i(TAG, "onNotificationAccessSettingConfirmedEnabled()");
         mIsInitialized = true;
+        boolean handled = false;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationListenerBound();
+            handled |= callbacks.onNotificationAccessSettingConfirmedEnabled();
         }
         mListenerManager.endTraversing();
+
+        return handled;
     }
 
-    private void onNotificationListenerUnbound()
+    private void onNotificationAccessSettingDisabled(DisabledCause disabledCause)
     {
-        FooLog.i(TAG, "onNotificationListenerUnbound()");
+        FooLog.i(TAG, "onNotificationAccessSettingDisabled(disabledCause=" + disabledCause + ')');
         mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationListenerAccessDisabled();
+            callbacks.onNotificationAccessSettingDisabled(disabledCause);
         }
         mListenerManager.endTraversing();
     }
@@ -275,7 +254,7 @@ public class NotificationParserManager
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
         if (notificationParser == null)
         {
-            result = AbstractNotificationParser.defaultOnNotificationPosted(getContext(), sbn, getTextToSpeech());
+            result = AbstractNotificationParser.defaultOnNotificationPosted(mContext, sbn, getTextToSpeech());
         }
         else
         {

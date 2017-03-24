@@ -157,23 +157,23 @@ walkView: view=null
 ---- contentView ----
 walkView: view=null
 */
-        CharSequence androidTitle = extras.getCharSequence("android.title");
+        CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
         FooLog.v(TAG, "onNotificationPosted: androidTitle == " + FooString.quote(androidTitle));
-        CharSequence[] androidTextLines = extras.getCharSequenceArray("android.textLines");
+        CharSequence[] androidTextLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
         FooLog.v(TAG, "onNotificationPosted: androidTextLines == " + Arrays.toString(androidTextLines));
-        CharSequence androidSubText = extras.getCharSequence("android.subText");
+        CharSequence androidSubText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
         FooLog.v(TAG, "onNotificationPosted: androidSubText == " + FooString.quote(androidSubText));
-        String[] androidPeople = extras.getStringArray("android.people");
+        String[] androidPeople = extras.getStringArray(Notification.EXTRA_PEOPLE);
         FooLog.v(TAG, "onNotificationPosted: androidPeople == " + Arrays.toString(androidPeople));
         ApplicationInfo androidAppInfo = extras.getParcelable("android.appInfo");
         FooLog.v(TAG, "onNotificationPosted: androidAppInfo == " + FooString.repr(androidAppInfo));
-        String androidInfoText = extras.getString("android.infoText");
+        String androidInfoText = extras.getString(Notification.EXTRA_INFO_TEXT);
         FooLog.v(TAG, "onNotificationPosted: androidInfoText == " + FooString.quote(androidInfoText));
-        String androidTemplate = extras.getString("android.template");
+        String androidTemplate = extras.getString(Notification.EXTRA_TEMPLATE);
         FooLog.v(TAG, "onNotificationPosted: androidTemplate == " + FooString.quote(androidTemplate));
-        CharSequence androidText = extras.getCharSequence("android.text");
+        CharSequence androidText = extras.getCharSequence(Notification.EXTRA_TEXT);
         FooLog.v(TAG, "onNotificationPosted: androidText == " + FooString.quote(androidText));
-        CharSequence androidBigText = extras.getCharSequence("android.bigText");
+        CharSequence androidBigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT);
         FooLog.v(TAG, "onNotificationPosted: androidBigText == " + FooString.quote(androidBigText));
 
         FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder();

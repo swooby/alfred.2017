@@ -2,6 +2,7 @@ package com.swooby.alfred;
 
 import android.app.Activity;
 import android.content.Context;
+import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.support.annotation.NonNull;
 
@@ -11,7 +12,6 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioUtils;
-import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeech.FooTextToSpeechCallbacks;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
@@ -25,9 +25,6 @@ public class TextToSpeechManager
 
     public interface TextToSpeechManagerConfiguration
     {
-        @NonNull
-        Context getContext();
-
         @NonNullNonEmpty
         String getVoiceName();
 
@@ -42,7 +39,7 @@ public class TextToSpeechManager
             implements FooTextToSpeechCallbacks
     {
         @Override
-        public void onTextToSpeechInitialized()
+        public void onTextToSpeechInitialized(int status)
         {
             // ignore
         }
@@ -53,26 +50,30 @@ public class TextToSpeechManager
         }
     }
 
+    private final Context                                          mContext;
     private final TextToSpeechManagerConfiguration                 mConfiguration;
     private final FooListenerManager<TextToSpeechManagerCallbacks> mListenerManager;
     private final FooTextToSpeech                                  mTextToSpeech;
 
-    public TextToSpeechManager(@NonNull TextToSpeechManagerConfiguration configuration)
+    public TextToSpeechManager(@NonNull Context context, @NonNull TextToSpeechManagerConfiguration configuration)
     {
         FooLog.v(TAG, "+TextToSpeechManager(...)");
 
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
         FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
 
+        mContext = context;
         mConfiguration = configuration;
 
         mListenerManager = new FooListenerManager<>();
+
         mTextToSpeech = FooTextToSpeech.getInstance();
         mTextToSpeech.attach(new FooTextToSpeechCallbacks()
         {
             @Override
-            public void onTextToSpeechInitialized()
+            public void onTextToSpeechInitialized(int status)
             {
-                TextToSpeechManager.this.onTextToSpeechInitialized();
+                TextToSpeechManager.this.onTextToSpeechInitialized(status);
             }
         });
 
@@ -87,12 +88,6 @@ public class TextToSpeechManager
     public void setAudioStreamType(int audioStreamType)
     {
         mTextToSpeech.setAudioStreamType(audioStreamType);
-    }
-
-    @NonNull
-    protected Context getContext()
-    {
-        return mConfiguration.getContext();
     }
 
     public boolean isEnabled()
@@ -138,24 +133,26 @@ public class TextToSpeechManager
     }
     */
 
-    private void onTextToSpeechInitialized()
+    private void onTextToSpeechInitialized(int status)
     {
         for (TextToSpeechManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onTextToSpeechInitialized();
+            callbacks.onTextToSpeechInitialized(status);
         }
         mListenerManager.endTraversing();
     }
 
-    public void attach(TextToSpeechManagerCallbacks listener)
+    public void attach(@NonNull TextToSpeechManagerCallbacks listener)
     {
+        FooRun.throwIllegalArgumentExceptionIfNull(listener, "listener");
+
         mListenerManager.attach(listener);
 
         if (mTextToSpeech.isStarted())
         {
             if (mTextToSpeech.isInitialized())
             {
-                onTextToSpeechInitialized();
+                listener.onTextToSpeechInitialized(TextToSpeech.SUCCESS);
             }
         }
         else
@@ -170,13 +167,14 @@ public class TextToSpeechManager
 
                 mTextToSpeech.setVoiceName(voiceName);
                 mTextToSpeech.setAudioStreamType(audioStreamType);
-                mTextToSpeech.start(getContext());
+                mTextToSpeech.start(mContext);
             }
         }
     }
 
     public void detach(TextToSpeechManagerCallbacks listener)
     {
+        FooRun.throwIllegalArgumentExceptionIfNull(listener, "listener");
         mListenerManager.detach(listener);
     }
 
@@ -203,84 +201,52 @@ public class TextToSpeechManager
 
     public void speak(String text)
     {
-        if (!isEnabled())
-        {
-            return;
-        }
-
-        mTextToSpeech.speak(text);
-    }
-
-    public void speak(String text, boolean clear)
-    {
-        if (!isEnabled())
-        {
-            return;
-        }
-
-        mTextToSpeech.speak(text, clear, null);
-    }
-
-    public void speak(String text, Runnable runAfter)
-    {
-        if (!isEnabled())
-        {
-            return;
-        }
-
-        mTextToSpeech.speak(text, runAfter);
-    }
-
-    public void speak(@NonNull FooTextToSpeechBuilder builder)
-    {
-        if (!isEnabled())
-        {
-            return;
-        }
-
-        mTextToSpeech.speak(builder);
-    }
-
-    public void speak(@NonNull FooTextToSpeechBuilder builder, boolean clear)
-    {
-        if (!isEnabled())
-        {
-            return;
-        }
-
-        mTextToSpeech.speak(builder, clear, null);
-    }
-
-    /*
-    public void speak(String text)
-    {
-        speak(false, false, text, null);
+        speak(text, null);
     }
 
     public void speak(String text, Runnable runAfter)
     {
         speak(false, false, text, runAfter);
     }
-    */
 
-    public void speak(boolean force, boolean toast, String text)
+    public void speak(boolean force, boolean clear, String text)
     {
-        speak(force, toast, text, null);
+        speak(force, clear, text, null);
     }
 
-    public void speak(boolean force, boolean toast, String text, Runnable runAfter)
+    public void speak(boolean force, boolean clear, String text, Runnable runAfter)
     {
         if (!force && !isEnabled())
         {
             return;
         }
 
-        if (toast)
+        mTextToSpeech.speak(clear, text, runAfter);
+    }
+
+    public void speak(@NonNull FooTextToSpeechBuilder builder)
+    {
+        speak(builder, null);
+    }
+
+    public void speak(@NonNull FooTextToSpeechBuilder builder, Runnable runAfter)
+    {
+        speak(false, false, builder, runAfter);
+    }
+
+    public void speak(boolean force, boolean clear, @NonNull FooTextToSpeechBuilder builder)
+    {
+        speak(force, clear, builder, null);
+    }
+
+    public void speak(boolean force, boolean clear, @NonNull FooTextToSpeechBuilder builder, Runnable runAfter)
+    {
+        if (!force && !isEnabled())
         {
-            FooPlatformUtils.toastLong(getContext(), text);
+            return;
         }
 
-        mTextToSpeech.speak(text, runAfter);
+        mTextToSpeech.speak(clear, builder, runAfter);
     }
 
     public void silence(int durationInMs)
