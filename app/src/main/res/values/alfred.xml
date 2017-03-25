@@ -22,14 +22,14 @@
     <string name="alfred_wired_headphone_X_disconnected">Wired Headphone %1$s disconnected</string>
 
     <string name="alfred_screen_on">Screen On</string>
-    <string name="alfred_screen_on_screen_was_off_for_X">Screen On; Screen Was Off For %1$s</string>
+    <string name="alfred_screen_on_after_being_off_for_X">Screen On After Being Off For %1$s</string>
     <string name="alfred_screen_off">Screen Off</string>
-    <string name="alfred_screen_off_screen_was_on_for_X">Screen Off; Screen Was On For %1$s</string>
+    <string name="alfred_screen_off_after_being_on_for_X">Screen Off After Being On For %1$s</string>
 
-    <string name="alfred_charger_connected">Charger Connected</string>
-    <string name="alfred_charger_connected_charger_was_disconnected_for_X">Charger Connected; Charger Was Disconnected For %1$s</string>
-    <string name="alfred_charger_disconnected">Charger Disconnected</string>
-    <string name="alfred_charger_disconnected_charger_was_connected_for_X">Charger Disconnected; Charger Was Connected For %1$s</string>
+    <string name="alfred_X_connected">%1$s Connected</string>
+    <string name="alfred_X_connected_after_being_disconnected_for_Y">%1$s Connected After Being Disconnected For %2$s</string>
+    <string name="alfred_X_disconnected">%1$s Disconnected</string>
+    <string name="alfred_X_disconnected_after_being_connected_for_Y">%1$s Disconnected After Being Connected For %2$s</string>
 
     <string name="alfred_waiting_for_notification_access">Waiting For Notification Access</string>
     <string name="alfred_notification_access_enabled">Notification Access Enabled</string>

@@ -10,8 +10,9 @@ import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.DisabledCause;
-import com.smartfoo.android.core.platform.FooChargingListener;
-import com.smartfoo.android.core.platform.FooChargingListener.FooChargingListenerCallbacks;
+import com.smartfoo.android.core.platform.FooChargePortListener;
+import com.smartfoo.android.core.platform.FooChargePortListener.ChargePort;
+import com.smartfoo.android.core.platform.FooChargePortListener.FooChargePortListenerCallbacks;
 import com.smartfoo.android.core.platform.FooHandler;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.platform.FooScreenListener;
@@ -29,6 +30,8 @@ import com.swooby.alfred.ProfileManager.ProfileManagerConfiguration;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerConfiguration;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AlfredManager
@@ -57,7 +60,7 @@ public class AlfredManager
     private final DelayedRunnableNotificationAccessSettingDisabled mDelayedRunnableNotificationAccessSettingDisabled;
     private final NotificationParserManager                        mNotificationParserManager;
     private final FooScreenListener                                mScreenListener;
-    private final FooChargingListener                              mChargingListener;
+    private final FooChargePortListener                            mChargePortListener;
     private final ProfileManager                                   mProfileManager;
 
     public AlfredManager(@NonNull Context applicationContext)
@@ -120,7 +123,7 @@ public class AlfredManager
             }
         });
         mScreenListener = new FooScreenListener(mApplicationContext);
-        mChargingListener = new FooChargingListener(mApplicationContext);
+        mChargePortListener = new FooChargePortListener(mApplicationContext);
         mProfileManager = new ProfileManager(mApplicationContext, new ProfileManagerConfiguration()
         {
             @Override
@@ -212,18 +215,18 @@ public class AlfredManager
                 AlfredManager.this.onScreenOn();
             }
         });
-        mChargingListener.attach(new FooChargingListenerCallbacks()
+        mChargePortListener.attach(new FooChargePortListenerCallbacks()
         {
             @Override
-            public void onChargingConnected()
+            public void onChargePortConnected(ChargePort chargePort)
             {
-                AlfredManager.this.onChargingConnected();
+                AlfredManager.this.onChargePortConnected(chargePort);
             }
 
             @Override
-            public void onChargingDisconnected()
+            public void onChargePortDisconnected(ChargePort chargePort)
             {
-                AlfredManager.this.onChargingDisconnected();
+                AlfredManager.this.onChargePortDisconnected(chargePort);
             }
         });
         // TODO:(pv) Phone doze listener
@@ -490,7 +493,10 @@ public class AlfredManager
         //...
 
         updateScreenInfo();
-        updateChargingInfo();
+        for (ChargePort chargingPort : mChargePortListener.getChargingPorts())
+        {
+            onChargePortConnected(chargingPort);
+        }
 
         //...
 
@@ -593,7 +599,7 @@ public class AlfredManager
 
                 mTimeScreenOffMs = -1;
 
-                speech = getString(R.string.alfred_screen_on_screen_was_off_for_X, FooString.getTimeDurationString(mApplicationContext, durationMs, TimeUnit.SECONDS));
+                speech = getString(R.string.alfred_screen_on_after_being_off_for_X, FooString.getTimeDurationString(mApplicationContext, durationMs, TimeUnit.SECONDS));
             }
             else
             {
@@ -610,7 +616,7 @@ public class AlfredManager
 
                 mTimeScreenOnMs = -1;
 
-                speech = getString(R.string.alfred_screen_off_screen_was_on_for_X, FooString.getTimeDurationString(mApplicationContext, durationMs, TimeUnit.SECONDS));
+                speech = getString(R.string.alfred_screen_off_after_being_on_for_X, FooString.getTimeDurationString(mApplicationContext, durationMs, TimeUnit.SECONDS));
             }
             else
             {
@@ -620,57 +626,65 @@ public class AlfredManager
         mTextToSpeechManager.speak(speech);
     }
 
-    private void onChargingConnected()
-    {
-        FooLog.i(TAG, "onChargingConnected()");
-        updateChargingInfo();
-    }
+    //
+    //
+    //
 
-    private void onChargingDisconnected()
-    {
-        FooLog.i(TAG, "onChargingDisconnected()");
-        updateChargingInfo();
-    }
+    private Map<ChargePort, Long> mTimeChargingConnected    = new HashMap<>();
+    private Map<ChargePort, Long> mTimeChargingDisconnected = new HashMap<>();
 
-    private long mTimeChargingConnectedMs    = -1;
-    private long mTimeChargingDisconnectedMs = -1;
-
-    private void updateChargingInfo()
+    private void onChargePortConnected(ChargePort chargePort)
     {
+        FooLog.i(TAG, "onChargePortConnected(chargePort=" + chargePort + ')');
+
+        long now = System.currentTimeMillis();
+
+        mTimeChargingConnected.put(chargePort, now);
+
+        String chargePortName = chargePort.toString(mApplicationContext);
+        //FooLog.i(TAG, "onChargePortConnected: chargePortName == " + FooString.quote(chargePortName));
+
         String speech;
-        if (mChargingListener.isCharging())
+        Long timeChargingDisconnectedMs = mTimeChargingDisconnected.remove(chargePort);
+        if (timeChargingDisconnectedMs != null)
         {
-            mTimeChargingConnectedMs = System.currentTimeMillis();
+            long elapsedMs = now - timeChargingDisconnectedMs;
 
-            if (mTimeChargingDisconnectedMs != -1)
-            {
-                long durationMs = mTimeChargingConnectedMs - mTimeChargingDisconnectedMs;
-
-                mTimeChargingDisconnectedMs = -1;
-
-                speech = getString(R.string.alfred_charger_connected_charger_was_disconnected_for_X, FooString.getTimeDurationString(mApplicationContext, durationMs, TimeUnit.SECONDS));
-            }
-            else
-            {
-                speech = getString(R.string.alfred_charger_connected);
-            }
+            speech = getString(R.string.alfred_X_connected_after_being_disconnected_for_Y,
+                    chargePortName,
+                    FooString.getTimeDurationString(mApplicationContext, elapsedMs, TimeUnit.SECONDS));
         }
         else
         {
-            mTimeChargingDisconnectedMs = System.currentTimeMillis();
+            speech = getString(R.string.alfred_X_connected, chargePortName);
+        }
+        mTextToSpeechManager.speak(speech);
+    }
 
-            if (mTimeChargingConnectedMs != -1)
-            {
-                long durationMs = mTimeChargingDisconnectedMs - mTimeChargingConnectedMs;
+    private void onChargePortDisconnected(ChargePort chargePort)
+    {
+        FooLog.i(TAG, "onChargePortDisconnected(chargePort=" + chargePort + ')');
 
-                mTimeChargingConnectedMs = -1;
+        long now = System.currentTimeMillis();
 
-                speech = getString(R.string.alfred_charger_disconnected_charger_was_connected_for_X, FooString.getTimeDurationString(mApplicationContext, durationMs, TimeUnit.SECONDS));
-            }
-            else
-            {
-                speech = getString(R.string.alfred_charger_disconnected);
-            }
+        mTimeChargingDisconnected.put(chargePort, now);
+
+        String chargePortName = chargePort.toString(mApplicationContext);
+        //FooLog.i(TAG, "onChargePortDisconnected: chargePortName == " + FooString.quote(chargePortName));
+
+        String speech;
+        Long timeChargingConnectedMs = mTimeChargingConnected.remove(chargePort);
+        if (timeChargingConnectedMs != null)
+        {
+            long elapsedMs = now - timeChargingConnectedMs;
+
+            speech = getString(R.string.alfred_X_disconnected_after_being_connected_for_Y,
+                    chargePortName,
+                    FooString.getTimeDurationString(mApplicationContext, elapsedMs, TimeUnit.SECONDS));
+        }
+        else
+        {
+            speech = getString(R.string.alfred_X_disconnected, chargePortName);
         }
         mTextToSpeechManager.speak(speech);
     }
