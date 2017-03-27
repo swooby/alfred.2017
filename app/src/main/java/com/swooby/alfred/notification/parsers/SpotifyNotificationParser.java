@@ -1,9 +1,8 @@
 package com.swooby.alfred.notification.parsers;
 
-import android.app.Notification;
+import android.app.Notification.Action;
 import android.content.Context;
 import android.media.session.MediaController;
-import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
@@ -22,6 +21,7 @@ public class SpotifyNotificationParser
 {
     private static final String TAG = FooLog.TAG(SpotifyNotificationParser.class);
 
+    private boolean      mLastIsCommercial;
     private boolean      mLastIsPlaying;
     private CharSequence mLastArtist;
     private CharSequence mLastTitle;
@@ -54,35 +54,23 @@ public class SpotifyNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
-        FooLog.v(TAG, "onNotificationPosted: androidTitle=" + FooString.quote(androidTitle));
-        CharSequence textArtist = extras.getCharSequence(Notification.EXTRA_TEXT);
-        FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
-        CharSequence textTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
+        CharSequence textTitle = getAndroidTitle(extras);
         FooLog.v(TAG, "onNotificationPosted: textTitle=" + FooString.quote(textTitle));
-        MediaSession.Token mediaSession = extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
-        FooLog.v(TAG, "onNotificationPosted: mediaSession=" + mediaSession);
-        int[] compactActions = extras.getIntArray(Notification.EXTRA_COMPACT_ACTIONS);
-        FooLog.v(TAG, "onNotificationPosted: compactActions=" + Arrays.toString(compactActions));
-
-        if (mediaSession == null)
-        {
-            FooLog.w(TAG, "onNotificationPosted: mediaSession == null; Unparsable");
-            return NotificationParseResult.Unparsable;
-        }
+        CharSequence textArtist = getAndroidText(extras);
+        FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
 
         Context context = getContext();
 
-        MediaController mediaController;
-        try
+        MediaController mediaController = getMediaController(context, extras);
+        FooLog.v(TAG, "onNotificationPosted: mediaController=" + mediaController);
+        if (mediaController == null)
         {
-            mediaController = new MediaController(context, mediaSession);
-        }
-        catch (Exception e)
-        {
-            FooLog.e(TAG, "onNotificationPosted: EXCEPTION; Unparsable", e);
+            FooLog.w(TAG, "onNotificationPosted: mediaController == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
+
+        Action[] actions = getActions(sbn);
+        FooLog.v(TAG, "onNotificationPosted: actions=" + Arrays.toString(actions));
 
         PlaybackState playbackState = mediaController.getPlaybackState();
         if (playbackState == null)
@@ -101,19 +89,34 @@ public class SpotifyNotificationParser
         }
         boolean isPlaying = playbackStateState == PlaybackState.STATE_PLAYING;
 
-        if (FooString.isNullOrEmpty(textArtist)) // && only pause control is enabled
+        // @formatter:off
+        // title == non-null commercial/advertisement/company name, artist == null/""
+        boolean isCommercial = !FooString.isNullOrEmpty(textTitle) && FooString.isNullOrEmpty(textArtist);
+        // Test if *ONLY* the Playing/Paused (middle) Action is enabled (actionIntent != null)
+        isCommercial &= actions.length < 1 || actions[0].actionIntent == null; // Thumbs Down (action always present)
+        isCommercial &= actions.length < 2 || actions[1].actionIntent == null; // Previous Track (action always present)
+        isCommercial &= actions.length < 3 || actions[2].actionIntent != null; // PlayingPause or PausedPlay (action always present)
+        isCommercial &= actions.length < 4 || actions[3].actionIntent == null; // Next Track (action always present)
+        isCommercial &= actions.length < 5 || actions[4].actionIntent == null; // Thumbs Up (action may be absent/null)
+        // @formatter:on
+        if (isCommercial)
         {
-            //
-            // It's a commercial!
-            //
-            // TODO:(pv) Make this a user option...
-            if (true)
+            if (!mLastIsCommercial)
             {
-                mute(true, "attenuating " + getPackageAppSpokenName() + " commercial");
+                mLastIsCommercial = true;
+
+                // TODO:(pv) Make this a user option...
+                if (true)
+                {
+                    //mediaController.setVolumeTo(...);
+                    mute(true, "attenuating " + getPackageAppSpokenName() + " commercial");
+                }
             }
 
             return NotificationParseResult.ParsableIgnored;
         }
+
+        mLastIsCommercial = false;
 
         textArtist = unknownIfNullOrEmpty(context, textArtist);
         textTitle = unknownIfNullOrEmpty(context, textTitle);

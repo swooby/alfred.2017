@@ -1,6 +1,7 @@
 package com.swooby.alfred.notification.parsers;
 
 import android.app.Notification;
+import android.app.Notification.Action;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -52,9 +53,40 @@ public abstract class AbstractNotificationParser
         return sbn != null ? sbn.getPackageName() : null;
     }
 
+    public static Bundle getExtras(StatusBarNotification sbn)
+    {
+        Notification notification = getNotification(sbn);
+        return notification != null ? notification.extras : null;
+    }
+
     public static Notification getNotification(StatusBarNotification sbn)
     {
         return sbn != null ? sbn.getNotification() : null;
+    }
+
+    public static Action[] getActions(StatusBarNotification sbn)
+    {
+        return getActions(getNotification(sbn));
+    }
+
+    public static CharSequence getAndroidTitle(Bundle extras)
+    {
+        return extras != null ? extras.getCharSequence(Notification.EXTRA_TITLE) : null;
+    }
+
+    public static CharSequence getAndroidText(Bundle extras)
+    {
+        return extras != null ? extras.getCharSequence(Notification.EXTRA_TEXT) : null;
+    }
+
+    public static Action[] getActions(Notification notification)
+    {
+        return notification != null ? notification.actions : null;
+    }
+
+    public static int[] getCompactActions(Bundle extras)
+    {
+        return extras != null ? extras.getIntArray(Notification.EXTRA_COMPACT_ACTIONS) : null;
     }
 
     public static RemoteViews getBigContentView(StatusBarNotification sbn)
@@ -62,12 +94,6 @@ public abstract class AbstractNotificationParser
         Notification notification = getNotification(sbn);
         // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
         return notification != null ? notification.bigContentView : null;
-    }
-
-    public static Bundle getExtras(StatusBarNotification sbn)
-    {
-        Notification notification = getNotification(sbn);
-        return notification != null ? notification.extras : null;
     }
 
     public static RemoteViews getContentView(StatusBarNotification sbn)
@@ -142,6 +168,7 @@ public abstract class AbstractNotificationParser
 
     public static int getAndroidIdOfChildWithName(@NonNull View parent, @NonNull String childName)
     {
+        //FooLog.e(TAG, "getAndroidIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
         Resources resources = parent.getResources();
         return getIdOfChildWithName(resources, childName, "android");
     }

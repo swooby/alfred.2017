@@ -179,22 +179,11 @@ public class NotificationParserManager
 
     private void start()
     {
-        //
-        // We can't just blindly initialize all AbstractNotificationParsers.
-        //  If we do, then we won't be able to detect the application name for any apps that are not installed...
-        //  ...and I would rather not hardcode the application name.
-        //  If someone then installs the app, then we will have initialized an empty/null application name, which isn't good.
-        // The best general solution is:
-        //  1) Have a general method that initializes a parser if its app is installed
-        //  2) At startup, detect any apps that are installed and initialize its parser
-        //  3) Listen for any installed/uninstalled apps and respectively add/removed any appropriate parser
-        //
-
-        // TODO:(pv) Listen for installation/removal of any installed apps
-        // TODO:(pv) Enumerate all AbstractNotificationParsers
-
+        // TODO:(pv) In DEBUG, show any parsers that do not have app installed w/ link to install app from Google Play
+        // TODO:(pv) Listen for installation/removal of apps (especially ones w/ parsers)
+        // TODO:(pv) Future ecosystem to allow installing 3rd-party developed parsers
         // TODO:(pv) Use package reflection to enumerate and load all non-Abstract parsers in parsers package
-        // TODO:(pv) Not all of these are required, and could rely on a decent default implementation that walks and talks all visible text elements
+        // TODO:(pv) Not all of these parsers may be required, and could rely on a decent default implementation that walks and talks all visible text elements
         //addNotificationParser(new AndroidSystemNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new FacebookNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new GmailNotificationParser(mNotificationParserCallbacks));

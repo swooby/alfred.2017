@@ -1,15 +1,47 @@
 package com.swooby.alfred.notification.parsers;
 
+import android.app.Notification;
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.session.MediaController;
+import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import com.smartfoo.android.core.FooRun;
+import com.smartfoo.android.core.logging.FooLog;
 import com.swooby.alfred.TextToSpeechManager;
 
 public abstract class AbstractMediaPlayerNotificiationParser
         extends AbstractNotificationParser
 {
+    private static final String TAG = FooLog.TAG(AbstractMediaPlayerNotificiationParser.class);
+
+    public MediaController getMediaController(@NonNull Context context, Bundle extras)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+        MediaController mediaController = null;
+        if (extras != null)
+        {
+            MediaSession.Token mediaSession = extras.getParcelable(Notification.EXTRA_MEDIA_SESSION);
+            FooLog.v(TAG, "getMediaController: mediaSession=" + mediaSession);
+
+            if (mediaSession != null)
+            {
+                try
+                {
+                    mediaController = new MediaController(context, mediaSession);
+                }
+                catch (Exception e)
+                {
+                    FooLog.e(TAG, "getMediaController: EXCEPTION", e);
+                }
+            }
+        }
+        return mediaController;
+    }
+
     public static String playbackStateToString(int playbackState)
     {
         String s;
@@ -87,7 +119,7 @@ public abstract class AbstractMediaPlayerNotificiationParser
     */
 
     // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
-    protected void mute(boolean mute, String speech)
+    protected void mute(boolean mute, String speechBeforeMute)
     {
         final int musicAudioStreamType = AudioManager.STREAM_MUSIC;
 
@@ -113,12 +145,12 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 }
             };
 
-            if (speech == null)
+            if (speechBeforeMute == null)
             {
-                speech = getPackageAppSpokenName() + " attenuating";
+                speechBeforeMute = getPackageAppSpokenName() + " attenuating";
             }
 
-            textToSpeechManager.speak(speech, runAfter);
+            textToSpeechManager.speak(speechBeforeMute, runAfter);
 
             if (textToSpeechAudioStreamType != musicAudioStreamType)
             {
