@@ -2,6 +2,7 @@ package com.swooby.alfred.notification.parsers;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.session.PlaybackState;
 import android.support.annotation.NonNull;
 
 import com.swooby.alfred.TextToSpeechManager;
@@ -9,6 +10,54 @@ import com.swooby.alfred.TextToSpeechManager;
 public abstract class AbstractMediaPlayerNotificiationParser
         extends AbstractNotificationParser
 {
+    public static String playbackStateToString(int playbackState)
+    {
+        String s;
+        switch (playbackState)
+        {
+            case PlaybackState.STATE_BUFFERING:
+                s = "STATE_BUFFERING";
+                break;
+            case PlaybackState.STATE_CONNECTING:
+                s = "STATE_CONNECTING";
+                break;
+            case PlaybackState.STATE_ERROR:
+                s = "STATE_ERROR";
+                break;
+            case PlaybackState.STATE_FAST_FORWARDING:
+                s = "STATE_FAST_FORWARDING";
+                break;
+            case PlaybackState.STATE_NONE:
+                s = "STATE_NONE";
+                break;
+            case PlaybackState.STATE_PAUSED:
+                s = "STATE_PAUSED";
+                break;
+            case PlaybackState.STATE_PLAYING:
+                s = "STATE_PLAYING";
+                break;
+            case PlaybackState.STATE_REWINDING:
+                s = "STATE_REWINDING";
+                break;
+            case PlaybackState.STATE_SKIPPING_TO_NEXT:
+                s = "STATE_SKIPPING_TO_NEXT";
+                break;
+            case PlaybackState.STATE_SKIPPING_TO_PREVIOUS:
+                s = "STATE_SKIPPING_TO_PREVIOUS";
+                break;
+            case PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM:
+                s = "STATE_SKIPPING_TO_QUEUE_ITEM";
+                break;
+            case PlaybackState.STATE_STOPPED:
+                s = "STATE_STOPPED";
+                break;
+            default:
+                s = "UNKNOWN";
+                break;
+        }
+        return s + '(' + playbackState + ')';
+    }
+
     /**
      * If we set volume to zero then many media players automatically pause
      */

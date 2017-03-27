@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 
+import com.smartfoo.android.core.BuildConfig;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.R;
@@ -83,7 +84,10 @@ public class GoogleHangoutsNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        super.onNotificationPosted(sbn);
+        if (BuildConfig.DEBUG)
+        {
+            super.onNotificationPosted(sbn);
+        }
 
         Notification notification = sbn.getNotification();
         if (notification == null)

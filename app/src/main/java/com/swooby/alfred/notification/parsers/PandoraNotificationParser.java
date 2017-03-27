@@ -12,6 +12,7 @@ import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
+import com.smartfoo.android.core.BuildConfig;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
@@ -62,7 +63,10 @@ public class PandoraNotificationParser
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
         FooLog.i(TAG, "---- #PANDORA ----");
-        super.onNotificationPosted(sbn);
+        if (BuildConfig.DEBUG)
+        {
+            super.onNotificationPosted(sbn);
+        }
 
         Bundle extras = getExtras(sbn);
         FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
@@ -108,7 +112,7 @@ public class PandoraNotificationParser
         if (true)
         {
             Set<Integer> bigContentViewIds = new LinkedHashSet<>();
-            walkView(remoteView, bigContentViewIds);
+            walkView(remoteView, true, bigContentViewIds);
             //FooLog.e(TAG, "mockBigContentViewIds=" + mockBigContentViewIds);
         }
 
@@ -152,7 +156,7 @@ public class PandoraNotificationParser
 
         Map<Integer, String> mapIdsToNames = new LinkedHashMap<>();
 
-        int idIcon = getIdOfChildWithName(remoteView, "icon");
+        int idIcon = getAndroidIdOfChildWithName(remoteView, "icon");
         FooLog.v(TAG,
                 "onNotificationPosted: idIcon=" + toVerboseString(idIcon));
         if (idIcon == 0)
@@ -162,7 +166,7 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idIcon, "icon");
 
-        int idTitle = getIdOfChildWithName(remoteView, "title");
+        int idTitle = getAndroidIdOfChildWithName(remoteView, "title");
         //FooLog.v(TAG, "onNotificationPosted: idTitle=" + toVerboseString(idTitle));
         if (idTitle == 0)
         {
@@ -171,7 +175,7 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idTitle, "title");
 
-        int idArtist = getIdOfChildWithName(remoteView, "artist");
+        int idArtist = getAndroidIdOfChildWithName(remoteView, "artist");
         //FooLog.v(TAG, "onNotificationPosted: idArtist=" + toVerboseString(idArtist));
         if (idArtist == 0)
         {
@@ -180,7 +184,7 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idArtist, "artist");
 
-        int idStation = getIdOfChildWithName(remoteView, "station");
+        int idStation = getAndroidIdOfChildWithName(remoteView, "station");
         //FooLog.v(TAG, "onNotificationPosted: idStation=" + toVerboseString(idStation));
         if (idStation == 0)
         {
@@ -209,7 +213,7 @@ public class PandoraNotificationParser
         mapIdsToNames.put(idThumbUp, "thumb_up");
         */
 
-        int idPlay = getIdOfChildWithName(remoteView, "play");
+        int idPlay = getAndroidIdOfChildWithName(remoteView, "play");
         FooLog.v(TAG,
                 "onNotificationPosted: idPlay=" + toVerboseString(idPlay));
         if (idPlay == 0)
@@ -219,7 +223,7 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idPlay, "play");
 
-        int idSkip = getIdOfChildWithName(remoteView, "skip");
+        int idSkip = getAndroidIdOfChildWithName(remoteView, "skip");
         FooLog.v(TAG,
                 "onNotificationPosted: idSkip=" + toVerboseString(idSkip));
         if (idSkip == 0)
@@ -229,7 +233,7 @@ public class PandoraNotificationParser
         }
         mapIdsToNames.put(idSkip, "skip");
 
-        int idLoading = getIdOfChildWithName(remoteView, "loading");
+        int idLoading = getAndroidIdOfChildWithName(remoteView, "loading");
         FooLog.v(TAG,
                 "onNotificationPosted: idLoading=" + toVerboseString(idLoading));
         if (idLoading == 0)

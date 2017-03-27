@@ -16,6 +16,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
@@ -59,6 +60,7 @@ public abstract class AbstractNotificationParser
     public static RemoteViews getBigContentView(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
+        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
         return notification != null ? notification.bigContentView : null;
     }
 
@@ -71,6 +73,7 @@ public abstract class AbstractNotificationParser
     public static RemoteViews getContentView(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
+        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
         return notification != null ? notification.contentView : null;
     }
 
@@ -129,13 +132,24 @@ public abstract class AbstractNotificationParser
     }
     */
 
-    public static int getIdOfChildWithName(@NonNull View parent, @NonNull String childName)
+    public static int getPackageIdOfChildWithName(@NonNull View parent, @NonNull String childName)
     {
         //FooLog.e(TAG, "getIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
-
         Resources resources = parent.getResources();
         String packageName = parent.getContext().getPackageName();
+        return getIdOfChildWithName(resources, childName, packageName);
+    }
 
+    public static int getAndroidIdOfChildWithName(@NonNull View parent, @NonNull String childName)
+    {
+        Resources resources = parent.getResources();
+        return getIdOfChildWithName(resources, childName, "android");
+    }
+
+    private static int getIdOfChildWithName(@NonNull Resources resources,
+                                            @NonNull String childName,
+                                            @NonNull String packageName)
+    {
         return resources.getIdentifier(childName, "id", packageName);
     }
 
@@ -773,39 +787,57 @@ public abstract class AbstractNotificationParser
         void onTextView(TextView textView);
     }
 
-    public static void walkView(View view, Set<Integer> viewIds)
+    public static void walkView(View view, boolean visibleOnly, Set<Integer> viewIds)
     {
-        walkView(view, viewIds, null);
+        walkView(0, view, visibleOnly, viewIds, null);
     }
 
-    public static void walkView(View view, Set<Integer> viewIds, WalkViewCallbacks callbacks)
+    public static void walkView(View view, boolean visibleOnly, Set<Integer> viewIds, WalkViewCallbacks callbacks)
     {
-        FooLog.v(TAG, "walkView: view=" + view);
+        walkView(0, view, visibleOnly, viewIds, callbacks);
+    }
 
-        if (view != null)
+    private static void walkView(int depth, View view, boolean visibleOnly, Set<Integer> viewIds, WalkViewCallbacks callbacks)
+    {
+        if (view == null)
         {
-            if (viewIds != null)
-            {
-                viewIds.add(view.getId());
-            }
+            return;
+        }
 
-            if (callbacks != null)
-            {
-                if (view instanceof TextView)
-                {
-                    callbacks.onTextView((TextView) view);
-                }
-            }
+        if (visibleOnly && view.getVisibility() != View.VISIBLE)
+        {
+            return;
+        }
 
-            if (view instanceof ViewGroup)
+        StringBuilder indent = new StringBuilder();
+        for (int i = 0; i < depth; i++)
+        {
+            indent.append(' ');
+        }
+        FooLog.v(TAG, "walkView: " + indent + "view=" + view);
+
+        if (viewIds != null)
+        {
+            viewIds.add(view.getId());
+        }
+
+        if (callbacks != null)
+        {
+            if (view instanceof TextView &&
+                !(view instanceof Button))
             {
-                ViewGroup viewGroup = (ViewGroup) view;
-                int childCount = viewGroup.getChildCount();
-                for (int i = 0; i < childCount; i++)
-                {
-                    View childView = viewGroup.getChildAt(i);
-                    walkView(childView, viewIds, callbacks);
-                }
+                callbacks.onTextView((TextView) view);
+            }
+        }
+
+        if (view instanceof ViewGroup)
+        {
+            ViewGroup viewGroup = (ViewGroup) view;
+            int childCount = viewGroup.getChildCount();
+            for (int i = 0; i < childCount; i++)
+            {
+                View childView = viewGroup.getChildAt(i);
+                walkView(depth + 1, childView, visibleOnly, viewIds, callbacks);
             }
         }
     }
@@ -917,9 +949,10 @@ public abstract class AbstractNotificationParser
         };
 
         FooLog.v(TAG, "defaultOnNotificationPosted: ---- bigContentView ----");
+        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
         RemoteViews bigContentView = notification.bigContentView;
         View inflatedBigContentView = inflateRemoteView(context, bigContentView);
-        walkView(inflatedBigContentView, null, walkViewCallbacks);
+        walkView(inflatedBigContentView, true, null, walkViewCallbacks);
         //View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
         //Set<Integer> bigContentViewIds = new LinkedHashSet<>();
         //walkView(mockBigContentView, bigContentViewIds);
@@ -934,9 +967,10 @@ public abstract class AbstractNotificationParser
         */
 
         FooLog.v(TAG, "defaultOnNotificationPosted: ---- contentView ----");
+        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
         RemoteViews contentView = notification.contentView;
         View inflatedContentView = inflateRemoteView(context, contentView);
-        walkView(inflatedContentView, null, bigContentView != null ? null : walkViewCallbacks);
+        walkView(inflatedContentView, true, null, bigContentView != null ? null : walkViewCallbacks);
         //View mockContentView = mockRemoteView(mainApplication, contentView);
         //Set<Integer> contentViewIds = new LinkedHashSet<>();
         //walkView(mockContentView, contentViewIds);

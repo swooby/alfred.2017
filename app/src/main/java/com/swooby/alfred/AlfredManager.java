@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -62,6 +63,8 @@ public class AlfredManager
     private final FooScreenListener                                mScreenListener;
     private final FooChargePortListener                            mChargePortListener;
     private final ProfileManager                                   mProfileManager;
+
+    private boolean mIsStarted;
 
     public AlfredManager(@NonNull Context applicationContext)
     {
@@ -139,12 +142,11 @@ public class AlfredManager
             }
         });
 
-        initialize();
-
         FooLog.v(TAG, "-AlfredManager(applicationContext=" + applicationContext + ')');
     }
 
-    public String getString(int resId, Object... formatArgs)
+    @NonNull
+    public String getString(@StringRes int resId, Object... formatArgs)
     {
         return mApplicationContext.getString(resId, formatArgs);
     }
@@ -173,8 +175,20 @@ public class AlfredManager
         return mNotificationParserManager;
     }
 
-    private void initialize()
+    public boolean isStarted()
     {
+        return mIsStarted;
+    }
+
+    public void start()
+    {
+        if (isStarted())
+        {
+            return;
+        }
+
+        mIsStarted = true;
+
         mNotificationManager.initializing("Text To Speech", "TBD text", "TBD subtext");
         final long timeStartMillis = System.currentTimeMillis();
         mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
@@ -641,15 +655,13 @@ public class AlfredManager
 
         mTimeChargingConnected.put(chargePort, now);
 
-        String chargePortName = chargePort.toString(mApplicationContext);
-        //FooLog.i(TAG, "onChargePortConnected: chargePortName == " + FooString.quote(chargePortName));
-
         String speech;
+        String chargePortName = getString(chargePort.getStringRes());
+        //FooLog.i(TAG, "onChargePortConnected: chargePortName == " + FooString.quote(chargePortName));
         Long timeChargingDisconnectedMs = mTimeChargingDisconnected.remove(chargePort);
         if (timeChargingDisconnectedMs != null)
         {
             long elapsedMs = now - timeChargingDisconnectedMs;
-
             speech = getString(R.string.alfred_X_connected_after_being_disconnected_for_Y,
                     chargePortName,
                     FooString.getTimeDurationString(mApplicationContext, elapsedMs, TimeUnit.SECONDS));
@@ -669,15 +681,13 @@ public class AlfredManager
 
         mTimeChargingDisconnected.put(chargePort, now);
 
-        String chargePortName = chargePort.toString(mApplicationContext);
-        //FooLog.i(TAG, "onChargePortDisconnected: chargePortName == " + FooString.quote(chargePortName));
-
         String speech;
+        String chargePortName = getString(chargePort.getStringRes());
+        //FooLog.i(TAG, "onChargePortDisconnected: chargePortName == " + FooString.quote(chargePortName));
         Long timeChargingConnectedMs = mTimeChargingConnected.remove(chargePort);
         if (timeChargingConnectedMs != null)
         {
             long elapsedMs = now - timeChargingConnectedMs;
-
             speech = getString(R.string.alfred_X_disconnected_after_being_connected_for_Y,
                     chargePortName,
                     FooString.getTimeDurationString(mApplicationContext, elapsedMs, TimeUnit.SECONDS));

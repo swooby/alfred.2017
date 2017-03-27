@@ -18,6 +18,7 @@ import com.swooby.alfred.notification.parsers.DownloadManagerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleHangoutsNotificationParser;
+import com.swooby.alfred.notification.parsers.GoogleMyGlassNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleNowNotificationParser;
 import com.swooby.alfred.notification.parsers.GooglePhotosNotificationParser;
 import com.swooby.alfred.notification.parsers.GooglePlayStoreNotificationParser;
@@ -203,6 +204,7 @@ public class NotificationParserManager
         addNotificationParser(new GoogleHangoutsNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new GoogleMapsNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new GoogleMessengerNotificationParser(mNotificationParserCallbacks));
+        addNotificationParser(new GoogleMyGlassNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GoogleNowNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GooglePhotosNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new GooglePlayStoreNotificationParser(mNotificationParserCallbacks));

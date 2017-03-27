@@ -36,6 +36,7 @@ public class GmailNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
+        FooLog.i(TAG, "---- #GMAIL ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);

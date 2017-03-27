@@ -17,6 +17,7 @@ public class MainApplication
         FooLog.v(TAG, "+onCreate()");
         super.onCreate();
         mAlfredManager = new AlfredManager(this);
+        mAlfredManager.start();
         FooLog.v(TAG, "-onCreate()");
     }
 
