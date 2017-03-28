@@ -33,6 +33,8 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
 import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.app.FooDebugActivity;
+import com.smartfoo.android.core.app.FooDebugConfiguration;
 import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment;
 import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment.GenericPromptPositiveNegativeDialogFragmentCallbacks;
 import com.smartfoo.android.core.logging.FooLog;
@@ -103,6 +105,7 @@ public class MainActivity
     };
 
     private MainApplication           mMainApplication;
+    private FooDebugConfiguration     mDebugConfiguration;
     private AlfredManager             mAlfredManager;
     private TextToSpeechManager       mTextToSpeechManager;
     private ProfileManager            mProfileManager;
@@ -124,12 +127,18 @@ public class MainActivity
 
     private boolean mRequestedTextToSpeechData;
 
+    protected boolean isDebugEnabled()
+    {
+        return mDebugConfiguration.isDebugEnabled();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        mMainApplication = (MainApplication) getApplication();
+        mMainApplication = MainApplication.getMainApplication(this);
+        mDebugConfiguration = mMainApplication.getFooDebugConfiguration();
         mAlfredManager = mMainApplication.getAlfredManager();
         mTextToSpeechManager = mAlfredManager.getTextToSpeechManager();
         mProfileManager = mAlfredManager.getProfileManager();
@@ -343,11 +352,30 @@ public class MainActivity
     @Override
     public boolean onPrepareOptionsMenu(Menu menu)
     {
-        MenuItem menuItem = menu.findItem(R.id.action_notification_access);
+        boolean isLoggingEnabled = FooLog.isEnabled();
+
+        MenuItem menuItem;
+
+        menuItem = menu.findItem(R.id.action_notification_access);
         if (menuItem != null)
         {
             menuItem.setVisible(FooNotificationListenerManager.supportsNotificationListenerSettings());
         }
+
+        menuItem = menu.findItem(R.id.action_debug_show_debug_log);
+        if (menuItem != null)
+        {
+            menuItem.setVisible(isLoggingEnabled);
+        }
+
+        menuItem = menu.findItem(R.id.action_debug_clear_debug_log);
+        if (menuItem != null)
+        {
+            menuItem.setVisible(isLoggingEnabled);
+        }
+
+        //...
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -357,6 +385,8 @@ public class MainActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
+
+        boolean isDebugEnabled = isDebugEnabled();
 
         switch (item.getItemId())
         {
@@ -370,6 +400,9 @@ public class MainActivity
             //case R.id.action_settings:
             //    // TODO:(pv) ...
             //    return true;
+            //case R.id.menu_refresh:
+            //    refreshItemsFromTable();
+            //    return true;
             case R.id.action_application_info:
                 FooPlatformUtils.showAppSettings(this);
                 return true;
@@ -379,9 +412,20 @@ public class MainActivity
             case R.id.action_text_to_speech:
                 startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
                 return true;
-            //case R.id.menu_refresh:
-            //    refreshItemsFromTable();
-            //    return true;
+            case R.id.action_debug_show_debug_log:
+            {
+                String username = null;
+
+                Intent intent = new Intent(this, FooDebugActivity.class);
+                intent.putExtras(FooDebugActivity.makeExtras(null, username));
+
+                startActivity(intent);
+
+                return true;
+            }
+            case R.id.action_debug_clear_debug_log:
+                FooLog.clear();
+                break;
         }
 
         if (mDrawerToggle != null)

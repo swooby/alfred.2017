@@ -9,6 +9,11 @@
     <string name="action_application_info">Application Info</string>
     <string name="action_notification_access">Notification Access</string>
     <string name="action_text_to_speech">Text-To-Speech</string>
+    <string name="action_debug_show_debug_log">Show Debug Log</string>
+    <string name="action_debug_clear_debug_log">Clear Debug Log</string>
+    <!--
+    <string name="action_debug_disable_debug_mode">Disable Debug Mode</string>
+    -->
 
     <!-- MainActivity: May these ever be spoken? -->
     <string name="enable_notification_access">Enable Notification Access</string>

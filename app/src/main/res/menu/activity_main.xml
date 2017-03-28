@@ -31,4 +31,60 @@
         app:showAsAction="never"
         />
 
+    <item
+        android:id="@+id/action_debug_show_debug_log"
+        android:title="@string/action_debug_show_debug_log"
+        android:visible="false"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_debug_clear_debug_log"
+        android:title="@string/action_debug_clear_debug_log"
+        android:visible="false"
+        app:showAsAction="never"/>
+
+    <!--
+    <item
+        android:id="@+id/action_debug_disable_debug_mode"
+        android:title="@string/action_debug_disable_debug_mode"
+        android:visible="false"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_set_scanning_options"
+        android:title="@string/action_set_scan_options"
+        android:visible="false"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_debug_android_application_details"
+        android:title="@string/action_debug_android_application_details"
+        android:visible="false"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_debug_android_battery_details"
+        android:title="@string/action_debug_android_battery_details"
+        android:visible="false"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_debug_android_developer_options"
+        android:title="@string/action_debug_android_developer_options"
+        android:visible="false"
+        app:showAsAction="never"
+        />
+
+    <item
+        android:id="@+id/action_debug_toggle_bluetooth"
+        android:title="@string/action_disable_bluetooth"
+        android:visible="false"
+        app:showAsAction="never"
+        />
+        -->
+
 </menu>

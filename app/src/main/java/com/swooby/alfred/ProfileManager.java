@@ -29,6 +29,13 @@ public class ProfileManager
         Wired
     }
 
+    public interface ProfileManagerConfiguration
+    {
+        String getProfileToken();
+
+        void setProfileToken(String profileToken);
+    }
+
     public static class ProfileManagerCallbacks
     {
         void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
@@ -50,13 +57,6 @@ public class ProfileManager
         {
             // ignore
         }
-    }
-
-    public interface ProfileManagerConfiguration
-    {
-        String getProfileToken();
-
-        void setProfileToken(String profileToken);
     }
 
     private final Context                                     mContext;

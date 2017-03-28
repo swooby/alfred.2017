@@ -41,6 +41,18 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.smartfoo.android.core.app.FooDebugActivity"
+            android:label="@string/activity_debug_title"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"
+                />
+        </activity>
+
         <service
             android:name="com.smartfoo.android.core.notification.FooNotificationListener"
             android:enabled="true"
