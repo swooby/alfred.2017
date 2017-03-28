@@ -57,7 +57,7 @@ public class GoogleHangoutsNotificationParser
 
     public GoogleHangoutsNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, application.getString(R.string.hangouts_package_app_spoken_name));
+        super("#HANGOUTS", callbacks);//, application.getString(R.string.hangouts_package_app_spoken_name));
 
         mTextMessages = new LinkedList<>();
     }
@@ -84,6 +84,7 @@ public class GoogleHangoutsNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
+        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
@@ -92,14 +93,14 @@ public class GoogleHangoutsNotificationParser
         Notification notification = sbn.getNotification();
         if (notification == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: notification == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Bundle extras = notification.extras;
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -139,7 +140,7 @@ public class GoogleHangoutsNotificationParser
         int count = textMessages.size();
         if (count == 0)
         {
-            FooLog.w(TAG, "onNotificationPosted: textMessages.size() == 0; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " textMessages.size() == 0; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 

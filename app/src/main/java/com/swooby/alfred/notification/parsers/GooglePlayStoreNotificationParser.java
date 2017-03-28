@@ -8,7 +8,7 @@ public class GooglePlayStoreNotificationParser
 {
     public GooglePlayStoreNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, "Google Play Store");
+        super("#GOOGLEPLAYSTORE", callbacks);//, "Google Play Store");
     }
 
     @Override

@@ -99,9 +99,9 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
     protected int mLastStreamMusicVolume = -1;
 
-    protected AbstractMediaPlayerNotificiationParser(@NonNull NotificationParserCallbacks callbacks)
+    protected AbstractMediaPlayerNotificiationParser(@NonNull String logPrefix, @NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);
+        super(logPrefix, callbacks);
 
         mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
     }

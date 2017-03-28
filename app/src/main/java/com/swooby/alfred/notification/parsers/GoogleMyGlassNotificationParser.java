@@ -17,7 +17,7 @@ public class GoogleMyGlassNotificationParser
 
     public GoogleMyGlassNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);
+        super("#GOOGLEGLASS", callbacks);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class GoogleMyGlassNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- #MYGLASS ----");
+        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
@@ -38,19 +38,19 @@ public class GoogleMyGlassNotificationParser
         Notification notification = sbn.getNotification();
         if (notification == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: notification == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Bundle extras = notification.extras;
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
-        FooLog.v(TAG, "onNotificationPosted: androidTitle == " + FooString.quote(androidTitle));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidTitle == " + FooString.quote(androidTitle));
 
         String packageAppSpokenName = getPackageAppSpokenName();
 

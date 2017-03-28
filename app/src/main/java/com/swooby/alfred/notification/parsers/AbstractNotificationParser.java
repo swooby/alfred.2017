@@ -35,8 +35,10 @@ import com.swooby.alfred.TextToSpeechManager;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public abstract class AbstractNotificationParser
 {
@@ -89,17 +91,25 @@ public abstract class AbstractNotificationParser
         return extras != null ? extras.getIntArray(Notification.EXTRA_COMPACT_ACTIONS) : null;
     }
 
-    public static RemoteViews getBigContentView(StatusBarNotification sbn)
+    /**
+     * @param sbn
+     * @return "As of N, this field may be null" :(
+     */
+    public static RemoteViews getBigContentRemoteViews(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
-        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
+        //noinspection deprecation
         return notification != null ? notification.bigContentView : null;
     }
 
-    public static RemoteViews getContentView(StatusBarNotification sbn)
+    /**
+     * @param sbn
+     * @return "As of N, this field may be null" :(
+     */
+    public static RemoteViews getContentRemoteViews(StatusBarNotification sbn)
     {
         Notification notification = getNotification(sbn);
-        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
+        //noinspection deprecation
         return notification != null ? notification.contentView : null;
     }
 
@@ -158,37 +168,55 @@ public abstract class AbstractNotificationParser
     }
     */
 
+    public static void logResourceInfo(@NonNull Context context, int resId)
+    {
+        Resources resources = context.getResources();
+        String resourceName = resources.getResourceName(resId);
+        FooLog.e(TAG, "logResourceInfo: resourceName == " + FooString.quote(resourceName));
+        String resourcePackageName = resources.getResourcePackageName(resId);
+        FooLog.e(TAG, "logResourceInfo: resourcePackageName == " + FooString.quote(resourcePackageName));
+        String resourceEntryName = resources.getResourceEntryName(resId);
+        FooLog.e(TAG, "logResourceInfo: resourceEntryName == " + FooString.quote(resourceEntryName));
+        String resourceTypeName = resources.getResourceTypeName(resId);
+        FooLog.e(TAG, "logResourceInfo: resourceTypeName == " + FooString.quote(resourceTypeName));
+    }
+
+    public enum ResourceType
+    {
+        drawable,
+        id,
+        string,
+    }
+
     public static int getPackageIdOfChildWithName(@NonNull View parent, @NonNull String childName)
     {
-        //FooLog.e(TAG, "getIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
-        Resources resources = parent.getResources();
-        String packageName = parent.getContext().getPackageName();
-        return getIdOfChildWithName(resources, childName, packageName);
+        //FooLog.e(TAG, "getPackageIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
+        return getIdentifier(parent.getContext(), ResourceType.id, childName);
     }
 
     public static int getAndroidIdOfChildWithName(@NonNull View parent, @NonNull String childName)
     {
         //FooLog.e(TAG, "getAndroidIdOfChildWithName(parent=" + parent + ", childName=" + FooString.quote(childName) + ')');
         Resources resources = parent.getResources();
-        return getIdOfChildWithName(resources, childName, "android");
+        return getIdentifier(resources, "android", ResourceType.id, childName);
     }
 
     private static int getIdOfChildWithName(@NonNull Resources resources,
-                                            @NonNull String childName,
-                                            @NonNull String packageName)
+                                            @NonNull String packageName,
+                                            @NonNull String childName)
     {
-        return resources.getIdentifier(childName, "id", packageName);
-    }
-
-    public enum ResourceType
-    {
-        drawable,
+        return getIdentifier(resources, childName, ResourceType.id, packageName);
     }
 
     public static int getIdentifier(@NonNull Context context, @NonNull ResourceType resourceType, @NonNull String name)
     {
         Resources resources = context.getResources();
         String packageName = context.getPackageName();
+        return getIdentifier(resources, packageName, resourceType, name);
+    }
+
+    public static int getIdentifier(@NonNull Resources resources, @NonNull String packageName, @NonNull ResourceType resourceType, @NonNull String name)
+    {
         return resources.getIdentifier(name, resourceType.name(), packageName);
     }
 
@@ -320,43 +348,23 @@ public abstract class AbstractNotificationParser
         int ICON             = 16;
     }
 
-    public static abstract class ValueTypes
+    public enum ActionValueType
     {
-        public static final int TEXT               = 1;
-        public static final int VISIBILITY         = 2;
-        public static final int ENABLED            = 3;
-        public static final int IMAGE_RESOURCE_ID  = 4;
-        public static final int BITMAP_RESOURCE_ID = 5;
-        public static final int PENDING_INTENT     = 6;
-        public static final int INTENT             = 7;
-        /*
-        public static final int ICON              = ?;
-        */
-
-        public static String toString(int value)
-        {
-            switch (value)
-            {
-                case TEXT:
-                    return "TEXT(" + value + ')';
-                case VISIBILITY:
-                    return "VISIBILITY(" + value + ')';
-                case ENABLED:
-                    return "ENABLED(" + value + ')';
-                case IMAGE_RESOURCE_ID:
-                    return "IMAGE_RESOURCE_ID(" + value + ')';
-                case BITMAP_RESOURCE_ID:
-                    return "BITMAP_RESOURCE_ID(" + value + ')';
-                case PENDING_INTENT:
-                    return "PENDING_INTENT(" + value + ')';
-                default:
-                    return "UNKNOWN(" + value + ')';
-            }
-        }
+        UNKNOWN,
+        TEXT,
+        VISIBILITY,
+        ENABLED,
+        IMAGE_RESOURCE_ID,
+        BITMAP_RESOURCE_ID,
+        PENDING_INTENT,
+        INTENT,
+        //ICON,
     }
 
     public static Object getRemoteViewValueById(
-            RemoteViews remoteViews, int viewId, int valueType)
+            RemoteViews remoteViews,
+            int viewId,
+            ActionValueType valueType)
     {
         if (remoteViews == null)
         {
@@ -394,7 +402,7 @@ public abstract class AbstractNotificationParser
                     FooLog.v(TAG, "getRemoteViewValueById: actionTag=" + toVerboseString(actionTag));
                     switch (valueType)
                     {
-                        case ValueTypes.PENDING_INTENT:
+                        case PENDING_INTENT:
                             switch (actionTag)
                             {
                                 case TagTypes.PendingIntent:
@@ -403,10 +411,10 @@ public abstract class AbstractNotificationParser
                                     continue;
                             }
                             break;
-                        case ValueTypes.TEXT:
-                        case ValueTypes.VISIBILITY:
-                        case ValueTypes.ENABLED:
-                        case ValueTypes.IMAGE_RESOURCE_ID:
+                        case TEXT:
+                        case VISIBILITY:
+                        case ENABLED:
+                        case IMAGE_RESOURCE_ID:
                             switch (actionTag)
                             {
                                 case TagTypes.ReflectionAction:
@@ -415,7 +423,7 @@ public abstract class AbstractNotificationParser
                                     continue;
                             }
                             break;
-                        case ValueTypes.INTENT:
+                        case INTENT:
                             switch (actionTag)
                             {
                                 case TagTypes.SetOnClickFillInIntent:
@@ -425,7 +433,7 @@ public abstract class AbstractNotificationParser
                                     continue;
                             }
                             break;
-                        case ValueTypes.BITMAP_RESOURCE_ID:
+                        case BITMAP_RESOURCE_ID:
                             switch (actionTag)
                             {
                                 case TagTypes.BitmapReflectionAction:
@@ -464,25 +472,25 @@ public abstract class AbstractNotificationParser
                                     "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
                             switch (valueType)
                             {
-                                case ValueTypes.TEXT:
+                                case TEXT:
                                     if (!"setText".equals(actionMethodName))
                                     {
                                         continue;
                                     }
                                     break;
-                                case ValueTypes.VISIBILITY:
+                                case VISIBILITY:
                                     if (!"setVisibility".equals(actionMethodName))
                                     {
                                         continue;
                                     }
                                     break;
-                                case ValueTypes.IMAGE_RESOURCE_ID:
+                                case IMAGE_RESOURCE_ID:
                                     if (!"setImageResource".equals(actionMethodName))
                                     {
                                         continue;
                                     }
                                     break;
-                                case ValueTypes.ENABLED:
+                                case ENABLED:
                                     if (!"setEnabled".equals(actionMethodName))
                                     {
                                         continue;
@@ -540,7 +548,7 @@ public abstract class AbstractNotificationParser
                                     "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
                             switch (valueType)
                             {
-                                case ValueTypes.BITMAP_RESOURCE_ID:
+                                case BITMAP_RESOURCE_ID:
                                     if (!"setImageBitmap".equals(actionMethodName))
                                     {
                                         continue;
@@ -607,14 +615,14 @@ public abstract class AbstractNotificationParser
     }
     */
 
-    public static class KeyValue
-            implements Comparable<KeyValue>
+    public static class ActionInfo
+            implements Comparable<ActionInfo>
     {
-        public final int    mViewId;
-        public final int    mValueType;
-        public final Object mValue;
+        public final int             mViewId;
+        public final ActionValueType mValueType;
+        public final Object          mValue;
 
-        public KeyValue(int viewId, int valueType, Object value)
+        public ActionInfo(int viewId, ActionValueType valueType, Object value)
         {
             mViewId = viewId;
             mValueType = valueType;
@@ -626,17 +634,17 @@ public abstract class AbstractNotificationParser
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.append("{ mViewId=").append(toVerboseString(mViewId))
-                    .append(", mValueType=").append(ValueTypes.toString(mValueType))
+            sb.append("{ mViewId=0x").append(Integer.toHexString(mViewId))
+                    .append(", mValueType=").append(mValueType)
                     .append(", mValue=");
 
             switch (mValueType)
             {
-                case ValueTypes.BITMAP_RESOURCE_ID:
-                case ValueTypes.IMAGE_RESOURCE_ID:
-                    sb.append(toVerboseString((Integer) mValue));
+                case BITMAP_RESOURCE_ID:
+                case IMAGE_RESOURCE_ID:
+                    sb.append("0x").append(Integer.toHexString((Integer) mValue));
                     break;
-                case ValueTypes.VISIBILITY:
+                case VISIBILITY:
                     if (mValue instanceof Integer)
                     {
                         sb.append(FooViewUtils.viewVisibilityToString((Integer) mValue));
@@ -653,13 +661,42 @@ public abstract class AbstractNotificationParser
         }
 
         @Override
-        public int compareTo(@NonNull KeyValue another)
+        public int compareTo(@NonNull ActionInfo another)
         {
             return Integer.compare(mViewId, another.mViewId);
         }
     }
 
-    public static void walkActions(RemoteViews remoteViews, List<KeyValue> listKeyValues)
+    public static class ActionInfos
+    {
+        private final Map<Integer, Map<ActionValueType, ActionInfo>> mViewIdToActionValueTypeToActionInfo;
+
+        public ActionInfos()
+        {
+            mViewIdToActionValueTypeToActionInfo = new LinkedHashMap<>();
+        }
+
+        public void add(ActionInfo actionInfo)
+        {
+            int viewId = actionInfo.mViewId;
+
+            Map<ActionValueType, ActionInfo> actionInfos = mViewIdToActionValueTypeToActionInfo.get(viewId);
+            if (actionInfos == null)
+            {
+                actionInfos = new LinkedHashMap<>();
+                mViewIdToActionValueTypeToActionInfo.put(viewId, actionInfos);
+            }
+
+            actionInfos.put(actionInfo.mValueType, actionInfo);
+        }
+
+        public Map<ActionValueType, ActionInfo> get(int viewId)
+        {
+            return mViewIdToActionValueTypeToActionInfo.get(viewId);
+        }
+    }
+
+    public static void walkActions(RemoteViews remoteViews, ActionInfos actionInfos)
     {
         if (remoteViews == null)
         {
@@ -699,14 +736,14 @@ public abstract class AbstractNotificationParser
                     int actionViewId = parcel.readInt();
                     //FooLog.v(TAG, "walkActions: actionViewId=" + toVerboseString(actionViewId));
 
-                    int valueType;
+                    ActionValueType actionValueType;
                     Object value = null;
 
                     switch (actionTag)
                     {
                         case TagTypes.PendingIntent:
                         {
-                            valueType = ValueTypes.PENDING_INTENT;
+                            actionValueType = ActionValueType.PENDING_INTENT;
                             if (parcel.readInt() != 0)
                             {
                                 value = PendingIntent.readPendingIntentOrNullFromParcel(parcel);
@@ -716,23 +753,23 @@ public abstract class AbstractNotificationParser
                         case TagTypes.ReflectionAction:
                         {
                             String actionMethodName = parcel.readString();
-                            //FooLog.v(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
+                            //FooLog.e(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
                             switch (actionMethodName)
                             {
                                 case "setText":
-                                    valueType = ValueTypes.TEXT;
+                                    actionValueType = ActionValueType.TEXT;
                                     break;
                                 case "setVisibility":
-                                    valueType = ValueTypes.VISIBILITY;
+                                    actionValueType = ActionValueType.VISIBILITY;
                                     break;
                                 case "setImageResource":
-                                    valueType = ValueTypes.IMAGE_RESOURCE_ID;
+                                    actionValueType = ActionValueType.IMAGE_RESOURCE_ID;
                                     break;
                                 case "setEnabled":
-                                    valueType = ValueTypes.ENABLED;
+                                    actionValueType = ActionValueType.ENABLED;
                                     break;
                                 default:
-                                    valueType = -1;
+                                    actionValueType = ActionValueType.UNKNOWN;
                                     break;
                             }
 
@@ -769,7 +806,7 @@ public abstract class AbstractNotificationParser
                             String actionMethodName = parcel.readString();
                             //FooLog.v(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
 
-                            valueType = ValueTypes.BITMAP_RESOURCE_ID;
+                            actionValueType = ActionValueType.BITMAP_RESOURCE_ID;
 
                             value = parcel.readInt();
 
@@ -785,12 +822,12 @@ public abstract class AbstractNotificationParser
                         FooLog.w(TAG, "walkActions: parcel.dataAvail()=" + parcelDataAvail);
                     }
 
-                    //FooLog.w(TAG, "walkActions: actionViewId=" + toVerboseString(actionViewId) +
-                    //              ", value=" + value);
+                    ActionInfo actionInfo = new ActionInfo(actionViewId, actionValueType, value);
+                    //FooLog.i(TAG, "walkActions: actionInfo=" + actionInfo);
 
-                    if (listKeyValues != null)
+                    if (actionInfos != null)
                     {
-                        listKeyValues.add(new KeyValue(actionViewId, valueType, value));
+                        actionInfos.add(actionInfo);
                     }
                 }
                 finally
@@ -814,17 +851,109 @@ public abstract class AbstractNotificationParser
         void onTextView(TextView textView);
     }
 
-    public static void walkView(View view, boolean visibleOnly, Set<Integer> viewIds)
+    public static class ViewWrapper
     {
-        walkView(0, view, visibleOnly, viewIds, null);
+        public final View   mView;
+        public final String mViewEntryName;
+
+        public ViewWrapper(@NonNull View view)
+        {
+            mView = view;
+
+            int viewId = mView.getId();
+
+            Resources res = view.getResources();
+            /*
+            switch (mId & 0xff000000)
+            {
+                /*
+                case 0x7f000000:
+                    mPackageName = "app";
+                    break;
+                case 0x01000000:
+                    mPackageName = "android";
+                    break;
+                    * /
+                default:
+                    mPackageName = res.getResourcePackageName(mId);
+                    break;
+            }
+            mTypeName = res.getResourceTypeName(mId);
+            */
+            mViewEntryName = res.getResourceEntryName(viewId);
+        }
+
+        public int getViewId()
+        {
+            return mView.getId();
+        }
+
+        @Override
+        public String toString()
+        {
+            return mView.toString();
+        }
     }
 
-    public static void walkView(View view, boolean visibleOnly, Set<Integer> viewIds, WalkViewCallbacks callbacks)
+    public static class ViewWrappers
     {
-        walkView(0, view, visibleOnly, viewIds, callbacks);
+        private final Map<String, ViewWrapper>  mViewEntryNameToViewInfo;
+        private final Map<Integer, ViewWrapper> mViewIdToViewInfo;
+
+        public ViewWrappers()
+        {
+            mViewEntryNameToViewInfo = new LinkedHashMap<>();
+            mViewIdToViewInfo = new LinkedHashMap<>();
+        }
+
+        public void add(@NonNull View view)
+        {
+            ViewWrapper viewWrapper = new ViewWrapper(view);
+            mViewEntryNameToViewInfo.put(viewWrapper.mViewEntryName, viewWrapper);
+            mViewIdToViewInfo.put(viewWrapper.getViewId(), viewWrapper);
+        }
+
+        public ViewWrapper get(@NonNull String name)
+        {
+            return mViewEntryNameToViewInfo.get(name);
+        }
+
+        public ViewWrapper get(int id)
+        {
+            return mViewIdToViewInfo.get(id);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{");
+            for (Iterator<Entry<String, ViewWrapper>> iterator = mViewEntryNameToViewInfo.entrySet().iterator();
+                 iterator.hasNext(); )
+            {
+                Entry<String, ViewWrapper> entry = iterator.next();
+                sb.append(entry.getKey()).append(':').append(entry.getValue());
+                if (iterator.hasNext())
+                {
+                    sb.append(", ");
+                }
+            }
+            sb.append(" }");
+            return sb.toString();
+        }
     }
 
-    private static void walkView(int depth, View view, boolean visibleOnly, Set<Integer> viewIds, WalkViewCallbacks callbacks)
+    public static void walkView(View view, ViewWrappers viewWrappers, boolean visibleOnly)
+    {
+        walkView(0, view, viewWrappers, visibleOnly, null);
+    }
+
+    public static void walkView(View view, ViewWrappers viewWrappers, boolean visibleOnly, WalkViewCallbacks callbacks)
+    {
+        walkView(0, view, viewWrappers, visibleOnly, callbacks);
+    }
+
+    private static void walkView(int depth, View view, ViewWrappers viewWrappers, boolean visibleOnly, WalkViewCallbacks callbacks)
     {
         if (view == null)
         {
@@ -843,9 +972,9 @@ public abstract class AbstractNotificationParser
         }
         FooLog.v(TAG, "walkView: " + indent + "view=" + view);
 
-        if (viewIds != null)
+        if (viewWrappers != null)
         {
-            viewIds.add(view.getId());
+            viewWrappers.add(view);
         }
 
         if (callbacks != null)
@@ -864,7 +993,7 @@ public abstract class AbstractNotificationParser
             for (int i = 0; i < childCount; i++)
             {
                 View childView = viewGroup.getChildAt(i);
-                walkView(depth + 1, childView, visibleOnly, viewIds, callbacks);
+                walkView(depth + 1, childView, viewWrappers, visibleOnly, callbacks);
             }
         }
     }
@@ -976,10 +1105,10 @@ public abstract class AbstractNotificationParser
         };
 
         FooLog.v(TAG, "defaultOnNotificationPosted: ---- bigContentView ----");
-        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
+        // NOTE: "As of N, this field may be null." :(
         RemoteViews bigContentView = notification.bigContentView;
         View inflatedBigContentView = inflateRemoteView(context, bigContentView);
-        walkView(inflatedBigContentView, true, null, walkViewCallbacks);
+        walkView(inflatedBigContentView, null, true, walkViewCallbacks);
         //View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
         //Set<Integer> bigContentViewIds = new LinkedHashSet<>();
         //walkView(mockBigContentView, bigContentViewIds);
@@ -994,10 +1123,10 @@ public abstract class AbstractNotificationParser
         */
 
         FooLog.v(TAG, "defaultOnNotificationPosted: ---- contentView ----");
-        // TODO:(pv) DAMN! As of Android 7 (N) this MOST OF THE TIME returns null! :(
+        // NOTE: "As of N, this field may be null." :(
         RemoteViews contentView = notification.contentView;
         View inflatedContentView = inflateRemoteView(context, contentView);
-        walkView(inflatedContentView, true, null, bigContentView != null ? null : walkViewCallbacks);
+        walkView(inflatedContentView, null, true, bigContentView != null ? null : walkViewCallbacks);
         //View mockContentView = mockRemoteView(mainApplication, contentView);
         //Set<Integer> contentViewIds = new LinkedHashSet<>();
         //walkView(mockContentView, contentViewIds);
@@ -1076,12 +1205,13 @@ public abstract class AbstractNotificationParser
         TextToSpeechManager getTextToSpeech();
     }
 
+    protected final String                      mLogPrefix;
     protected final NotificationParserCallbacks mCallbacks;
 
-    protected AbstractNotificationParser(@NonNull NotificationParserCallbacks callbacks)
+    protected AbstractNotificationParser(@NonNull String logPrefix, @NonNull NotificationParserCallbacks callbacks)
     {
-        FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
-        mCallbacks = callbacks;
+        mLogPrefix = FooRun.toNonNull(logPrefix, "logPrefix");
+        mCallbacks = FooRun.toNonNull(callbacks, "callbacks");
     }
 
     @NonNullNonEmpty

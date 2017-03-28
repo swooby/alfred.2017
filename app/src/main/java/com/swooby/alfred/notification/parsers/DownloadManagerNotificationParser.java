@@ -8,7 +8,7 @@ public class DownloadManagerNotificationParser
 {
     public DownloadManagerNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, "Google Play Store");
+        super("#DOWNLOADMANAGER", callbacks);//, "Google Play Store");
     }
 
     @Override

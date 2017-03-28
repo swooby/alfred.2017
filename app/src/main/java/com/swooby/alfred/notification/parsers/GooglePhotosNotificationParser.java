@@ -7,7 +7,7 @@ public class GooglePhotosNotificationParser
 {
     public GooglePhotosNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);
+        super("#GOOGLEPHOTOS", callbacks);
     }
 
     @Override

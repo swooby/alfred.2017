@@ -8,7 +8,7 @@ public class GoogleDialerNotificationParser
 {
     public GoogleDialerNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, "Google Dialer");
+        super("#GOOGLEDIALER", callbacks);//, "Google Dialer");
     }
 
     @Override

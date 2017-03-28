@@ -47,8 +47,6 @@
     <string name="alfred_unknown">Unknown</string>
 
     <string name="alfred_pandora_package_app_name">Pandora</string>
-    <string name="alfred_pandora_advertisement_title">Advertisement</string>
-    <string name="alfred_pandora_advertisement_artist">Your station will be right back…</string>
 
     <string name="alfred_spotify_package_app_name">Spotify</string>
 

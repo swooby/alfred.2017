@@ -8,7 +8,7 @@ public class GoogleCameraNotificationParser
 {
     public GoogleCameraNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);
+        super("#GOOGLECAMERA", callbacks);
     }
 
     @Override

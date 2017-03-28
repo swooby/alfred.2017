@@ -24,7 +24,7 @@ public class GmailNotificationParser
 
     public GmailNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, "G mail");
+        super("#GMAIL", callbacks);//, "G mail");
     }
 
     @Override
@@ -36,7 +36,7 @@ public class GmailNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- #GMAIL ----");
+        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
@@ -45,14 +45,14 @@ public class GmailNotificationParser
         Notification notification = sbn.getNotification();
         if (notification == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: notification == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Bundle extras = notification.extras;
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -159,23 +159,23 @@ walkView: view=null
 walkView: view=null
 */
         CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
-        FooLog.v(TAG, "onNotificationPosted: androidTitle == " + FooString.quote(androidTitle));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidTitle == " + FooString.quote(androidTitle));
         CharSequence[] androidTextLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);
-        FooLog.v(TAG, "onNotificationPosted: androidTextLines == " + Arrays.toString(androidTextLines));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidTextLines == " + Arrays.toString(androidTextLines));
         CharSequence androidSubText = extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
-        FooLog.v(TAG, "onNotificationPosted: androidSubText == " + FooString.quote(androidSubText));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidSubText == " + FooString.quote(androidSubText));
         String[] androidPeople = extras.getStringArray(Notification.EXTRA_PEOPLE);
-        FooLog.v(TAG, "onNotificationPosted: androidPeople == " + Arrays.toString(androidPeople));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidPeople == " + Arrays.toString(androidPeople));
         ApplicationInfo androidAppInfo = extras.getParcelable("android.appInfo");
-        FooLog.v(TAG, "onNotificationPosted: androidAppInfo == " + FooString.repr(androidAppInfo));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidAppInfo == " + FooString.repr(androidAppInfo));
         String androidInfoText = extras.getString(Notification.EXTRA_INFO_TEXT);
-        FooLog.v(TAG, "onNotificationPosted: androidInfoText == " + FooString.quote(androidInfoText));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidInfoText == " + FooString.quote(androidInfoText));
         String androidTemplate = extras.getString(Notification.EXTRA_TEMPLATE);
-        FooLog.v(TAG, "onNotificationPosted: androidTemplate == " + FooString.quote(androidTemplate));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidTemplate == " + FooString.quote(androidTemplate));
         CharSequence androidText = extras.getCharSequence(Notification.EXTRA_TEXT);
-        FooLog.v(TAG, "onNotificationPosted: androidText == " + FooString.quote(androidText));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidText == " + FooString.quote(androidText));
         CharSequence androidBigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT);
-        FooLog.v(TAG, "onNotificationPosted: androidBigText == " + FooString.quote(androidBigText));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidBigText == " + FooString.quote(androidBigText));
 
         FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder();
 
@@ -184,7 +184,7 @@ walkView: view=null
         //
         if (androidSubText == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: accountName == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " accountName == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
         builder.appendSpeech(androidSubText.toString());
@@ -226,7 +226,7 @@ walkView: view=null
             {
                 for (CharSequence textLine : androidTextLines)
                 {
-                    FooLog.v(TAG, "onNotificationPosted: textLine=" + textLine);
+                    FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " textLine=" + textLine);
                     boolean appended = false;
 
                     if (textLine instanceof Spannable)

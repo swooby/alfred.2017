@@ -7,7 +7,7 @@ public class GoogleNowNotificationParser
 {
     public GoogleNowNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);
+        super("#GOOGLENOW", callbacks);
     }
 
     @Override

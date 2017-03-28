@@ -8,7 +8,7 @@ public class GoogleMessengerNotificationParser
 {
     public GoogleMessengerNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, "Google Messenger");
+        super("#GOOGLEMESSENGER", callbacks);//, "Google Messenger");
     }
 
     @Override

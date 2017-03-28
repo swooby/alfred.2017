@@ -15,6 +15,7 @@ import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class SpotifyNotificationParser
         extends AbstractMediaPlayerNotificiationParser
@@ -28,7 +29,7 @@ public class SpotifyNotificationParser
 
     public SpotifyNotificationParser(@NonNull NotificationParserCallbacks callbacks)
     {
-        super(callbacks);//, application.getString(R.string.spotify_package_app_spoken_name));
+        super("#SPOTIFY", callbacks);//, application.getString(R.string.spotify_package_app_spoken_name));
     }
 
     @Override
@@ -40,54 +41,70 @@ public class SpotifyNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- #SPOTIFY ----");
+        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
         }
 
         Bundle extras = getExtras(sbn);
-        FooLog.v(TAG, "onNotificationPosted: extras=" + FooPlatformUtils.toString(extras));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " extras=" + FooPlatformUtils.toString(extras));
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: extras == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
+                          " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         CharSequence textTitle = getAndroidTitle(extras);
-        FooLog.v(TAG, "onNotificationPosted: textTitle=" + FooString.quote(textTitle));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " textTitle=" + FooString.quote(textTitle));
         CharSequence textArtist = getAndroidText(extras);
-        FooLog.v(TAG, "onNotificationPosted: textArtist=" + FooString.quote(textArtist));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " textArtist=" + FooString.quote(textArtist));
 
         Context context = getContext();
 
         MediaController mediaController = getMediaController(context, extras);
-        FooLog.v(TAG, "onNotificationPosted: mediaController=" + mediaController);
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " mediaController=" + mediaController);
         if (mediaController == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: mediaController == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
+                          " mediaController == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Action[] actions = getActions(sbn);
-        FooLog.v(TAG, "onNotificationPosted: actions=" + Arrays.toString(actions));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " actions=" + Arrays.toString(actions));
+        int[] compactActions = getCompactActions(extras);
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " compactActions=" + Arrays.toString(compactActions));
 
         PlaybackState playbackState = mediaController.getPlaybackState();
         if (playbackState == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: mediaSession == null; Unparsable");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
+                          " mediaSession == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         int playbackStateState = playbackState.getState();
-        FooLog.v(TAG, "onNotificationPosted: playbackStateState == " + playbackStateToString(playbackStateState));
+        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
+                      " playbackStateState == " + playbackStateToString(playbackStateState));
         if (playbackStateState != PlaybackState.STATE_PAUSED &&
             playbackStateState != PlaybackState.STATE_PLAYING)
         {
-            FooLog.w(TAG, "onNotificationPosted: playbackStateState != (PAUSED || PLAYING); Ignored");
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
+                          " playbackStateState != (PAUSED || PLAYING); Ignored");
             return NotificationParseResult.ParsableIgnored;
         }
         boolean isPlaying = playbackStateState == PlaybackState.STATE_PLAYING;
+
+        textArtist = unknownIfNullOrEmpty(context, textArtist);
+        textTitle = unknownIfNullOrEmpty(context, textTitle);
 
         // @formatter:off
         // title == non-null commercial/advertisement/company name, artist == null/""
@@ -113,18 +130,19 @@ public class SpotifyNotificationParser
                 }
             }
 
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
+                          " isCommercial == true; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
 
         mLastIsCommercial = false;
 
-        textArtist = unknownIfNullOrEmpty(context, textArtist);
-        textTitle = unknownIfNullOrEmpty(context, textTitle);
-
         if (isPlaying == mLastIsPlaying &&
-            textArtist.equals(mLastArtist) &&
-            textTitle.equals(mLastTitle))
+            Objects.equals(textArtist, mLastArtist) &&
+            Objects.equals(textTitle, mLastTitle))
         {
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
+                          " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
 
@@ -138,6 +156,8 @@ public class SpotifyNotificationParser
 
         if (isPlaying)
         {
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " playing");
+
             builder.appendSpeech("playing");
             builder.appendSilenceWordBreak();
             builder.appendSpeech("artist " + textArtist);
@@ -146,6 +166,8 @@ public class SpotifyNotificationParser
         }
         else
         {
+            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " paused");
+
             builder.appendSpeech("paused");
         }
 
