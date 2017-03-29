@@ -17,6 +17,13 @@ import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import java.util.Arrays;
 import java.util.Objects;
 
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getActions;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getAndroidText;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getAndroidTitle;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getCompactActions;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getExtras;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.unknownIfNullOrEmpty;
+
 public class SpotifyNotificationParser
         extends AbstractMediaPlayerNotificiationParser
 {
@@ -41,64 +48,55 @@ public class SpotifyNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
+        FooLog.i(TAG, "---- " + hashtag() + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
         }
 
+        final String prefix = hashtag("onNotificationPosted");
+
         Bundle extras = getExtras(sbn);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " extras=" + FooPlatformUtils.toString(extras));
+        FooLog.v(TAG, prefix + " extras=" + FooPlatformUtils.toString(extras));
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " extras == null; Unparsable");
+            FooLog.w(TAG, prefix + " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         CharSequence textTitle = getAndroidTitle(extras);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " textTitle=" + FooString.quote(textTitle));
+        FooLog.v(TAG, prefix + " textTitle=" + FooString.quote(textTitle));
         CharSequence textArtist = getAndroidText(extras);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " textArtist=" + FooString.quote(textArtist));
+        FooLog.v(TAG, prefix + " textArtist=" + FooString.quote(textArtist));
 
         Context context = getContext();
 
         MediaController mediaController = getMediaController(context, extras);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " mediaController=" + mediaController);
+        FooLog.v(TAG, prefix + " mediaController=" + mediaController);
         if (mediaController == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " mediaController == null; Unparsable");
+            FooLog.w(TAG, prefix + " mediaController == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Action[] actions = getActions(sbn);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actions=" + Arrays.toString(actions));
+        FooLog.v(TAG, prefix + " actions=" + Arrays.toString(actions));
         int[] compactActions = getCompactActions(extras);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " compactActions=" + Arrays.toString(compactActions));
+        FooLog.v(TAG, prefix + " compactActions=" + Arrays.toString(compactActions));
 
         PlaybackState playbackState = mediaController.getPlaybackState();
         if (playbackState == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " mediaSession == null; Unparsable");
+            FooLog.w(TAG, prefix + " mediaSession == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         int playbackStateState = playbackState.getState();
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " playbackStateState == " + playbackStateToString(playbackStateState));
+        FooLog.v(TAG, prefix + " playbackStateState == " + playbackStateToString(playbackStateState));
         if (playbackStateState != PlaybackState.STATE_PAUSED &&
             playbackStateState != PlaybackState.STATE_PLAYING)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " playbackStateState != (PAUSED || PLAYING); Ignored");
+            FooLog.w(TAG, prefix + " playbackStateState != (PAUSED || PLAYING); Ignored");
             return NotificationParseResult.ParsableIgnored;
         }
         boolean isPlaying = playbackStateState == PlaybackState.STATE_PLAYING;
@@ -130,8 +128,7 @@ public class SpotifyNotificationParser
                 }
             }
 
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " isCommercial == true; ParsableIgnored");
+            FooLog.w(TAG, prefix + " isCommercial == true; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
 
@@ -141,8 +138,7 @@ public class SpotifyNotificationParser
             Objects.equals(textArtist, mLastArtist) &&
             Objects.equals(textTitle, mLastTitle))
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " data unchanged; ParsableIgnored");
+            FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
 
@@ -156,7 +152,7 @@ public class SpotifyNotificationParser
 
         if (isPlaying)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " playing");
+            FooLog.w(TAG, prefix + " playing");
 
             builder.appendSpeech("playing");
             builder.appendSilenceWordBreak();
@@ -166,7 +162,7 @@ public class SpotifyNotificationParser
         }
         else
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " paused");
+            FooLog.w(TAG, prefix + " paused");
 
             builder.appendSpeech("paused");
         }

@@ -29,28 +29,30 @@ public class GoogleMyGlassNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
+        FooLog.i(TAG, "---- " + hashtag() + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
         }
 
+        final String prefix = hashtag("onNotificationPosted");
+
         Notification notification = sbn.getNotification();
         if (notification == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " notification == null; Unparsable");
+            FooLog.w(TAG, prefix + " notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Bundle extras = notification.extras;
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " extras == null; Unparsable");
+            FooLog.w(TAG, prefix + " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         CharSequence androidTitle = extras.getCharSequence(Notification.EXTRA_TITLE);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " androidTitle == " + FooString.quote(androidTitle));
+        FooLog.v(TAG, prefix + " androidTitle == " + FooString.quote(androidTitle));
 
         String packageAppSpokenName = getPackageAppSpokenName();
 

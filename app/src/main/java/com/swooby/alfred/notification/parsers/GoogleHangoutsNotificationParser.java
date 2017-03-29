@@ -84,23 +84,25 @@ public class GoogleHangoutsNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
+        FooLog.i(TAG, "---- " + hashtag() + " ----");
         if (BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
         }
 
+        final String prefix = hashtag("onNotificationPosted");
+
         Notification notification = sbn.getNotification();
         if (notification == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " notification == null; Unparsable");
+            FooLog.w(TAG, prefix + " notification == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         Bundle extras = notification.extras;
         if (extras == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " extras == null; Unparsable");
+            FooLog.w(TAG, prefix + " extras == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -140,7 +142,7 @@ public class GoogleHangoutsNotificationParser
         int count = textMessages.size();
         if (count == 0)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " textMessages.size() == 0; Unparsable");
+            FooLog.w(TAG, prefix + " textMessages.size() == 0; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 

@@ -19,10 +19,28 @@ import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils.ActionInfo;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils.ActionInfos;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils.ActionValueType;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils.ResourceType;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils.ViewWrapper;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils.ViewWrappers;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getActions;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getBigContentRemoteViews;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getExtras;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getIdentifier;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getImageBitmap;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.inflateRemoteView;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.logResourceInfo;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.toVerboseString;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.unknownIfNullOrEmpty;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.walkActions;
+import static com.swooby.alfred.notification.parsers.NotificationParserUtils.walkView;
 
 public class PandoraNotificationParser
         extends AbstractMediaPlayerNotificiationParser
@@ -52,25 +70,24 @@ public class PandoraNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        FooLog.i(TAG, "---- " + mLogPrefix + " ----");
+        FooLog.i(TAG, "---- " + hashtag() + " ----");
         if (false && BuildConfig.DEBUG)
         {
             super.onNotificationPosted(sbn);
         }
 
+        final String prefix = hashtag("onNotificationPosted");
+
         Bundle extras = getExtras(sbn);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " extras == " + FooPlatformUtils.toString(extras));
+        FooLog.v(TAG, prefix + " extras == " + FooPlatformUtils.toString(extras));
 
         Action[] actions = getActions(sbn);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actions == " + Arrays.toString(actions));
+        FooLog.v(TAG, prefix + " actions == " + Arrays.toString(actions));
 
         RemoteViews bigContentRemoteViews = getBigContentRemoteViews(sbn);
         if (bigContentRemoteViews == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " bigContentRemoteViews == null; Unparsable");
+            FooLog.w(TAG, prefix + " bigContentRemoteViews == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -79,8 +96,7 @@ public class PandoraNotificationParser
         View remoteView = inflateRemoteView(context, bigContentRemoteViews);
         if (remoteView == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " remoteView == null; Unparsable");
+            FooLog.w(TAG, prefix + " remoteView == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
@@ -101,25 +117,19 @@ public class PandoraNotificationParser
         }
 
         final int ID_DRAWABLE_PLAYING_PAUSE = getIdentifier(remoteContext, ResourceType.drawable, "ic_pause");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " ID_DRAWABLE_PLAYING_PAUSE == " + toVerboseString(ID_DRAWABLE_PLAYING_PAUSE));
+        FooLog.v(TAG, prefix + " ID_DRAWABLE_PLAYING_PAUSE == " + toVerboseString(ID_DRAWABLE_PLAYING_PAUSE));
         final int ID_DRAWABLE_PAUSED_PLAY = getIdentifier(remoteContext, ResourceType.drawable, "ic_play");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " ID_DRAWABLE_PAUSED_PLAY == " + toVerboseString(ID_DRAWABLE_PAUSED_PLAY));
+        FooLog.v(TAG, prefix + " ID_DRAWABLE_PAUSED_PLAY == " + toVerboseString(ID_DRAWABLE_PAUSED_PLAY));
         final int ID_STRING_ADVERTISEMENT = getIdentifier(remoteContext, ResourceType.string, "advertisement");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " ID_STRING_ADVERTISEMENT == " + toVerboseString(ID_STRING_ADVERTISEMENT));
+        FooLog.v(TAG, prefix + " ID_STRING_ADVERTISEMENT == " + toVerboseString(ID_STRING_ADVERTISEMENT));
         final int ID_STRING_WHY_ADS_LABEL = getIdentifier(remoteContext, ResourceType.string, "why_ads_label");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " ID_STRING_WHY_ADS_LABEL == " + toVerboseString(ID_STRING_WHY_ADS_LABEL));
+        FooLog.v(TAG, prefix + " ID_STRING_WHY_ADS_LABEL == " + toVerboseString(ID_STRING_WHY_ADS_LABEL));
 
         Resources remoteResources = remoteContext.getResources();
         final String ADVERTISEMENT_TITLE = remoteResources.getString(ID_STRING_ADVERTISEMENT);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " ADVERTISEMENT_TITLE == " + FooString.quote(ADVERTISEMENT_TITLE));
+        FooLog.v(TAG, prefix + " ADVERTISEMENT_TITLE == " + FooString.quote(ADVERTISEMENT_TITLE));
         final String ADVERTISEMENT_ARTIST = remoteResources.getString(ID_STRING_WHY_ADS_LABEL);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " ADVERTISEMENT_ARTIST == " + FooString.quote(ADVERTISEMENT_ARTIST));
+        FooLog.v(TAG, prefix + " ADVERTISEMENT_ARTIST == " + FooString.quote(ADVERTISEMENT_ARTIST));
 
         //
         // Walk the views/actions...
@@ -132,62 +142,46 @@ public class PandoraNotificationParser
         walkActions(bigContentRemoteViews, bigContentIdToActionInfo);
 
         ViewWrapper viewWrapperIcon = bigContentViewWrappers.get("icon");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperIcon == " + viewWrapperIcon);
+        FooLog.v(TAG, prefix + " viewWrapperIcon == " + viewWrapperIcon);
         Map<ActionValueType, ActionInfo> actionInfosIcon = bigContentIdToActionInfo.get(viewWrapperIcon.getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosIcon == " + actionInfosIcon);
+        FooLog.v(TAG, prefix + " actionInfosIcon == " + actionInfosIcon);
 
         ViewWrapper viewWrapperTitle = bigContentViewWrappers.get("title");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperTitle == " + viewWrapperTitle);
+        FooLog.v(TAG, prefix + " viewWrapperTitle == " + viewWrapperTitle);
         Map<ActionValueType, ActionInfo> actionInfosTitle = bigContentIdToActionInfo.get(viewWrapperTitle.getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosTitle == " + actionInfosTitle);
+        FooLog.v(TAG, prefix + " actionInfosTitle == " + actionInfosTitle);
 
         ViewWrapper viewWrapperArtist = bigContentViewWrappers.get("artist");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperArtist == " + viewWrapperArtist);
+        FooLog.v(TAG, prefix + " viewWrapperArtist == " + viewWrapperArtist);
         Map<ActionValueType, ActionInfo> actionInfosArtist = bigContentIdToActionInfo.get(viewWrapperArtist.getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosArtist == " + actionInfosArtist);
+        FooLog.v(TAG, prefix + " actionInfosArtist == " + actionInfosArtist);
 
         ViewWrapper viewWrapperStationOrAlbum = bigContentViewWrappers.get("stationOrAlbum");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperStationOrAlbum == " + viewWrapperStationOrAlbum);
+        FooLog.v(TAG, prefix + " viewWrapperStationOrAlbum == " + viewWrapperStationOrAlbum);
         Map<ActionValueType, ActionInfo> actionInfosStationOrAlbum = bigContentIdToActionInfo.get(viewWrapperStationOrAlbum
                 .getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosStationOrAlbum == " + actionInfosStationOrAlbum);
+        FooLog.v(TAG, prefix + " actionInfosStationOrAlbum == " + actionInfosStationOrAlbum);
 
         ViewWrapper viewWrapperSkipBackwardReplay = bigContentViewWrappers.get("skip_backward_replay");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperSkipBackwardReplay == " + viewWrapperSkipBackwardReplay);
+        FooLog.v(TAG, prefix + " viewWrapperSkipBackwardReplay == " + viewWrapperSkipBackwardReplay);
         Map<ActionValueType, ActionInfo> actionInfosSkipBackwardReplay = bigContentIdToActionInfo.get(viewWrapperSkipBackwardReplay
                 .getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosSkipBackwardReplay == " + actionInfosSkipBackwardReplay);
+        FooLog.v(TAG, prefix + " actionInfosSkipBackwardReplay == " + actionInfosSkipBackwardReplay);
 
         ViewWrapper viewWrapperPlayPause = bigContentViewWrappers.get("play_pause");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperPlayPause == " + viewWrapperPlayPause);
+        FooLog.v(TAG, prefix + " viewWrapperPlayPause == " + viewWrapperPlayPause);
         Map<ActionValueType, ActionInfo> actionInfosPlayPause = bigContentIdToActionInfo.get(viewWrapperPlayPause.getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosPlayPause == " + actionInfosPlayPause);
+        FooLog.v(TAG, prefix + " actionInfosPlayPause == " + actionInfosPlayPause);
 
         ViewWrapper viewWrapperSkip = bigContentViewWrappers.get("skip");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperSkip == " + viewWrapperSkip);
+        FooLog.v(TAG, prefix + " viewWrapperSkip == " + viewWrapperSkip);
         Map<ActionValueType, ActionInfo> actionInfosSkip = bigContentIdToActionInfo.get(viewWrapperSkip.getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosSkip == " + actionInfosSkip);
+        FooLog.v(TAG, prefix + " actionInfosSkip == " + actionInfosSkip);
 
         ViewWrapper viewWrapperLoading = bigContentViewWrappers.get("loading");
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " viewWrapperLoading == " + viewWrapperLoading);
+        FooLog.v(TAG, prefix + " viewWrapperLoading == " + viewWrapperLoading);
         Map<ActionValueType, ActionInfo> actionInfosLoading = bigContentIdToActionInfo.get(viewWrapperLoading.getViewId());
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " actionInfosLoading == " + actionInfosLoading);
+        FooLog.v(TAG, prefix + " actionInfosLoading == " + actionInfosLoading);
 
         //
         //
@@ -195,53 +189,44 @@ public class PandoraNotificationParser
 
         ActionInfo actionInfoPlayPauseEnabled = actionInfosPlayPause.get(ActionValueType.ENABLED);
         boolean playPauseEnabled = (boolean) actionInfoPlayPauseEnabled.mValue;
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " playPauseEnabled == " + playPauseEnabled);
+        FooLog.v(TAG, prefix + " playPauseEnabled == " + playPauseEnabled);
 
         ActionInfo actionInfoPlayPauseImageResourceId = actionInfosPlayPause.get(ActionValueType.IMAGE_RESOURCE_ID);
         int idViewPlayPauseImageResourceId = (int) actionInfoPlayPauseImageResourceId.mValue;
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " idViewPlayPauseImageResourceId == " + toVerboseString(idViewPlayPauseImageResourceId));
+        FooLog.v(TAG, prefix + " idViewPlayPauseImageResourceId == " + toVerboseString(idViewPlayPauseImageResourceId));
 
         boolean isPlayPauseImagePausedPlay = idViewPlayPauseImageResourceId == ID_DRAWABLE_PAUSED_PLAY;
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " isPlayPauseImagePausedPlay == " + isPlayPauseImagePausedPlay);
+        FooLog.v(TAG, prefix + " isPlayPauseImagePausedPlay == " + isPlayPauseImagePausedPlay);
 
         ImageView imageViewIcon = (ImageView) viewWrapperIcon.mView;
         if (imageViewIcon == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " imageViewIcon == null; Unparsable");
+            FooLog.w(TAG, prefix + " imageViewIcon == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
 
         BitmapDrawable bitmapIcon = getImageBitmap(imageViewIcon);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " bitmapIcon == " + bitmapIcon);
+        FooLog.v(TAG, prefix + " bitmapIcon == " + bitmapIcon);
 
         int iconVisibility = imageViewIcon.getVisibility();
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " iconVisibility == " + FooViewUtils.viewVisibilityToString(iconVisibility));
+        FooLog.v(TAG, prefix + " iconVisibility == " + FooViewUtils.viewVisibilityToString(iconVisibility));
 
         ProgressBar progressBarLoading = (ProgressBar) viewWrapperLoading.mView;
         if (progressBarLoading == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " progressBarLoading == null; Unparsable");
+            FooLog.w(TAG, prefix + " progressBarLoading == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
         int loadingVisibility = progressBarLoading.getVisibility();
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " loadingVisibility == " + FooViewUtils.viewVisibilityToString(loadingVisibility));
+        FooLog.v(TAG, prefix + " loadingVisibility == " + FooViewUtils.viewVisibilityToString(loadingVisibility));
 
         boolean isPausedByUser = isPlayPauseImagePausedPlay &&
                                  loadingVisibility == View.GONE &&
                                  bitmapIcon != null && iconVisibility == View.VISIBLE;
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " isPausedByUser == " + isPausedByUser);
+        FooLog.v(TAG, prefix + " isPausedByUser == " + isPausedByUser);
 
         //boolean isLoading = bitmapIcon == null || loadingVisibility == View.VISIBLE;
-        //FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " isLoading == " + isLoading);
+        //FooLog.v(TAG, prefix + " isLoading == " + isLoading);
         /*
         if (isLoading)
         {
@@ -251,40 +236,34 @@ public class PandoraNotificationParser
         */
 
         //boolean isPlaying = isLoading || idPlayImageResourceId == idDrawablePause;
-        //FooLog.e(TAG, "onNotificationPosted: " + mLogPrefix + " isPlaying == " + isPlaying);
+        //FooLog.e(TAG, prefix + " isPlaying == " + isPlaying);
 
         TextView textViewTitle = (TextView) viewWrapperTitle.mView;
         if (textViewTitle == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " textViewTitle == null; Unparsable");
+            FooLog.w(TAG, prefix + " textViewTitle == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
         CharSequence textTitle = textViewTitle.getText();
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " textTitle == " + FooString.quote(textTitle));
+        FooLog.v(TAG, prefix + " textTitle == " + FooString.quote(textTitle));
 
         TextView textViewArtist = (TextView) viewWrapperArtist.mView;
         if (textViewArtist == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " textViewArtist == null; Unparsable");
+            FooLog.w(TAG, prefix + " textViewArtist == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
         CharSequence textArtist = textViewArtist.getText();
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " textArtist == " + FooString.quote(textArtist));
+        FooLog.v(TAG, prefix + " textArtist == " + FooString.quote(textArtist));
 
         TextView textViewStationOrAlbum = (TextView) viewWrapperStationOrAlbum.mView;
         if (textViewStationOrAlbum == null)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " textViewStationOrAlbum == null; Unparsable");
+            FooLog.w(TAG, prefix + " textViewStationOrAlbum == null; Unparsable");
             return NotificationParseResult.Unparsable;
         }
         CharSequence textStationOrAlbum = textViewStationOrAlbum.getText();
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " textStationOrAlbum == " + FooString.quote(textStationOrAlbum));
+        FooLog.v(TAG, prefix + " textStationOrAlbum == " + FooString.quote(textStationOrAlbum));
 
         textTitle = unknownIfNullOrEmpty(context, textTitle);
         textArtist = unknownIfNullOrEmpty(context, textArtist);
@@ -309,8 +288,7 @@ public class PandoraNotificationParser
                 }
             }
 
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " isCommercial == true; ParsableIgnored");
+            FooLog.w(TAG, prefix + " isCommercial == true; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
 
@@ -320,9 +298,8 @@ public class PandoraNotificationParser
 
         mLastIsCommercial = false;
 
-        //FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix + " mLastIsPlaying == " + mLastIsPlaying);
-        FooLog.v(TAG, "onNotificationPosted: " + mLogPrefix +
-                      " mLastIsPausedByUser == " + mLastIsPausedByUser);
+        //FooLog.v(TAG, prefix + " mLastIsPlaying == " + mLastIsPlaying);
+        FooLog.v(TAG, prefix + " mLastIsPausedByUser == " + mLastIsPausedByUser);
 
         //if ((mLastIsPlaying != null && isPlaying == mLastIsPlaying) &&
         if ((mLastIsPausedByUser != null && isPausedByUser == mLastIsPausedByUser) &&
@@ -330,8 +307,7 @@ public class PandoraNotificationParser
             Objects.equals(textArtist, mLastArtist) &&
             Objects.equals(textStationOrAlbum, mLastStationOrAlbum))
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix +
-                          " data unchanged; ParsableIgnored");
+            FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
 
@@ -347,13 +323,13 @@ public class PandoraNotificationParser
 
         if (isPausedByUser)
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " paused");
+            FooLog.w(TAG, prefix + " paused");
 
             builder.appendSpeech("paused");
         }
         else
         {
-            FooLog.w(TAG, "onNotificationPosted: " + mLogPrefix + " playing");
+            FooLog.w(TAG, prefix + " playing");
 
             builder.appendSpeech("playing")
                     .appendSilenceWordBreak()

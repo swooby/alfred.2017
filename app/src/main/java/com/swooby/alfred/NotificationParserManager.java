@@ -22,6 +22,7 @@ import com.swooby.alfred.notification.parsers.GoogleMyGlassNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleNowNotificationParser;
 import com.swooby.alfred.notification.parsers.GooglePhotosNotificationParser;
 import com.swooby.alfred.notification.parsers.GooglePlayStoreNotificationParser;
+import com.swooby.alfred.notification.parsers.NotificationParserUtils;
 import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
 import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
 
@@ -100,12 +101,14 @@ public class NotificationParserManager
 
         mNotificationParserCallbacks = new NotificationParserCallbacks()
         {
+            @NonNull
             @Override
             public Context getContext()
             {
                 return mContext;
             }
 
+            @NonNull
             @Override
             public TextToSpeechManager getTextToSpeech()
             {
@@ -237,7 +240,7 @@ public class NotificationParserManager
             return;
         }
 
-        String packageName = AbstractNotificationParser.getPackageName(sbn);
+        String packageName = NotificationParserUtils.getPackageName(sbn);
         FooLog.v(TAG, "onNotificationPosted: packageName=" + FooString.quote(packageName));
 
         NotificationParseResult result;
@@ -274,7 +277,7 @@ public class NotificationParserManager
             return;
         }
 
-        String packageName = AbstractNotificationParser.getPackageName(sbn);
+        String packageName = NotificationParserUtils.getPackageName(sbn);
         FooLog.d(TAG, "onNotificationRemoved: packageName=" + FooString.quote(packageName));
 
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);

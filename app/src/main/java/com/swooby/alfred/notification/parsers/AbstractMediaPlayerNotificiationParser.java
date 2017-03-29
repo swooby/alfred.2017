@@ -99,24 +99,12 @@ public abstract class AbstractMediaPlayerNotificiationParser
 
     protected int mLastStreamMusicVolume = -1;
 
-    protected AbstractMediaPlayerNotificiationParser(@NonNull String logPrefix, @NonNull NotificationParserCallbacks callbacks)
+    protected AbstractMediaPlayerNotificiationParser(@NonNull String hashtag, @NonNull NotificationParserCallbacks callbacks)
     {
-        super(logPrefix, callbacks);
+        super(hashtag, callbacks);
 
         mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
     }
-
-    /*
-    protected AbstractMediaPlayerNotificiationParser(
-            @NonNull MainApplication application,
-            @NonNull String packageName,
-            @NonNull String packageAppSpokenName)
-    {
-        super(application, packageName, packageAppSpokenName);
-
-        mAudioManager = (AudioManager) application.getSystemService(Context.AUDIO_SERVICE);
-    }
-    */
 
     // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
     protected void mute(boolean mute, String speechBeforeMute)
