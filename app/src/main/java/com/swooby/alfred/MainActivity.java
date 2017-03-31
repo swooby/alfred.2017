@@ -544,8 +544,8 @@ public class MainActivity
     private int textToSpeechAudioStreamTypeUpdate()
     {
         //noinspection unchecked
-        ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = (ArrayAdapter<AudioStreamType>) mSpinnerTextToSpeechAudioStreamType
-                .getAdapter();
+        ArrayAdapter<AudioStreamType> audioStreamTypeAdapter =
+                (ArrayAdapter<AudioStreamType>) mSpinnerTextToSpeechAudioStreamType.getAdapter();
 
         int selectedIndex = -1;
 
@@ -553,14 +553,10 @@ public class MainActivity
         FooLog.v(TAG, "textToSpeechAudioStreamTypeUpdate: textToSpeechAudioStreamType=" +
                       FooAudioUtils.audioStreamTypeToString(textToSpeechAudioStreamType));
 
-        for (int i = 0; i < textToSpeechAudioStreamTypeAdapter.getCount(); i++)
+        for (int i = 0; i < audioStreamTypeAdapter.getCount(); i++)
         {
-            AudioStreamType audioStreamType = textToSpeechAudioStreamTypeAdapter.getItem(i);
-            if (audioStreamType == null)
-            {
-                continue;
-            }
-            if (audioStreamType.getAudioStreamType() == textToSpeechAudioStreamType)
+            AudioStreamType audioStreamType = audioStreamTypeAdapter.getItem(i);
+            if (audioStreamType != null && audioStreamType.getAudioStreamType() == textToSpeechAudioStreamType)
             {
                 selectedIndex = i;
                 break;
@@ -583,24 +579,30 @@ public class MainActivity
 
         mTextToSpeechManager.setAudioStreamType(textToSpeechAudioStreamType);
 
-        int percent = FooAudioUtils.getVolumePercent(mAudioManager, textToSpeechAudioStreamType);
-        onTextToSpeechAudioStreamVolumeChanged(percent, true, false);
+        int volume = FooAudioUtils.getVolumeAbsolute(mAudioManager, textToSpeechAudioStreamType);
+        onTextToSpeechAudioStreamVolumeChanged(textToSpeechAudioStreamType, volume, true, false);
 
         volumeObserverStart(textToSpeechAudioStreamType);
     }
 
-    private void onTextToSpeechAudioStreamVolumeChanged(int percent, boolean updateSeekbar, boolean updateStreamVolume)
+    private void onTextToSpeechAudioStreamVolumeChanged(int volume, boolean updateSeekbar, boolean updateStreamVolume)
+    {
+        int audioStreamType = mTextToSpeechManager.getAudioStreamType();
+        onTextToSpeechAudioStreamVolumeChanged(audioStreamType, volume, updateSeekbar, updateStreamVolume);
+    }
+
+    private void onTextToSpeechAudioStreamVolumeChanged(int audioStreamType, int volume, boolean updateSeekbar, boolean updateStreamVolume)
     {
         if (updateSeekbar)
         {
-            mSeekbarTextToSpeechAudioStreamVolume.setProgress(percent);
+            int volumeMax = mAudioManager.getStreamMaxVolume(audioStreamType);
+            mSeekbarTextToSpeechAudioStreamVolume.setMax(volumeMax);
+            mSeekbarTextToSpeechAudioStreamVolume.setProgress(volume);
         }
 
         if (updateStreamVolume)
         {
-            int textToSpeechAudioStreamType = mTextToSpeechManager.getAudioStreamType();
-            int volume = FooAudioUtils.getVolumeAbsoluteFromPercent(mAudioManager, textToSpeechAudioStreamType, percent);
-            mAudioManager.setStreamVolume(textToSpeechAudioStreamType, volume, 0);
+            mAudioManager.setStreamVolume(audioStreamType, volume, 0);
         }
     }
 
@@ -623,8 +625,7 @@ public class MainActivity
             @Override
             public void onAudioStreamVolumeChanged(int audioStreamType, int volume)
             {
-                int percent = FooAudioUtils.getVolumePercentFromAbsolute(mAudioManager, audioStreamType, volume);
-                onTextToSpeechAudioStreamVolumeChanged(percent, true, false);
+                onTextToSpeechAudioStreamVolumeChanged(audioStreamType, volume, true, false);
             }
         });
     }

@@ -5,10 +5,8 @@
     <string name="alfred_app_name">@string/app_name</string>
 
     <string name="alfred_initializing">Initializing</string>
-    <string name="alfred_speak_alfred_running2">Alfred Running</string>
     <string name="alfred_running">Running</string>
     <string name="alfred_reading_notifications">Reading Notifications</string>
-    <string name="alfred_speak_alfred_paused">Alfred Paused</string>
     <string name="alfred_paused">Paused</string>
     <string name="alfred_A_colon_B">%1$s: %2$s</string>
 
