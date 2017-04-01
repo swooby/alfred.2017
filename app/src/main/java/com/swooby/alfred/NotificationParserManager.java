@@ -1,5 +1,6 @@
 package com.swooby.alfred;
 
+import android.app.Notification;
 import android.content.Context;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
@@ -9,11 +10,12 @@ import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
-import com.smartfoo.android.core.notification.FooNotificationListenerManager.DisabledCause;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.FooNotificationListenerManagerCallbacks;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParserCallbacks;
+import com.swooby.alfred.notification.parsers.AlfredNotificationParser;
 import com.swooby.alfred.notification.parsers.DownloadManagerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
@@ -27,6 +29,8 @@ import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
 import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class NotificationParserManager
@@ -43,9 +47,11 @@ public class NotificationParserManager
 
     public interface NotificationParserManagerCallbacks
     {
-        boolean onNotificationAccessSettingConfirmedEnabled();
+        boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications);
 
-        void onNotificationAccessSettingDisabled(DisabledCause disabledCause);
+        void onNotificationListenerNotConnected(NotConnectedReason reason);
+
+        void onNotificationParsed(@NonNull AbstractNotificationParser parser);
     }
 
     private final Context                                                mContext;
@@ -75,25 +81,25 @@ public class NotificationParserManager
         mFooNotificationListenerManagerCallbacks = new FooNotificationListenerManagerCallbacks()
         {
             @Override
-            public boolean onNotificationAccessSettingConfirmedEnabled()
+            public boolean onNotificationListenerConnected(@NonNull StatusBarNotification[] activeNotifications)
             {
-                return NotificationParserManager.this.onNotificationAccessSettingConfirmedEnabled();
+                return NotificationParserManager.this.onNotificationListenerConnected(activeNotifications);
             }
 
             @Override
-            public void onNotificationAccessSettingDisabled(DisabledCause disabledCause)
+            public void onNotificationListenerNotConnected(@NonNull NotConnectedReason reason)
             {
-                NotificationParserManager.this.onNotificationAccessSettingDisabled(disabledCause);
+                NotificationParserManager.this.onNotificationListenerNotConnected(reason);
             }
 
             @Override
-            public void onNotificationPosted(StatusBarNotification sbn)
+            public void onNotificationPosted(@NonNull StatusBarNotification sbn)
             {
                 NotificationParserManager.this.onNotificationPosted(sbn);
             }
 
             @Override
-            public void onNotificationRemoved(StatusBarNotification sbn)
+            public void onNotificationRemoved(@NonNull StatusBarNotification sbn)
             {
                 NotificationParserManager.this.onNotificationRemoved(sbn);
             }
@@ -113,6 +119,12 @@ public class NotificationParserManager
             public TextToSpeechManager getTextToSpeech()
             {
                 return NotificationParserManager.this.getTextToSpeech();
+            }
+
+            @Override
+            public void onNotificationParsed(@NonNull AbstractNotificationParser parser)
+            {
+                NotificationParserManager.this.onNotificationParsed(parser);
             }
         };
 
@@ -142,12 +154,9 @@ public class NotificationParserManager
         return FooNotificationListenerManager.isNotificationAccessSettingConfirmedNotEnabled(mContext);
     }
 
-    /**
-     * @return true if Notification Access is confirmed enabled (ie: FooNotificationListener successfully bound)
-     */
-    public boolean isNotificationAccessSettingConfirmedEnabled()
+    public boolean isNotificationListenerConnected()
     {
-        return mFooNotificationListenerManager.isNotificationAccessSettingConfirmedEnabled();
+        return mFooNotificationListenerManager.isNotificationListenerConnected();
     }
 
     public void startActivityNotificationListenerSettings()
@@ -155,9 +164,39 @@ public class NotificationParserManager
         FooNotificationListenerManager.startActivityNotificationListenerSettings(mContext);
     }
 
-    public void refresh()
+    public void initializeActiveNotifications()
     {
-        mFooNotificationListenerManager.initializeActiveNotifications();
+        StatusBarNotification[] activeNotifications = mFooNotificationListenerManager.getActiveNotifications();
+        List<StatusBarNotification> prioritizedActiveNotifications = prioritizeNotifications(activeNotifications);
+        for (StatusBarNotification activeNotification : prioritizedActiveNotifications)
+        {
+            onNotificationPosted(activeNotification);
+        }
+    }
+
+    @NonNull
+    private List<StatusBarNotification> prioritizeNotifications(StatusBarNotification[] statusBarNotifications)
+    {
+        List<StatusBarNotification> prioritized = new LinkedList<>();
+        if (statusBarNotifications != null)
+        {
+            String packageNameSelf = mContext.getPackageName();
+            for (StatusBarNotification statusBarNotification : statusBarNotifications)
+            {
+                String packageName = statusBarNotification.getPackageName();
+                if (packageName.equals(packageNameSelf))
+                {
+                    Notification notification = statusBarNotification.getNotification();
+                    if ((notification.flags & Notification.FLAG_ONGOING_EVENT) == Notification.FLAG_ONGOING_EVENT)
+                    {
+                        prioritized.add(0, statusBarNotification);
+                        continue;
+                    }
+                }
+                prioritized.add(statusBarNotification);
+            }
+        }
+        return prioritized;
     }
 
     public void attach(NotificationParserManagerCallbacks callbacks)
@@ -187,6 +226,7 @@ public class NotificationParserManager
         // TODO:(pv) Future ecosystem to allow installing 3rd-party developed parsers
         // TODO:(pv) Use package reflection to enumerate and load all non-Abstract parsers in parsers package
         // TODO:(pv) Not all of these parsers may be required, and could rely on a decent default implementation that walks and talks all visible text elements
+        addNotificationParser(new AlfredNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new AndroidSystemNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new FacebookNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new GmailNotificationParser(mNotificationParserCallbacks));
@@ -207,27 +247,29 @@ public class NotificationParserManager
         mFooNotificationListenerManager.attach(mContext, mFooNotificationListenerManagerCallbacks);
     }
 
-    private boolean onNotificationAccessSettingConfirmedEnabled()
+    private boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications)
     {
-        FooLog.i(TAG, "onNotificationAccessSettingConfirmedEnabled()");
+        FooLog.i(TAG, "onNotificationListenerConnected(...)");
         mIsInitialized = true;
         boolean handled = false;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            handled |= callbacks.onNotificationAccessSettingConfirmedEnabled();
+            handled |= callbacks.onNotificationListenerConnected(activeNotifications);
         }
         mListenerManager.endTraversing();
 
-        return handled;
+        initializeActiveNotifications();
+
+        return true;
     }
 
-    private void onNotificationAccessSettingDisabled(DisabledCause disabledCause)
+    private void onNotificationListenerNotConnected(NotConnectedReason reason)
     {
-        FooLog.i(TAG, "onNotificationAccessSettingDisabled(disabledCause=" + disabledCause + ')');
+        FooLog.i(TAG, "onNotificationListenerNotConnected(reason=" + reason + ')');
         mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationAccessSettingDisabled(disabledCause);
+            callbacks.onNotificationListenerNotConnected(reason);
         }
         mListenerManager.endTraversing();
     }
@@ -288,5 +330,14 @@ public class NotificationParserManager
 
         // TODO:(pv) Reset any cache in the parser...
         notificationParser.onNotificationRemoved(sbn);
+    }
+
+    private void onNotificationParsed(AbstractNotificationParser parser)
+    {
+        for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onNotificationParsed(parser);
+        }
+        mListenerManager.endTraversing();
     }
 }

@@ -1,13 +1,16 @@
 package com.swooby.alfred;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.collections.FooBundleBuilder;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotification;
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
@@ -18,6 +21,13 @@ import com.swooby.alfred.Profile.Tokens;
 public class NotificationManager
 {
     private static final String TAG = FooLog.TAG(NotificationManager.class);
+
+    private static final String PACKAGE_NAME        = NotificationManager.class.getPackage().getName();
+    public static final  String EXTRA_ALFRED_EXTRAS = PACKAGE_NAME + ".EXTRAS";
+    /**
+     * Must be put inside a Bundle of key {@link #EXTRA_ALFRED_EXTRAS}
+     */
+    public static        String EXTRA_ALFRED_SPEECH = PACKAGE_NAME + ".SPEECH";
 
     @NonNull
     public static PendingIntent createPendingIntentMainActivity(@NonNull Context context)
@@ -51,19 +61,26 @@ public class NotificationManager
         private final   int     mSmallIcon;
         @NonNull
         private final   String  mText;
+        protected final Bundle  mExtras;
         protected final int     mRequestCode;
 
-        protected NotificationStatus(@NonNull Context context, @DrawableRes int smallIcon, @NonNull String text, String subtext)
+        protected NotificationStatus(@NonNull Context context, @DrawableRes int smallIcon, @NonNull String text, String subtext, Bundle extras)
         {
-            this(context, smallIcon, text, subtext, NotificationIds.ONGOING);
+            this(context, smallIcon, text, subtext, extras, NotificationIds.ONGOING);
         }
 
-        protected NotificationStatus(@NonNull Context context, int smallIcon, @NonNull String text, String subtext, int requestCode)
+        protected NotificationStatus(@NonNull Context context, int smallIcon, @NonNull String text, String subtext, Bundle extras, int requestCode)
         {
             FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+            if (!FooString.isNullOrEmpty(subtext))
+            {
+                text = context.getString(R.string.alfred_A_colon_B, text, subtext);
+            }
+
             mContext = context;
             mSmallIcon = smallIcon;
-            mText = FooString.isNullOrEmpty(subtext) ? text : context.getString(R.string.alfred_A_colon_B, text, subtext);
+            mText = text;
+            mExtras = extras;
             mRequestCode = requestCode;
         }
 
@@ -85,6 +102,11 @@ public class NotificationManager
             return mText;
         }
 
+        public Bundle getExtras()
+        {
+            return mExtras;
+        }
+
         @NonNull
         public PendingIntent getPendingIntent()
         {
@@ -92,32 +114,51 @@ public class NotificationManager
         }
     }
 
-    public static class NotificationStatusStarting
+    private static class NotificationStatusStarting
             extends NotificationStatus
     {
-        protected NotificationStatusStarting(@NonNull Context context, @NonNull String text, String subtext)
+        NotificationStatusStarting(@NonNull Context context, @NonNull String text, String subtext, Bundle extras)
         {
-            super(context, R.drawable.ic_warning_white_18dp, text, subtext);
+            super(context, R.drawable.ic_warning_white_18dp, text, subtext, extras);
         }
     }
 
-    public static class NotificationStatusRunning
+    static class NotificationStatusRunning
             extends NotificationStatus
     {
-        protected NotificationStatusRunning(@NonNull Context context, @NonNull String text, String subtext)
+        @NonNull
+        private static String getDefaultText(@NonNull Context context)
         {
-            super(context, R.drawable.ic_alfred_running_white_18dp, text, subtext);
+            return context.getString(R.string.alfred_A_colon_B, context.getString(R.string.alfred_app_name), context.getString(R.string.alfred_running));
+        }
+
+        private static Bundle DEFAULT_EXTRAS;
+
+        private static Bundle getDefaultExtras(@NonNull Context context)
+        {
+            return DEFAULT_EXTRAS;
+        }
+
+        NotificationStatusRunning(@NonNull Context context)
+        {
+            this(context, getDefaultText(context), context.getString(R.string.alfred_reading_notifications), getDefaultExtras(context));
+        }
+
+        NotificationStatusRunning(@NonNull Context context, @NonNull String text, String subtext, Bundle extras)
+        {
+            super(context, R.drawable.ic_alfred_running_white_18dp, text, subtext, extras);
         }
     }
 
-    public static class NotificationStatusNotificationAccessNotEnabled
+    static class NotificationStatusNotificationAccessNotEnabled
             extends NotificationStatus
     {
-        public NotificationStatusNotificationAccessNotEnabled(@NonNull Context context, @NonNull String text, String subtext)
+        NotificationStatusNotificationAccessNotEnabled(@NonNull Context context, @NonNull String text, String subtext, Bundle extras)
         {
-            super(context, R.drawable.ic_warning_white_18dp, text, subtext, 0);
+            super(context, R.drawable.ic_warning_white_18dp, text, subtext, extras, 0);
         }
 
+        @NonNull
         @Override
         public PendingIntent getPendingIntent()
         {
@@ -125,7 +166,7 @@ public class NotificationManager
         }
     }
 
-    public static class NotificationStatusProfileNotEnabled
+    static class NotificationStatusProfileNotEnabled
             extends NotificationStatus
     {
         private static String toString(@NonNull Context context, @NonNull String token)
@@ -148,9 +189,9 @@ public class NotificationManager
             return s;
         }
 
-        protected NotificationStatusProfileNotEnabled(@NonNull Context context, String profileToken)
+        NotificationStatusProfileNotEnabled(@NonNull Context context, String profileToken)
         {
-            super(context, R.drawable.ic_alfred_paused_white_18dp, FooRes.getString(context, R.string.alfred_paused), toString(context, profileToken));
+            super(context, R.drawable.ic_alfred_paused_white_18dp, FooRes.getString(context, R.string.alfred_paused), toString(context, profileToken), null);
         }
     }
 
@@ -163,78 +204,15 @@ public class NotificationManager
 
     private FooNotification mNotificationOngoing;
 
-    public NotificationManager(@NonNull Context context)
+    NotificationManager(@NonNull Context context)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
         mContext = context;
     }
 
-    public void initializing(String statusSubText, String contentTitle, String contentText)
-    {
-        NotificationStatus notificationStatus = new NotificationStatusStarting(mContext, getString(R.string.alfred_initializing), statusSubText);
-        ongoingShow(notificationStatus, contentTitle, contentText);
-    }
-
-    public void running(NotificationStatus notificationStatus, String contentTitle, String contentText)
-    {
-        if (notificationStatus == null)
-        {
-            notificationStatus = new NotificationStatusRunning(mContext, getString(R.string.alfred_running), getString(R.string.alfred_reading_notifications));
-        }
-        ongoingShow(notificationStatus, contentTitle, contentText);
-    }
-
-    public void paused(@NonNull NotificationStatus notificationStatus, String contentTitle, String contentText)
-    {
-        ongoingShow(notificationStatus, contentTitle, contentText);
-    }
-
-    private void ongoingShow(@NonNull NotificationStatus notificationStatus, String contentTitle, String contentText)
-    {
-        mNotificationOngoing = notification(NotificationIds.ONGOING, true, notificationStatus, contentTitle, contentText);
-    }
-
-    private void ongoingCancel()
-    {
-        if (mNotificationOngoing != null)
-        {
-            mNotificationOngoing.cancel(mContext);
-            mNotificationOngoing = null;
-        }
-    }
-
-    //
-    //
-    //
-
     private String getString(int resId, Object... formatArgs)
     {
         return mContext.getString(resId, formatArgs);
-    }
-
-    public FooNotification notification(int requestCode, boolean ongoing,
-                                        @NonNull NotificationStatus status,
-                                        String contentTitle, String contentText)
-    {
-        FooRun.throwIllegalArgumentExceptionIfNull(status, "status");
-        FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentTitle, "contentTitle");
-
-        // TODO:(pv) Add speech make this the single method that shows/speaks anything we need
-        //      Put speech in the waitingFor, or some other helper class? FooTextToSpeechBuilder?
-        //      Privatize as many below methods as possible
-
-        FooNotificationBuilder builder = new FooNotificationBuilder(mContext)
-                .setOngoing(ongoing)
-                .setSmallIcon(status.getSmallIcon())
-                .setSubText(status.getText())
-                .setContentTitle(contentTitle)
-                .setContentIntent(status.getPendingIntent());
-        if (!FooString.isNullOrEmpty(contentText))
-        {
-            builder.setContentText(contentText);
-        }
-
-        return notificationShow(requestCode, builder);
     }
 
     private FooNotification notificationShow(int requestCode, FooNotificationBuilder builder)
@@ -243,5 +221,66 @@ public class NotificationManager
         FooLog.v(TAG, "notificationShow: notification=" + notification);
         notification.show(mContext);
         return notification;
+    }
+
+    private FooNotification notificationShow(int requestCode,
+                                             boolean ongoing,
+                                             @NonNull NotificationStatus status,
+                                             @NonNull String contentTitle,
+                                             String contentText)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(status, "status");
+        FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentTitle, "contentTitle");
+        //FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentText, "contentText");
+
+        FooNotificationBuilder builder = new FooNotificationBuilder(mContext)
+                .setOngoing(ongoing)
+                .setSmallIcon(status.getSmallIcon())
+                .setSubText(status.getText())
+                .setContentTitle(contentTitle)
+                .setContentIntent(status.getPendingIntent())
+                .addExtras(new FooBundleBuilder()
+                        .putBundle(EXTRA_ALFRED_EXTRAS, status.getExtras())
+                        .build());
+        if (!FooString.isNullOrEmpty(contentText))
+        {
+            builder.setContentText(contentText);
+        }
+        
+        return notificationShow(requestCode, builder);
+    }
+
+    //
+    //
+    //
+
+    void notifyInitializing(@NonNull String statusSubText, @NonNull String contentTitle, String contentText)
+    {
+        NotificationStatus notificationStatus = new NotificationStatusStarting(mContext, getString(R.string.alfred_initializing), statusSubText, null);
+        notificationOngoingShow(notificationStatus, contentTitle, contentText);
+    }
+
+    void notifyRunning(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
+    {
+        notificationOngoingShow(notificationStatus, contentTitle, contentText);
+    }
+
+    void notifyPaused(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
+    {
+        notificationOngoingShow(notificationStatus, contentTitle, contentText);
+    }
+
+    private void notificationOngoingShow(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
+    {
+        mNotificationOngoing = notificationShow(NotificationIds.ONGOING, true, notificationStatus, contentTitle, contentText);
+    }
+
+    private void notificationOngoingCancel()
+    {
+        if (mNotificationOngoing != null)
+        {
+            mNotificationOngoing.cancel(mContext);
+            mNotificationOngoing = null;
+        }
     }
 }

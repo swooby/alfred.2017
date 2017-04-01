@@ -54,7 +54,7 @@
         </activity>
 
         <service
-            android:name="com.smartfoo.android.core.notification.FooNotificationListener"
+            android:name="com.smartfoo.android.core.notification.FooNotificationListenerManager$FooNotificationListener"
             android:enabled="true"
             android:exported="true"
             android:label="@string/app_name"

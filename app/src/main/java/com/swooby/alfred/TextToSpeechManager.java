@@ -206,17 +206,17 @@ public class TextToSpeechManager
 
     public void speak(String text, Runnable runAfter)
     {
-        speak(false, false, text, runAfter);
+        speak(false, text, runAfter);
     }
 
-    public void speak(boolean force, boolean clear, String text)
+    public void speak(boolean clear, String text)
     {
-        speak(force, clear, text, null);
+        speak(clear, text, null);
     }
 
-    public void speak(boolean force, boolean clear, String text, Runnable runAfter)
+    public void speak(boolean clear, String text, Runnable runAfter)
     {
-        if (!force && !isEnabled())
+        if (!isEnabled())
         {
             return;
         }
@@ -231,17 +231,17 @@ public class TextToSpeechManager
 
     public void speak(@NonNull FooTextToSpeechBuilder builder, Runnable runAfter)
     {
-        speak(false, false, builder, runAfter);
+        speak(false, builder, runAfter);
     }
 
-    public void speak(boolean force, boolean clear, @NonNull FooTextToSpeechBuilder builder)
+    public void speak(boolean clear, @NonNull FooTextToSpeechBuilder builder)
     {
-        speak(force, clear, builder, null);
+        speak(clear, builder, null);
     }
 
-    public void speak(boolean force, boolean clear, @NonNull FooTextToSpeechBuilder builder, Runnable runAfter)
+    public void speak(boolean clear, @NonNull FooTextToSpeechBuilder builder, Runnable runAfter)
     {
-        if (!force && !isEnabled())
+        if (!isEnabled())
         {
             return;
         }
@@ -251,12 +251,7 @@ public class TextToSpeechManager
 
     public void silence(int durationInMs)
     {
-        silence(false, durationInMs);
-    }
-
-    public void silence(boolean force, int durationInMs)
-    {
-        if (!force && !isEnabled())
+        if (!isEnabled())
         {
             return;
         }

@@ -2,6 +2,8 @@ package com.swooby.alfred;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
@@ -10,7 +12,7 @@ import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
-import com.smartfoo.android.core.notification.FooNotificationListenerManager.DisabledCause;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
 import com.smartfoo.android.core.platform.FooChargePortListener;
 import com.smartfoo.android.core.platform.FooChargePortListener.ChargePort;
 import com.smartfoo.android.core.platform.FooChargePortListener.FooChargePortListenerCallbacks;
@@ -23,6 +25,7 @@ import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.NotificationManager.NotificationStatus;
 import com.swooby.alfred.NotificationManager.NotificationStatusNotificationAccessNotEnabled;
 import com.swooby.alfred.NotificationManager.NotificationStatusProfileNotEnabled;
+import com.swooby.alfred.NotificationManager.NotificationStatusRunning;
 import com.swooby.alfred.NotificationParserManager.NotificationParserManagerCallbacks;
 import com.swooby.alfred.NotificationParserManager.NotificationParserManagerConfiguration;
 import com.swooby.alfred.ProfileManager.HeadsetType;
@@ -30,6 +33,8 @@ import com.swooby.alfred.ProfileManager.ProfileManagerCallbacks;
 import com.swooby.alfred.ProfileManager.ProfileManagerConfiguration;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerConfiguration;
+import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
+import com.swooby.alfred.notification.parsers.AlfredNotificationParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,26 +48,25 @@ public class AlfredManager
     {
         Activity getActivity();
 
-        void onNotificationAccessSettingConfirmedEnabled();
+        void onNotificationListenerConnected();
 
-        boolean onNotificationAccessSettingDisabled(DisabledCause disabledCause);
+        boolean onNotificationListenerNotConnected(NotConnectedReason reason);
 
         void onProfileEnabled(String profileToken);
 
         void onProfileDisabled(String profileToken);
     }
 
-    private final Context                                          mApplicationContext;
-    private final FooHandler                                       mHandler;
-    private final AppPreferences                                   mAppPreferences;
-    private final NotificationManager                              mNotificationManager;
-    private final FooListenerManager<AlfredManagerCallbacks>       mListenerManager;
-    private final TextToSpeechManager                              mTextToSpeechManager;
-    private final DelayedRunnableNotificationAccessSettingDisabled mDelayedRunnableNotificationAccessSettingDisabled;
-    private final NotificationParserManager                        mNotificationParserManager;
-    private final FooScreenListener                                mScreenListener;
-    private final FooChargePortListener                            mChargePortListener;
-    private final ProfileManager                                   mProfileManager;
+    private final Context                                    mApplicationContext;
+    private final FooHandler                                 mHandler;
+    private final AppPreferences                             mAppPreferences;
+    private final NotificationManager                        mNotificationManager;
+    private final FooListenerManager<AlfredManagerCallbacks> mListenerManager;
+    private final TextToSpeechManager                        mTextToSpeechManager;
+    private final NotificationParserManager                  mNotificationParserManager;
+    private final FooScreenListener                          mScreenListener;
+    private final FooChargePortListener                      mChargePortListener;
+    private final ProfileManager                             mProfileManager;
 
     private boolean mIsStarted;
 
@@ -109,7 +113,6 @@ public class AlfredManager
                 return AlfredManager.this.isProfileEnabled();
             }
         });
-        mDelayedRunnableNotificationAccessSettingDisabled = new DelayedRunnableNotificationAccessSettingDisabled();
         mNotificationParserManager = new NotificationParserManager(mApplicationContext, new NotificationParserManagerConfiguration()
         {
             @Override
@@ -189,7 +192,7 @@ public class AlfredManager
 
         mIsStarted = true;
 
-        mNotificationManager.initializing("Text To Speech", "TBD text", "TBD subtext");
+        mNotificationManager.notifyInitializing("Text To Speech", "TBD text", "TBD subtext");
         final long timeStartMillis = System.currentTimeMillis();
         mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
         {
@@ -204,15 +207,21 @@ public class AlfredManager
         mNotificationParserManager.attach(new NotificationParserManagerCallbacks()
         {
             @Override
-            public boolean onNotificationAccessSettingConfirmedEnabled()
+            public boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications)
             {
-                return AlfredManager.this.onNotificationAccessSettingConfirmedEnabled();
+                return AlfredManager.this.onNotificationListenerConnected();
             }
 
             @Override
-            public void onNotificationAccessSettingDisabled(DisabledCause disabledCause)
+            public void onNotificationListenerNotConnected(NotConnectedReason reason)
             {
-                AlfredManager.this.onNotificationAccessSettingDisabled(disabledCause, false);
+                AlfredManager.this.onNotificationListenerNotConnected(reason, 200);
+            }
+
+            @Override
+            public void onNotificationParsed(@NonNull AbstractNotificationParser parser)
+            {
+                AlfredManager.this.onNotificationParsed(parser);
             }
         });
         mScreenListener.attach(new FooScreenListenerCallbacks()
@@ -300,6 +309,7 @@ public class AlfredManager
 
     public void attach(AlfredManagerCallbacks callbacks)
     {
+        FooLog.i(TAG, "attach(callbacks=" + callbacks + ')');
         mListenerManager.attach(callbacks);
         if (callbacks.getActivity() != null)
         {
@@ -309,6 +319,7 @@ public class AlfredManager
 
     public void detach(AlfredManagerCallbacks callbacks)
     {
+        FooLog.i(TAG, "detach(callbacks=" + callbacks + ')');
         mListenerManager.detach(callbacks);
     }
 
@@ -330,6 +341,24 @@ public class AlfredManager
         return true;
     }
 
+    private void onNotificationParsed(@NonNull AbstractNotificationParser parser)
+    {
+    }
+
+    private void notification(@NonNull NotificationStatus notificationStatus,
+                              String text,
+                              String subtext)
+    {
+        if (notificationStatus instanceof NotificationStatusProfileNotEnabled)
+        {
+            mNotificationManager.notifyPaused(notificationStatus, text, subtext);
+        }
+        else
+        {
+            mNotificationManager.notifyRunning(notificationStatus, text, subtext);
+        }
+    }
+
     private void onTextToSpeechInitialized(int status, long timeElapsedMillis)
     {
         FooLog.i(TAG, "onTextToSpeechInitialized: timeElapsedMillis == " + timeElapsedMillis +
@@ -340,65 +369,140 @@ public class AlfredManager
         }
     }
 
-    private boolean onNotificationAccessSettingConfirmedEnabled()
+    private void onProfileEnabled(String profileToken)
     {
-        FooLog.i(TAG, "onNotificationAccessSettingConfirmedEnabled()");
+        FooLog.i(TAG, "onProfileEnabled(profileToken=" + FooString.quote(profileToken) + ')');
 
-        String speech = getString(R.string.alfred_notification_access_enabled);
-        mTextToSpeechManager.speak(speech);
+        //
+        // !!!!!!THIS IS WHERE THE REAL APP LOGIC ACTUALLY STARTS!!!!!!
+        //
+
+        NotificationStatus notificationStatus;
+        boolean isNotificationListenerConnected = mNotificationParserManager.isNotificationListenerConnected();
+        if (isNotificationListenerConnected)
+        {
+            notificationStatus = new NotificationStatusRunning(mApplicationContext);
+        }
+        else
+        {
+            notificationStatus = new NotificationStatusNotificationAccessNotEnabled(mApplicationContext,
+                    getString(R.string.alfred_running),
+                    getString(R.string.alfred_waiting_for_notification_access),
+                    null); // <-- TODO:(pv) Put above/below speech in here
+        }
+        notification(notificationStatus, "TBD text", "onProfileEnabled");
 
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationAccessSettingConfirmedEnabled();
+            callbacks.onProfileEnabled(profileToken);
         }
         mListenerManager.endTraversing();
 
-        speech = "Initializing Notifications";
-        mTextToSpeechManager.speak(speech);
-        mNotificationParserManager.refresh();
-
-        return true;
+        if (isNotificationListenerConnected)
+        {
+            onNotificationListenerConnected();
+        }
     }
 
-    private class DelayedRunnableNotificationAccessSettingDisabled
+    private void onProfileDisabled(String profileToken)
+    {
+        FooLog.i(TAG, "onProfileDisabled(profileToken=" + FooString.quote(profileToken) + ')');
+
+        NotificationStatus notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
+        notification(notificationStatus, "TBD text", "onProfileDisabled");
+
+        for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onProfileDisabled(profileToken);
+        }
+        mListenerManager.endTraversing();
+    }
+
+    //
+    //
+    //
+
+    private class DelayedRunnableNotificationListenerNotConnected
             implements Runnable
     {
-        private final String TAG = FooLog.TAG(DelayedRunnableNotificationAccessSettingDisabled.class);
+        private final String TAG = FooLog.TAG(DelayedRunnableNotificationListenerNotConnected.class);
 
-        public DisabledCause mDisabledCause;
+        private final NotConnectedReason mReason;
+
+        public DelayedRunnableNotificationListenerNotConnected(NotConnectedReason reason)
+        {
+            mReason = reason;
+        }
 
         @Override
         public void run()
         {
             FooLog.v(TAG, "+run()");
-            onNotificationAccessSettingDisabled(mDisabledCause, true);
+            onNotificationListenerNotConnected(mReason, 0);
             FooLog.v(TAG, "-run()");
         }
     }
 
-    private void onNotificationAccessSettingDisabled(DisabledCause disabledCause, boolean delayed)
+    private DelayedRunnableNotificationListenerNotConnected mDelayedRunnableNotificationAccessSettingDisabled;
+
+    private boolean onNotificationListenerConnected()
     {
-        FooLog.w(TAG, "onNotificationAccessSettingDisabled(disabledCause=" + disabledCause +
-                      ", delayed=" + delayed + ')');
+        FooLog.i(TAG, "onNotificationListenerConnected()");
+
+        mHandler.removeCallbacks(mDelayedRunnableNotificationAccessSettingDisabled);
+        mDelayedRunnableNotificationAccessSettingDisabled = null;
+
+        for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onNotificationListenerConnected();
+        }
+        mListenerManager.endTraversing();
+
+        mNotificationParserManager.initializeActiveNotifications();
+
+        NotificationStatus notificationStatus;
+        boolean isProfileEnabled = isProfileEnabled();
+        if (isProfileEnabled)
+        {
+            notificationStatus = new NotificationStatusRunning(mApplicationContext);
+        }
+        else
+        {
+            String profileToken = mProfileManager.getProfileToken();
+            notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
+        }
+        notification(notificationStatus, "TBD text", "onNotificationAccessSettingConfirmedEnabled");
+
+        return true;
+    }
+
+    /**
+     * @param reason                reason
+     * @param ifHeadlessDelayMillis > 0 to delay the given milliseconds if no UI is attached
+     */
+    private void onNotificationListenerNotConnected(NotConnectedReason reason, int ifHeadlessDelayMillis)
+    {
+        FooLog.w(TAG, "onNotificationListenerNotConnected(reason=" + reason +
+                      ", ifHeadlessDelayMillis=" + ifHeadlessDelayMillis + ')');
 
         boolean headless = true;
         boolean handled = false;
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
             headless &= callbacks.getActivity() == null;
-            handled |= callbacks.onNotificationAccessSettingDisabled(disabledCause);
+            handled |= callbacks.onNotificationListenerNotConnected(reason);
         }
         mListenerManager.endTraversing();
 
-        if (headless && !delayed)
+        if (headless && ifHeadlessDelayMillis > 0)
         {
-            mDelayedRunnableNotificationAccessSettingDisabled.mDisabledCause = disabledCause;
-            mHandler.postDelayed(mDelayedRunnableNotificationAccessSettingDisabled, 200);
+            mDelayedRunnableNotificationAccessSettingDisabled = new DelayedRunnableNotificationListenerNotConnected(reason);
+            mHandler.postDelayed(mDelayedRunnableNotificationAccessSettingDisabled, ifHeadlessDelayMillis);
             return;
         }
 
-        String title = getNotificationAccessNotEnabledTitle(disabledCause);
-        String message = getNotificationAccessNotEnabledMessage(disabledCause);
+        String title = getNotificationListenerNotConnectedTitle(reason);
+        String message = getNotificationListenerNotConnectedMessage(reason);
 
         if (headless)
         {
@@ -407,56 +511,70 @@ public class AlfredManager
             FooPlatformUtils.toastLong(mApplicationContext, text);
         }
 
-        //
-        // Always speak this, even if profile is disabled
-        //
-        mTextToSpeechManager.speak(true, false, new FooTextToSpeechBuilder()
+        mTextToSpeechManager.speak(new FooTextToSpeechBuilder()
                 .appendSpeech(title)
                 .appendSilenceWordBreak()
                 .appendSpeech(message));
 
-        /*
-        if (handled)
-        {
-            return;
-        }
-        */
-
-        boolean isProfileEnabled = isProfileEnabled();
         NotificationStatus notificationStatus;
+        boolean isProfileEnabled = isProfileEnabled();
         if (isProfileEnabled)
         {
             notificationStatus = new NotificationStatusNotificationAccessNotEnabled(mApplicationContext,
                     getString(R.string.alfred_running),
-                    getString(R.string.alfred_waiting_for_notification_access));
+                    getString(R.string.alfred_waiting_for_notification_access)
+                    , null);
         }
         else
         {
             String profileToken = mProfileManager.getProfileToken();
             notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
         }
-        notification(isProfileEnabled, notificationStatus, "TBD text", "onNotificationAccessSettingDisabled");
-
-        //
-        // Only show the notification if no UI handled the event
-        //
-        //showNotificationAccessNotEnabledNotification(title);
+        notification(notificationStatus, "TBD text", "onNotificationAccessSettingDisabled");
     }
 
-    private void notification(boolean isProfileEnabled,
-                              NotificationStatus notificationStatus,
-                              String text,
-                              String subtext)
+    public String getNotificationListenerNotConnectedTitle(@NonNull NotConnectedReason reason)
     {
-        if (isProfileEnabled)
+        FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason");
+        int resId;
+        switch (reason)
         {
-            mNotificationManager.running(notificationStatus, text, subtext);
+            case ConfirmedNotEnabled:
+                resId = R.string.alfred_notification_access_not_enabled;
+                break;
+            case ConnectedTimeout:
+                resId = R.string.alfred_notification_listener_bind_timeout;
+                break;
+            default:
+                throw new IllegalArgumentException("Unhandled reason == " + reason);
         }
-        else
-        {
-            mNotificationManager.paused(notificationStatus, text, subtext);
-        }
+        return getString(resId);
     }
+
+    public String getNotificationListenerNotConnectedMessage(@NonNull NotConnectedReason reason)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason");
+        int resId;
+        switch (reason)
+        {
+            case ConfirmedNotEnabled:
+                resId = R.string.alfred_please_enable_notification_access_for_the_X_application;
+                break;
+            case ConnectedTimeout:
+                resId = R.string.alfred_please_reenable_notification_access_for_the_X_application;
+                break;
+            default:
+                throw new IllegalArgumentException("Unhandled reason == " + reason);
+        }
+
+        String appName = getString(R.string.alfred_app_name);
+
+        return getString(resId, appName);
+    }
+
+    //
+    //
+    //
 
     private void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
     {
@@ -483,102 +601,6 @@ public class AlfredManager
 
         String speech = getString(resId, headsetName);
         mTextToSpeechManager.speak(speech);
-    }
-
-    private void onProfileEnabled(String profileToken)
-    {
-        FooLog.i(TAG, "onProfileEnabled(profileToken=" + FooString.quote(profileToken) + ')');
-
-        boolean isNotificationAccessSettingConfirmedEnabled = mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled();
-
-        NotificationStatus notificationStatus = null;
-        if (!isNotificationAccessSettingConfirmedEnabled)
-        {
-            notificationStatus = new NotificationStatusNotificationAccessNotEnabled(mApplicationContext,
-                    getString(R.string.alfred_running),
-                    getString(R.string.alfred_waiting_for_notification_access));
-        }
-        notification(true, notificationStatus, "TBD text", "onProfileEnabled");
-
-        //
-        // !!!!!!THIS IS WHERE THE REAL APP LOGIC ACTUALLY STARTS!!!!!!
-        //
-
-        //...
-
-        updateScreenInfo();
-        for (ChargePort chargingPort : mChargePortListener.getChargingPorts())
-        {
-            onChargePortConnected(chargingPort);
-        }
-
-        //...
-
-        for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
-        {
-            callbacks.onProfileEnabled(profileToken);
-        }
-        mListenerManager.endTraversing();
-
-        if (isNotificationAccessSettingConfirmedEnabled)
-        {
-            onNotificationAccessSettingConfirmedEnabled();
-        }
-    }
-
-    private void onProfileDisabled(String profileToken)
-    {
-        FooLog.i(TAG, "onProfileDisabled(profileToken=" + FooString.quote(profileToken) + ')');
-
-        NotificationStatus notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
-        notification(false, notificationStatus, "TBD text", "onProfileDisabled");
-
-        //...
-
-        for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
-        {
-            callbacks.onProfileDisabled(profileToken);
-        }
-        mListenerManager.endTraversing();
-    }
-
-    public String getNotificationAccessNotEnabledTitle(@NonNull DisabledCause disabledCause)
-    {
-        FooRun.throwIllegalArgumentExceptionIfNull(disabledCause, "disabledCause");
-        int resId;
-        switch (disabledCause)
-        {
-            case ConfirmedNotEnabled:
-                resId = R.string.alfred_notification_access_not_enabled;
-                break;
-            case BindTimeout:
-                resId = R.string.alfred_notification_access_bind_timeout;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled disabledCause == " + disabledCause);
-        }
-        return getString(resId);
-    }
-
-    public String getNotificationAccessNotEnabledMessage(@NonNull DisabledCause disabledCause)
-    {
-        FooRun.throwIllegalArgumentExceptionIfNull(disabledCause, "disabledCause");
-        int resId;
-        switch (disabledCause)
-        {
-            case ConfirmedNotEnabled:
-                resId = R.string.alfred_please_enable_notification_access_for_the_X_application;
-                break;
-            case BindTimeout:
-                resId = R.string.alfred_please_reenable_notification_access_for_the_X_application;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled disabledCause == " + disabledCause);
-        }
-
-        String appName = getString(R.string.alfred_app_name);
-
-        return getString(resId, appName);
     }
 
     //
@@ -643,6 +665,14 @@ public class AlfredManager
     //
     //
     //
+
+    private void updateChargePortInfo()
+    {
+        for (ChargePort chargingPort : mChargePortListener.getChargingPorts())
+        {
+            onChargePortConnected(chargingPort);
+        }
+    }
 
     private Map<ChargePort, Long> mTimeChargingConnected    = new HashMap<>();
     private Map<ChargePort, Long> mTimeChargingDisconnected = new HashMap<>();

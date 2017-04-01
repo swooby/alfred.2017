@@ -134,6 +134,8 @@ public class SpotifyNotificationParser
 
         mLastIsCommercial = false;
 
+        mute(false, null);//"un-muting commercial");
+
         if (isPlaying == mLastIsPlaying &&
             Objects.equals(textArtist, mLastArtist) &&
             Objects.equals(textTitle, mLastTitle))
@@ -141,8 +143,6 @@ public class SpotifyNotificationParser
             FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
-
-        mute(false, null);//"un-muting commercial");
 
         mLastIsPlaying = isPlaying;
         mLastArtist = textArtist;

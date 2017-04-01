@@ -30,9 +30,9 @@
     <string name="alfred_X_disconnected_after_being_connected_for_Y">%1$s Disconnected After Being Connected For %2$s</string>
 
     <string name="alfred_waiting_for_notification_access">Waiting For Notification Access</string>
-    <string name="alfred_notification_access_enabled">Notification Access Enabled</string>
+    <string name="alfred_notification_listener_connected">Notification Listener Connected</string>
     <string name="alfred_notification_access_not_enabled">Notification Access Not Enabled</string>
-    <string name="alfred_notification_access_bind_timeout">Notification Access Bind Timeout</string>
+    <string name="alfred_notification_listener_bind_timeout">Notification Listener Bind Timeout</string>
     <string name="alfred_please_enable_notification_access_for_the_X_application">Please enable Notification Access for the \"%1$s\" application.</string>
     <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, reboot your device.</string>
     <string name="alfred_visual_only_tap_to_configure">Tap to configure.</string>

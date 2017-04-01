@@ -42,7 +42,7 @@ import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
-import com.smartfoo.android.core.notification.FooNotificationListenerManager.DisabledCause;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 import com.swooby.alfred.AlfredManager.AlfredManagerCallbacks;
@@ -72,15 +72,15 @@ public class MainActivity
         }
 
         @Override
-        public void onNotificationAccessSettingConfirmedEnabled()
+        public void onNotificationListenerConnected()
         {
-            MainActivity.this.onNotificationAccessSettingConfirmedEnabled();
+            MainActivity.this.onNotificationListenerConnected();
         }
 
         @Override
-        public boolean onNotificationAccessSettingDisabled(DisabledCause disabledCause)
+        public boolean onNotificationListenerNotConnected(NotConnectedReason reason)
         {
-            return MainActivity.this.onNotificationAccessSettingDisabled(disabledCause, true);
+            return MainActivity.this.onNotificationListenerNotConnected(reason, true);
         }
 
         @Override
@@ -118,11 +118,11 @@ public class MainActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
 
-    private Button  mButtonNotificationListenerSettings;
     private Spinner mSpinnerTextToSpeechVoices;
     private Spinner mSpinnerTextToSpeechAudioStreamType;
     private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
     private Spinner mSpinnerProfiles;
+    private Button  mButtonNotificationListenerSettings;
     private Button  mButtonProcessNotifications;
 
     private boolean mRequestedTextToSpeechData;
@@ -188,18 +188,7 @@ public class MainActivity
         if (mNavigationView != null)
         {
             mNavigationView.setNavigationItemSelectedListener(this);
-
         }
-
-        mButtonNotificationListenerSettings = (Button) findViewById(R.id.buttonNotificationListenerSettings);
-        mButtonNotificationListenerSettings.setOnClickListener(new OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                startActivityNotificationListenerSettings();
-            }
-        });
 
         mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
 
@@ -276,13 +265,25 @@ public class MainActivity
             }
         });
 
+        mButtonNotificationListenerSettings = (Button) findViewById(R.id.buttonNotificationListenerSettings);
+        mButtonNotificationListenerSettings.setVisibility(View.GONE);
+        mButtonNotificationListenerSettings.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                startActivityNotificationListenerSettings();
+            }
+        });
+
         mButtonProcessNotifications = (Button) findViewById(R.id.buttonProcessNotifications);
+        mButtonProcessNotifications.setVisibility(View.GONE);
         mButtonProcessNotifications.setOnClickListener(new OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-                mNotificationParserManager.refresh();
+                mNotificationParserManager.initializeActiveNotifications();
             }
         });
 
@@ -492,11 +493,11 @@ public class MainActivity
 
         if (mNotificationParserManager.isNotificationAccessSettingConfirmedNotEnabled())
         {
-            onNotificationAccessSettingDisabled(DisabledCause.ConfirmedNotEnabled, false);
+            onNotificationListenerNotConnected(NotConnectedReason.ConfirmedNotEnabled, false);
         }
-        else if (mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled())
+        else if (mNotificationParserManager.isNotificationListenerConnected())
         {
-            onNotificationAccessSettingConfirmedEnabled();
+            onNotificationListenerConnected();
         }
 
         textToSpeechAudioStreamTypeUpdate();
@@ -818,11 +819,12 @@ public class MainActivity
     {
     }
 
-    private void onNotificationAccessSettingConfirmedEnabled()
+    private void onNotificationListenerConnected()
     {
-        FooLog.i(TAG, "onNotificationAccessSettingConfirmedEnabled()");
+        FooLog.i(TAG, "onNotificationListenerConnected()");
 
         mButtonNotificationListenerSettings.setVisibility(View.GONE);
+        mButtonProcessNotifications.setVisibility(View.VISIBLE);
 
         FragmentManager fm = getSupportFragmentManager();
         DialogFragment dialogFragment = (DialogFragment) fm.findFragmentByTag(FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);
@@ -832,11 +834,12 @@ public class MainActivity
         }
     }
 
-    private boolean onNotificationAccessSettingDisabled(DisabledCause disabledCause, boolean showDialog)
+    private boolean onNotificationListenerNotConnected(NotConnectedReason reason, boolean showDialog)
     {
-        FooLog.w(TAG, "onNotificationAccessSettingDisabled(disabledCause=" + disabledCause +
+        FooLog.w(TAG, "onNotificationListenerNotConnected(reason=" + reason +
                       ", showDialog=" + showDialog + ')');
 
+        mButtonProcessNotifications.setVisibility(View.GONE);
         mButtonNotificationListenerSettings.setVisibility(View.VISIBLE);
 
         if (!showDialog)
@@ -844,8 +847,8 @@ public class MainActivity
             return false;
         }
 
-        String title = mAlfredManager.getNotificationAccessNotEnabledTitle(disabledCause);
-        String message = mAlfredManager.getNotificationAccessNotEnabledMessage(disabledCause);
+        String title = mAlfredManager.getNotificationListenerNotConnectedTitle(reason);
+        String message = mAlfredManager.getNotificationListenerNotConnectedMessage(reason);
 
         FragmentManager fm = getSupportFragmentManager();
         GenericPromptPositiveNegativeDialogFragment dialogFragment = (GenericPromptPositiveNegativeDialogFragment) fm

@@ -298,6 +298,8 @@ public class PandoraNotificationParser
 
         mLastIsCommercial = false;
 
+        mute(false, null);//, "un-muting commercial");
+
         //FooLog.v(TAG, prefix + " mLastIsPlaying == " + mLastIsPlaying);
         FooLog.v(TAG, prefix + " mLastIsPausedByUser == " + mLastIsPausedByUser);
 
@@ -310,8 +312,6 @@ public class PandoraNotificationParser
             FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
-
-        mute(false, null);//, "un-muting commercial");
 
         //mLastIsPlaying = isPlaying;
         mLastIsPausedByUser = isPausedByUser;

@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId 'com.swooby.alfred'
-        minSdkVersion 24
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName '1.0'
