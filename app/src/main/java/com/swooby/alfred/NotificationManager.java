@@ -246,7 +246,7 @@ public class NotificationManager
         {
             builder.setContentText(contentText);
         }
-        
+
         return notificationShow(requestCode, builder);
     }
 

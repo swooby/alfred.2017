@@ -101,8 +101,6 @@ public class SpotifyNotificationParser
         }
         boolean isPlaying = playbackStateState == PlaybackState.STATE_PLAYING;
 
-        textArtist = unknownIfNullOrEmpty(context, textArtist);
-        textTitle = unknownIfNullOrEmpty(context, textTitle);
 
         // @formatter:off
         // title == non-null commercial/advertisement/company name, artist == null/""
@@ -132,9 +130,15 @@ public class SpotifyNotificationParser
             return NotificationParseResult.ParsableIgnored;
         }
 
+        //
+        //
+        //
+
         mLastIsCommercial = false;
 
         mute(false, null);//"un-muting commercial");
+        textArtist = unknownIfNullOrEmpty(context, textArtist);
+        textTitle = unknownIfNullOrEmpty(context, textTitle);
 
         if (isPlaying == mLastIsPlaying &&
             Objects.equals(textArtist, mLastArtist) &&

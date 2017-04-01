@@ -195,6 +195,11 @@ public class TextToSpeechManager
         return true;
     }
 
+    public void clear()
+    {
+        mTextToSpeech.clear();
+    }
+
     //
     //
     //
@@ -249,13 +254,13 @@ public class TextToSpeechManager
         mTextToSpeech.speak(clear, builder, runAfter);
     }
 
-    public void silence(int durationInMs)
+    public void silence(int durationMillis)
     {
         if (!isEnabled())
         {
             return;
         }
 
-        mTextToSpeech.silence(durationInMs);
+        mTextToSpeech.silence(durationMillis);
     }
 }

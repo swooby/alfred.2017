@@ -265,10 +265,6 @@ public class PandoraNotificationParser
         CharSequence textStationOrAlbum = textViewStationOrAlbum.getText();
         FooLog.v(TAG, prefix + " textStationOrAlbum == " + FooString.quote(textStationOrAlbum));
 
-        textTitle = unknownIfNullOrEmpty(context, textTitle);
-        textArtist = unknownIfNullOrEmpty(context, textArtist);
-        textStationOrAlbum = unknownIfNullOrEmpty(context, textStationOrAlbum);
-
         //
         //
         //
@@ -299,6 +295,9 @@ public class PandoraNotificationParser
         mLastIsCommercial = false;
 
         mute(false, null);//, "un-muting commercial");
+        textTitle = unknownIfNullOrEmpty(context, textTitle);
+        textArtist = unknownIfNullOrEmpty(context, textArtist);
+        textStationOrAlbum = unknownIfNullOrEmpty(context, textStationOrAlbum);
 
         //FooLog.v(TAG, prefix + " mLastIsPlaying == " + mLastIsPlaying);
         FooLog.v(TAG, prefix + " mLastIsPausedByUser == " + mLastIsPausedByUser);

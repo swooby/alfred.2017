@@ -373,6 +373,8 @@ public class AlfredManager
     {
         FooLog.i(TAG, "onProfileEnabled(profileToken=" + FooString.quote(profileToken) + ')');
 
+        mTextToSpeechManager.clear();
+
         //
         // !!!!!!THIS IS WHERE THE REAL APP LOGIC ACTUALLY STARTS!!!!!!
         //
@@ -410,6 +412,8 @@ public class AlfredManager
 
         NotificationStatus notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
         notification(notificationStatus, "TBD text", "onProfileDisabled");
+
+        mTextToSpeechManager.clear();
 
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
