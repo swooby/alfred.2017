@@ -122,7 +122,7 @@ public class SpotifyNotificationParser
                 if (true)
                 {
                     //mediaController.setVolumeTo(...);
-                    mute(true, "attenuating " + getPackageAppSpokenName() + " commercial");
+                    attenuate(true, "attenuating " + getPackageAppSpokenName() + " commercial");
                 }
             }
 
@@ -136,7 +136,6 @@ public class SpotifyNotificationParser
 
         mLastIsCommercial = false;
 
-        mute(false, null);//"un-muting commercial");
         textArtist = unknownIfNullOrEmpty(context, textArtist);
         textTitle = unknownIfNullOrEmpty(context, textTitle);
 
@@ -147,6 +146,8 @@ public class SpotifyNotificationParser
             FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
+
+        attenuate(false, null);//"un-muting commercial");
 
         mLastIsPlaying = isPlaying;
         mLastArtist = textArtist;

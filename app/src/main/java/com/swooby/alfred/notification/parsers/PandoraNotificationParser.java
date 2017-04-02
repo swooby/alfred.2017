@@ -280,7 +280,7 @@ public class PandoraNotificationParser
                 // TODO:(pv) Make this a user option...
                 if (true)
                 {
-                    mute(true, "attenuating " + getPackageAppSpokenName() + " commercial");
+                    attenuate(true, "attenuating " + getPackageAppSpokenName() + " commercial");
                 }
             }
 
@@ -294,7 +294,6 @@ public class PandoraNotificationParser
 
         mLastIsCommercial = false;
 
-        mute(false, null);//, "un-muting commercial");
         textTitle = unknownIfNullOrEmpty(context, textTitle);
         textArtist = unknownIfNullOrEmpty(context, textArtist);
         textStationOrAlbum = unknownIfNullOrEmpty(context, textStationOrAlbum);
@@ -311,6 +310,8 @@ public class PandoraNotificationParser
             FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
+
+        attenuate(false, null);//, "un-muting commercial");
 
         //mLastIsPlaying = isPlaying;
         mLastIsPausedByUser = isPausedByUser;

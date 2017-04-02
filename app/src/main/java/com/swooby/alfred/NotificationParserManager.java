@@ -278,7 +278,7 @@ public class NotificationParserManager
     {
         if (!isEnabled())
         {
-            FooLog.w(TAG, "onNotificationPosted: isEnabled() == false; ignoring");
+            FooLog.v(TAG, "onNotificationPosted: isEnabled() == false; ignoring");
             return;
         }
 
@@ -315,7 +315,7 @@ public class NotificationParserManager
     {
         if (!isEnabled())
         {
-            FooLog.w(TAG, "onNotificationRemoved: isEnabled() == false; ignoring");
+            FooLog.v(TAG, "onNotificationRemoved: isEnabled() == false; ignoring");
             return;
         }
 

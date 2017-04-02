@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
+import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.swooby.alfred.TextToSpeechManager;
 
@@ -107,28 +108,27 @@ public abstract class AbstractMediaPlayerNotificiationParser
     }
 
     // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
-    protected void mute(boolean mute, String speechBeforeMute)
+    protected void attenuate(boolean attenuate, String speechBeforeMute)
     {
+        // This assumes Media is always playing on STREAM_MUSIC
         final int musicAudioStreamType = AudioManager.STREAM_MUSIC;
 
-        if (mute)
+        if (attenuate)
         {
             if (mLastStreamMusicVolume != -1)
             {
+                FooLog.w(TAG, "attenuate: mLastStreamMusicVolume != -1; ignoring");
                 return;
             }
 
-            TextToSpeechManager textToSpeechManager = getTextToSpeech();
-
-            int textToSpeechAudioStreamType = textToSpeechManager.getAudioStreamType();
-
             mLastStreamMusicVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
 
-            Runnable runAfter = new Runnable()
+            Runnable runAfterSpeechBeforeMute = new Runnable()
             {
                 @Override
                 public void run()
                 {
+                    FooLog.v(TAG, "attenuate: setStreamVolume(" + musicAudioStreamType + ", " + MUTE_VOLUME + ')');
                     mAudioManager.setStreamVolume(musicAudioStreamType, MUTE_VOLUME, 0);
                 }
             };
@@ -138,23 +138,30 @@ public abstract class AbstractMediaPlayerNotificiationParser
                 speechBeforeMute = getPackageAppSpokenName() + " attenuating";
             }
 
-            textToSpeechManager.speak(speechBeforeMute, runAfter);
+            TextToSpeechManager textToSpeechManager = getTextToSpeech();
+
+            int textToSpeechAudioStreamType = textToSpeechManager.getAudioStreamType();
+
+            textToSpeechManager.speak(speechBeforeMute, runAfterSpeechBeforeMute);
 
             if (textToSpeechAudioStreamType != musicAudioStreamType)
             {
-                runAfter.run();
+                runAfterSpeechBeforeMute.run();
             }
         }
         else
         {
             if (mLastStreamMusicVolume == -1)
             {
+                FooLog.w(TAG, "attenuate: mLastStreamMusicVolume == -1; ignoring");
                 return;
             }
 
             int audioStreamVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
             if (audioStreamVolume == MUTE_VOLUME)
             {
+                FooLog.v(TAG, "attenuate: setStreamVolume(" + musicAudioStreamType +
+                              ", " + mLastStreamMusicVolume + ')');
                 mAudioManager.setStreamVolume(musicAudioStreamType, mLastStreamMusicVolume, 0);
 
                 /*
