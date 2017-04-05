@@ -10,9 +10,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
-import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
-import com.swooby.alfred.TextToSpeechManager;
+import com.smartfoo.android.core.media.FooAudioFocusListener;
+import com.smartfoo.android.core.media.FooAudioFocusListener.FooAudioFocusListenerCallbacks;
 
 public abstract class AbstractMediaPlayerNotificiationParser
         extends AbstractNotificationParser
@@ -91,90 +91,53 @@ public abstract class AbstractMediaPlayerNotificiationParser
         return s + '(' + playbackState + ')';
     }
 
-    /**
-     * If we set volume to zero then many media players automatically pause
-     */
-    public static final int MUTE_VOLUME = 1;
-
-    protected final AudioManager mAudioManager;
-
-    protected int mLastStreamMusicVolume = -1;
+    private final FooAudioFocusListener mAudioFocusListener;
 
     protected AbstractMediaPlayerNotificiationParser(@NonNull String hashtag, @NonNull NotificationParserCallbacks callbacks)
     {
         super(hashtag, callbacks);
 
-        mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        mAudioFocusListener = FooAudioFocusListener.getInstance();
     }
 
-    // TODO:(pv) User option to always force un-muting, even if mLastVolume == -1, when the next track resumes?
-    protected void attenuate(boolean attenuate, String speechBeforeMute)
+    private final FooAudioFocusListenerCallbacks mAudioFocusListenerCallbacks = new FooAudioFocusListenerCallbacks()
     {
-        // This assumes Media is always playing on STREAM_MUSIC
-        final int musicAudioStreamType = AudioManager.STREAM_MUSIC;
-
-        if (attenuate)
+        @Override
+        public boolean onAudioFocusLost(FooAudioFocusListener audioFocusListener, int audioFocusStreamType, int audioFocusDurationHint, int focusChange)
         {
-            if (mLastStreamMusicVolume != -1)
-            {
-                FooLog.w(TAG, "attenuate: mLastStreamMusicVolume != -1; ignoring");
-                return;
-            }
-
-            mLastStreamMusicVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
-
-            Runnable runAfterSpeechBeforeMute = new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    FooLog.v(TAG, "attenuate: setStreamVolume(" + musicAudioStreamType + ", " + MUTE_VOLUME + ')');
-                    mAudioManager.setStreamVolume(musicAudioStreamType, MUTE_VOLUME, 0);
-                }
-            };
-
-            if (speechBeforeMute == null)
-            {
-                speechBeforeMute = getPackageAppSpokenName() + " attenuating";
-            }
-
-            TextToSpeechManager textToSpeechManager = getTextToSpeech();
-
-            int textToSpeechAudioStreamType = textToSpeechManager.getAudioStreamType();
-
-            textToSpeechManager.speak(speechBeforeMute, runAfterSpeechBeforeMute);
-
-            if (textToSpeechAudioStreamType != musicAudioStreamType)
-            {
-                runAfterSpeechBeforeMute.run();
-            }
+            audioFocusStart();
+            return true;
         }
-        else
+    };
+
+    private boolean mIsCommercialSpoken;
+
+    NotificationParseResult onCommercial(String prefix)
+    {
+        audioFocusStart();
+
+        if (!mIsCommercialSpoken)
         {
-            if (mLastStreamMusicVolume == -1)
-            {
-                FooLog.w(TAG, "attenuate: mLastStreamMusicVolume == -1; ignoring");
-                return;
-            }
+            mIsCommercialSpoken = true;
 
-            int audioStreamVolume = mAudioManager.getStreamVolume(musicAudioStreamType);
-            if (audioStreamVolume == MUTE_VOLUME)
-            {
-                FooLog.v(TAG, "attenuate: setStreamVolume(" + musicAudioStreamType +
-                              ", " + mLastStreamMusicVolume + ')');
-                mAudioManager.setStreamVolume(musicAudioStreamType, mLastStreamMusicVolume, 0);
-
-                /*
-                if (speech == null)
-                {
-                    speech = "restored";
-                }
-
-                mTextToSpeech.speak(mPackageAppSpokenName + ' ' + speech);
-                */
-            }
-
-            mLastStreamMusicVolume = -1;
+            getTextToSpeech().speak("attenuating " + getPackageAppSpokenName() + " commercial");
         }
+
+        FooLog.w(TAG, prefix + " onCommercial(...); return ParsableIgnored");
+        return NotificationParseResult.ParsableIgnored;
+    }
+
+    void onNonCommercial()
+    {
+        mIsCommercialSpoken = false;
+        mAudioFocusListener.audioFocusStop(mAudioFocusListenerCallbacks);
+    }
+
+    private boolean audioFocusStart()
+    {
+        return mAudioFocusListener.audioFocusStart(getContext(),
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK,
+                mAudioFocusListenerCallbacks);
     }
 }

@@ -323,6 +323,19 @@
 
             </TableRow>
 
+            <TableRow>
+
+                <Button
+                    android:id="@+id/buttonTextToSpeechClear"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_span="3"
+                    android:layout_weight="1"
+                    android:text="@string/clear_text_to_speech"
+                    />
+
+            </TableRow>
+
             <!--
             <TableRow>
 

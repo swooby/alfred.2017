@@ -137,7 +137,7 @@ public class GoogleHangoutsNotificationParser
             }
         }
 
-        // TODO:(pv) I think there is perhaps a better even less verbatim way to speak the notification info...
+        // TODO:(pv) I think there is perhaps a better even less verbatim way to speak the notification info…
 
         int count = textMessages.size();
         if (count == 0)

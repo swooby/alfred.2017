@@ -29,7 +29,6 @@ public class SpotifyNotificationParser
 {
     private static final String TAG = FooLog.TAG(SpotifyNotificationParser.class);
 
-    private boolean      mLastIsCommercial;
     private boolean      mLastIsPlaying;
     private CharSequence mLastArtist;
     private CharSequence mLastTitle;
@@ -101,7 +100,6 @@ public class SpotifyNotificationParser
         }
         boolean isPlaying = playbackStateState == PlaybackState.STATE_PLAYING;
 
-
         // @formatter:off
         // title == non-null commercial/advertisement/company name, artist == null/""
         boolean isCommercial = !FooString.isNullOrEmpty(textTitle) && FooString.isNullOrEmpty(textArtist);
@@ -112,29 +110,17 @@ public class SpotifyNotificationParser
         isCommercial &= actions.length < 4 || actions[3].actionIntent == null; // Next Track (action always present)
         isCommercial &= actions.length < 5 || actions[4].actionIntent == null; // Thumbs Up (action may be absent/null)
         // @formatter:on
+        FooLog.v(TAG, prefix + " isCommercial == " + isCommercial);
         if (isCommercial)
         {
-            if (!mLastIsCommercial)
-            {
-                mLastIsCommercial = true;
-
-                // TODO:(pv) Make this a user option...
-                if (true)
-                {
-                    //mediaController.setVolumeTo(...);
-                    attenuate(true, "attenuating " + getPackageAppSpokenName() + " commercial");
-                }
-            }
-
-            FooLog.w(TAG, prefix + " isCommercial == true; ParsableIgnored");
-            return NotificationParseResult.ParsableIgnored;
+            return onCommercial(prefix);
         }
 
-        //
-        //
-        //
+        onNonCommercial();
 
-        mLastIsCommercial = false;
+        //
+        //
+        //
 
         textArtist = unknownIfNullOrEmpty(context, textArtist);
         textTitle = unknownIfNullOrEmpty(context, textTitle);
@@ -146,8 +132,6 @@ public class SpotifyNotificationParser
             FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
             return NotificationParseResult.ParsableIgnored;
         }
-
-        attenuate(false, null);//"un-muting commercial");
 
         mLastIsPlaying = isPlaying;
         mLastArtist = textArtist;

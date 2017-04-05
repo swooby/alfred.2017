@@ -182,7 +182,7 @@ walkView: view=null
         FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder();
 
         //
-        // Account name...
+        // Account name…
         //
         if (androidSubText == null)
         {
@@ -192,7 +192,7 @@ walkView: view=null
         builder.appendSpeech(androidSubText.toString());
 
         //
-        // Notification type/style...
+        // Notification type/style…
         //
         Class notificationClass = null;
         if (androidTemplate != null)
@@ -214,7 +214,7 @@ walkView: view=null
         else if (notificationClass == InboxStyle.class)
         {
             //
-            // X New Messages...
+            // X New Messages…
             //
             if (androidTitle != null)
             {
@@ -222,7 +222,7 @@ walkView: view=null
             }
 
             //
-            // From + Subject...
+            // From + Subject…
             //
             if (androidTextLines != null)
             {

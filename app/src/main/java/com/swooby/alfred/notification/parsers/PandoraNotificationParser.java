@@ -47,10 +47,6 @@ public class PandoraNotificationParser
 {
     private static final String TAG = FooLog.TAG(PandoraNotificationParser.class);
 
-    // TODO:(pv) Make this nullable Boolean to better handle proper state at startup
-    //protected boolean mLastIsLoading;
-    //protected Boolean mLastIsPlaying;
-    private boolean      mLastIsCommercial;
     private Boolean      mLastIsPausedByUser;
     private CharSequence mLastArtist;
     private CharSequence mLastTitle;
@@ -132,7 +128,7 @@ public class PandoraNotificationParser
         FooLog.v(TAG, prefix + " ADVERTISEMENT_ARTIST == " + FooString.quote(ADVERTISEMENT_ARTIST));
 
         //
-        // Walk the views/actions...
+        // Walk the views/actions…
         //
 
         ViewWrappers bigContentViewWrappers = new ViewWrappers();
@@ -199,24 +195,12 @@ public class PandoraNotificationParser
         FooLog.v(TAG, prefix + " isPlayPauseImagePausedPlay == " + isPlayPauseImagePausedPlay);
 
         ImageView imageViewIcon = (ImageView) viewWrapperIcon.mView;
-        if (imageViewIcon == null)
-        {
-            FooLog.w(TAG, prefix + " imageViewIcon == null; Unparsable");
-            return NotificationParseResult.Unparsable;
-        }
-
         BitmapDrawable bitmapIcon = getImageBitmap(imageViewIcon);
         FooLog.v(TAG, prefix + " bitmapIcon == " + bitmapIcon);
-
         int iconVisibility = imageViewIcon.getVisibility();
         FooLog.v(TAG, prefix + " iconVisibility == " + FooViewUtils.viewVisibilityToString(iconVisibility));
 
         ProgressBar progressBarLoading = (ProgressBar) viewWrapperLoading.mView;
-        if (progressBarLoading == null)
-        {
-            FooLog.w(TAG, prefix + " progressBarLoading == null; Unparsable");
-            return NotificationParseResult.Unparsable;
-        }
         int loadingVisibility = progressBarLoading.getVisibility();
         FooLog.v(TAG, prefix + " loadingVisibility == " + FooViewUtils.viewVisibilityToString(loadingVisibility));
 
@@ -239,29 +223,14 @@ public class PandoraNotificationParser
         //FooLog.e(TAG, prefix + " isPlaying == " + isPlaying);
 
         TextView textViewTitle = (TextView) viewWrapperTitle.mView;
-        if (textViewTitle == null)
-        {
-            FooLog.w(TAG, prefix + " textViewTitle == null; Unparsable");
-            return NotificationParseResult.Unparsable;
-        }
         CharSequence textTitle = textViewTitle.getText();
         FooLog.v(TAG, prefix + " textTitle == " + FooString.quote(textTitle));
 
         TextView textViewArtist = (TextView) viewWrapperArtist.mView;
-        if (textViewArtist == null)
-        {
-            FooLog.w(TAG, prefix + " textViewArtist == null; Unparsable");
-            return NotificationParseResult.Unparsable;
-        }
         CharSequence textArtist = textViewArtist.getText();
         FooLog.v(TAG, prefix + " textArtist == " + FooString.quote(textArtist));
 
         TextView textViewStationOrAlbum = (TextView) viewWrapperStationOrAlbum.mView;
-        if (textViewStationOrAlbum == null)
-        {
-            FooLog.w(TAG, prefix + " textViewStationOrAlbum == null; Unparsable");
-            return NotificationParseResult.Unparsable;
-        }
         CharSequence textStationOrAlbum = textViewStationOrAlbum.getText();
         FooLog.v(TAG, prefix + " textStationOrAlbum == " + FooString.quote(textStationOrAlbum));
 
@@ -271,28 +240,17 @@ public class PandoraNotificationParser
 
         boolean isCommercial = ADVERTISEMENT_TITLE.equals(textTitle) &&
                                ADVERTISEMENT_ARTIST.equals(textArtist);
+        FooLog.v(TAG, prefix + " isCommercial == " + isCommercial);
         if (isCommercial)
         {
-            if (!mLastIsCommercial)
-            {
-                mLastIsCommercial = true;
-
-                // TODO:(pv) Make this a user option...
-                if (true)
-                {
-                    attenuate(true, "attenuating " + getPackageAppSpokenName() + " commercial");
-                }
-            }
-
-            FooLog.w(TAG, prefix + " isCommercial == true; ParsableIgnored");
-            return NotificationParseResult.ParsableIgnored;
+            return onCommercial(prefix);
         }
 
-        //
-        //
-        //
+        onNonCommercial();
 
-        mLastIsCommercial = false;
+        //
+        //
+        //
 
         textTitle = unknownIfNullOrEmpty(context, textTitle);
         textArtist = unknownIfNullOrEmpty(context, textArtist);
@@ -311,9 +269,6 @@ public class PandoraNotificationParser
             return NotificationParseResult.ParsableIgnored;
         }
 
-        attenuate(false, null);//, "un-muting commercial");
-
-        //mLastIsPlaying = isPlaying;
         mLastIsPausedByUser = isPausedByUser;
         mLastTitle = textTitle;
         mLastArtist = textArtist;

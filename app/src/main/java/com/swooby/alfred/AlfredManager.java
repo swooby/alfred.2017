@@ -288,7 +288,7 @@ public class AlfredManager
         /*
         if (!isRecognitionAvailable())
         {
-            // TODO:(pv) Better place for initialization and indication of failure...
+            // TODO:(pv) Better place for initialization and indication of failure…
             //speak(true, true, "Speech recognition is not available for this device.");
             //speak(true, true, "Goodbye.");
             return;
@@ -313,7 +313,7 @@ public class AlfredManager
         mListenerManager.attach(callbacks);
         if (callbacks.getActivity() != null)
         {
-            // TODO:(pv) Cancel any pending Toasts...
+            // TODO:(pv) Cancel any pending Toasts…
         }
     }
 
@@ -608,7 +608,7 @@ public class AlfredManager
     }
 
     //
-    //
+    // Screen…
     //
 
     private void onScreenOff()
@@ -667,7 +667,7 @@ public class AlfredManager
     }
 
     //
-    //
+    // Charging/Ports…
     //
 
     private void updateChargePortInfo()
@@ -678,8 +678,8 @@ public class AlfredManager
         }
     }
 
-    private Map<ChargePort, Long> mTimeChargingConnected    = new HashMap<>();
-    private Map<ChargePort, Long> mTimeChargingDisconnected = new HashMap<>();
+    private final Map<ChargePort, Long> mTimeChargingConnected    = new HashMap<>();
+    private final Map<ChargePort, Long> mTimeChargingDisconnected = new HashMap<>();
 
     private void onChargePortConnected(ChargePort chargePort)
     {

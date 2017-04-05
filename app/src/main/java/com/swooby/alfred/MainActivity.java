@@ -375,7 +375,7 @@ public class MainActivity
             menuItem.setVisible(isLoggingEnabled);
         }
 
-        //...
+        //…
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -399,7 +399,7 @@ public class MainActivity
                 }
                 break;
             //case R.id.action_settings:
-            //    // TODO:(pv) ...
+            //    // TODO:(pv) …
             //    return true;
             //case R.id.menu_refresh:
             //    refreshItemsFromTable();
@@ -864,7 +864,7 @@ public class MainActivity
 
         if (dialogFragment == null)
         {
-            // TODO:(pv) 3rd button to immediately reboot phone...
+            // TODO:(pv) 3rd button for option to immediately reboot phone…
 
             dialogFragment = GenericPromptPositiveNegativeDialogFragment.newInstance(title, message);
             dialogFragment.show(fm, FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED);

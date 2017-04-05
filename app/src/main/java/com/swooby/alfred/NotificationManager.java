@@ -38,7 +38,7 @@ public class NotificationManager
     @NonNull
     public static PendingIntent createPendingIntentMainActivity(@NonNull Context context, int requestCode)
     {
-        return FooNotification.createPendingIntent(context, requestCode, MainActivity.class);
+        return FooNotification.createPendingIntentForActivity(context, requestCode, MainActivity.class);
     }
 
     @NonNull
@@ -51,7 +51,7 @@ public class NotificationManager
     public static PendingIntent createPendingIntentNotificationListenerSettingsActivity(@NonNull Context context, int requestCode)
     {
         Intent intent = FooNotificationListenerManager.getIntentNotificationListenerSettings();
-        return FooNotification.createPendingIntent(context, requestCode, intent);
+        return FooNotification.createPendingIntentForActivity(context, requestCode, intent);
     }
 
     public static abstract class NotificationStatus

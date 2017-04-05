@@ -221,8 +221,10 @@ public class TextToSpeechManager
 
     public void speak(boolean clear, String text, Runnable runAfter)
     {
+        FooLog.v(TAG, "speak(clear=" + clear + ", text=" + FooString.quote(text) + ", runAfter=" + runAfter + ')');
         if (!isEnabled())
         {
+            FooLog.v(TAG, "speak: isEnabled() == false; ignoring");
             return;
         }
 
@@ -246,8 +248,10 @@ public class TextToSpeechManager
 
     public void speak(boolean clear, @NonNull FooTextToSpeechBuilder builder, Runnable runAfter)
     {
+        FooLog.v(TAG, "speak(clear=" + clear + ", builder=" + builder + ", runAfter=" + runAfter + ')');
         if (!isEnabled())
         {
+            FooLog.v(TAG, "speak: isEnabled() == false; ignoring");
             return;
         }
 
@@ -256,8 +260,10 @@ public class TextToSpeechManager
 
     public void silence(int durationMillis)
     {
+        FooLog.v(TAG, "silence(durationMillis=" + durationMillis + ')');
         if (!isEnabled())
         {
+            FooLog.v(TAG, "silence: isEnabled() == false; ignoring");
             return;
         }
 

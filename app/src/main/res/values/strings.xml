@@ -16,12 +16,13 @@
     -->
 
     <!-- MainActivity: May these ever be spoken? -->
-    <string name="enable_notification_access">Enable Notification Access</string>
     <string name="voice">Voice:</string>
     <string name="stream">Stream:</string>
     <string name="volume">Volume:</string>
     <string name="profile">Profile:</string>
+    <string name="enable_notification_access">Enable Notification Access</string>
     <string name="process_notifications">Process Notifications</string>
+    <string name="clear_text_to_speech">Clear Text To Speech</string>
 
     <!-- Profile names: May these ever be spoken? -->
     <string name="profile_disabled">Disabled</string>
