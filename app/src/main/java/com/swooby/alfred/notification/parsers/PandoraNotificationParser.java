@@ -278,9 +278,9 @@ public class PandoraNotificationParser
 
         FooLog.v(TAG, prefix + " mIsStillListeningPromptShowing == " + mIsStillListeningPromptShowing);
 
-        boolean isPausedByUser = isPlayPauseImagePausedPlay &&
-                                 loadingVisibility == View.GONE &&
-                                 bitmapIcon != null && iconVisibility == View.VISIBLE
+        boolean isPausedByUser = (isPlayPauseImagePausedPlay &&
+                                  loadingVisibility == View.GONE &&
+                                  bitmapIcon != null && iconVisibility == View.VISIBLE)
                                  || mIsStillListeningPromptShowing;
         FooLog.v(TAG, prefix + " isPausedByUser == " + isPausedByUser);
 
