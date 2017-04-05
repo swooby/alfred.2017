@@ -123,8 +123,8 @@ public abstract class AbstractMediaPlayerNotificiationParser
             getTextToSpeech().speak("attenuating " + getPackageAppSpokenName() + " commercial");
         }
 
-        FooLog.w(TAG, prefix + " onCommercial(...); return ParsableIgnored");
-        return NotificationParseResult.ParsableIgnored;
+        FooLog.w(TAG, prefix + " onCommercial(...); return ParsedIgnored");
+        return NotificationParseResult.ParsedIgnored;
     }
 
     void onNonCommercial()

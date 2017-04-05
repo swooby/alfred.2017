@@ -95,8 +95,8 @@ public class SpotifyNotificationParser
         if (playbackStateState != PlaybackState.STATE_PAUSED &&
             playbackStateState != PlaybackState.STATE_PLAYING)
         {
-            FooLog.w(TAG, prefix + " playbackStateState != (PAUSED || PLAYING); Ignored");
-            return NotificationParseResult.ParsableIgnored;
+            FooLog.w(TAG, prefix + " playbackStateState != (PAUSED || PLAYING); ParsedIgnored");
+            return NotificationParseResult.ParsedIgnored;
         }
         boolean isPlaying = playbackStateState == PlaybackState.STATE_PLAYING;
 
@@ -129,8 +129,8 @@ public class SpotifyNotificationParser
             Objects.equals(textArtist, mLastArtist) &&
             Objects.equals(textTitle, mLastTitle))
         {
-            FooLog.w(TAG, prefix + " data unchanged; ParsableIgnored");
-            return NotificationParseResult.ParsableIgnored;
+            FooLog.w(TAG, prefix + " data unchanged; ParsedIgnored");
+            return NotificationParseResult.ParsedIgnored;
         }
 
         mLastIsPlaying = isPlaying;
@@ -158,6 +158,6 @@ public class SpotifyNotificationParser
 
         getTextToSpeech().speak(builder);
 
-        return NotificationParseResult.ParsableHandled;
+        return NotificationParseResult.ParsedHandled;
     }
 }

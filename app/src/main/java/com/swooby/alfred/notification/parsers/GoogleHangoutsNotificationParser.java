@@ -161,7 +161,7 @@ public class GoogleHangoutsNotificationParser
 
         getTextToSpeech().speak(builder);
 
-        return NotificationParseResult.ParsableHandled;
+        return NotificationParseResult.ParsedHandled;
     }
 
     @Override

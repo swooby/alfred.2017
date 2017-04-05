@@ -209,7 +209,7 @@ walkView: view=null
 
         if (notificationClass == BigTextStyle.class)
         {
-            return NotificationParseResult.ParsableIgnored;
+            return NotificationParseResult.ParsedIgnored;
         }
         else if (notificationClass == InboxStyle.class)
         {
@@ -262,6 +262,6 @@ walkView: view=null
 
         getTextToSpeech().speak(builder);
 
-        return NotificationParseResult.ParsableHandled;
+        return NotificationParseResult.ParsedHandled;
     }
 }

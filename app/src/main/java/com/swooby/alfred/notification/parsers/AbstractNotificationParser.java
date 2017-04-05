@@ -158,7 +158,7 @@ public abstract class AbstractNotificationParser
 
         if (textToSpeechManager == null)
         {
-            return NotificationParseResult.ParsableIgnored;
+            return NotificationParseResult.ParsedIgnored;
         }
 
         if (builder.getNumberOfParts() == 1)
@@ -201,11 +201,12 @@ public abstract class AbstractNotificationParser
 
     public enum NotificationParseResult
     {
+        UnparsedIgnored,
         DefaultWithTickerText,
         DefaultWithoutTickerText,
         Unparsable,
-        ParsableIgnored,
-        ParsableHandled,
+        ParsedIgnored,
+        ParsedHandled,
     }
 
     public interface NotificationParserCallbacks

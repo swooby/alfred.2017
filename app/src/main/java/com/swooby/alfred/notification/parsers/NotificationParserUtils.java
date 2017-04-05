@@ -25,6 +25,7 @@ import android.widget.TextView;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.view.FooViewUtils;
 import com.swooby.alfred.R;
@@ -48,6 +49,20 @@ public class NotificationParserUtils
     public static String toVerboseString(Integer value)
     {
         return value == null ? "null" : Integer.toString(value) + "(0x" + Integer.toHexString(value) + ')';
+    }
+
+    public static Resources getResourcesForApplication(@NonNull Context context, @NonNullNonEmpty String appPackageName)
+    {
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+        FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(appPackageName, "appPackageName");
+        try
+        {
+            return context.getPackageManager().getResourcesForApplication(appPackageName);
+        }
+        catch (NameNotFoundException e)
+        {
+            return null;
+        }
     }
 
     public static String getPackageName(StatusBarNotification sbn)

@@ -299,14 +299,15 @@ public class NotificationParserManager
 
         switch (result)
         {
+            case UnparsedIgnored:
             case DefaultWithTickerText:
             case DefaultWithoutTickerText:
                 break;
             case Unparsable:
                 FooLog.w(TAG, "onNotificationPosted: Unparsable StatusBarNotification");
                 break;
-            case ParsableHandled:
-            case ParsableIgnored:
+            case ParsedHandled:
+            case ParsedIgnored:
                 break;
         }
     }

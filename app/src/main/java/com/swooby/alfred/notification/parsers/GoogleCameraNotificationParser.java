@@ -61,6 +61,6 @@ public class GoogleCameraNotificationParser
 */
         super.onNotificationPosted(sbn);
 
-        return NotificationParseResult.ParsableIgnored;
+        return NotificationParseResult.ParsedIgnored;
     }
 }

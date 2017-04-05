@@ -62,6 +62,6 @@ public class GoogleMyGlassNotificationParser
 
         getTextToSpeech().speak(builder);
 
-        return NotificationParseResult.ParsableHandled;
+        return NotificationParseResult.ParsedHandled;
     }
 }

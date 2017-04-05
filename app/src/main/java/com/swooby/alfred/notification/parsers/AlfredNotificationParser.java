@@ -30,6 +30,6 @@ public class AlfredNotificationParser
     @Override
     public NotificationParseResult onNotificationPosted(StatusBarNotification sbn)
     {
-        return NotificationParseResult.ParsableIgnored;
+        return NotificationParseResult.UnparsedIgnored;
     }
 }

@@ -25,6 +25,6 @@ public class DownloadManagerNotificationParser
         //
         super.onNotificationPosted(sbn);
 
-        return NotificationParseResult.ParsableIgnored;
+        return NotificationParseResult.ParsedIgnored;
     }
 }

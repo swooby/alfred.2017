@@ -129,7 +129,7 @@ public class NotificationManager
         @NonNull
         private static String getDefaultText(@NonNull Context context)
         {
-            return context.getString(R.string.alfred_A_colon_B, context.getString(R.string.alfred_app_name), context.getString(R.string.alfred_running));
+            return context.getString(R.string.alfred_running);
         }
 
         private static Bundle DEFAULT_EXTRAS;
