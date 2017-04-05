@@ -258,7 +258,10 @@ public class NotificationParserManager
         }
         mListenerManager.endTraversing();
 
-        initializeActiveNotifications();
+        if (!handled)
+        {
+            initializeActiveNotifications();
+        }
 
         return true;
     }
