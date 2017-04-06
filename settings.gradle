@@ -18,4 +18,9 @@ if (hasProperty('LOCAL_DEVELOPMENT_BUILD') && getProperty('LOCAL_DEVELOPMENT_BUI
     project(':smartfoo-android-lib-core').projectDir = new File('../../SmartFoo/smartfoo/android/smartfoo-android-lib-core/')
 }
 
+/*
+include ':audiofocusthief'
+project(':audiofocusthief').projectDir = new File('../../SmartFoo/smartfoo/android/audiofocusthief/')
+*/
+
 include ':app'
