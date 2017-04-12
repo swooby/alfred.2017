@@ -7,7 +7,8 @@
 # TODO:(pv) Upload APK to GitHub
 # TODO:(pv) Upload mapping.txt to Firebase [and Google Play?]
 
-sudo: false
+#sudo: false
+sudo: required
 
 before_install:
   # Per: https://docs.travis-ci.com/user/encrypting-files/#Encrypting-multiple-files
@@ -49,8 +50,8 @@ android:
 
 script:
   - '[ "${TRAVIS_PULL_REQUEST}" == "false" ] && ./gradlew assembleRelease || ./gradlew assembleDebug'
-  - apt-get install python-openssl
-  - pip install google-api-python-client
+  - sudo apt-get install python-openssl
+  - sudo pip install google-api-python-client
   - python ci/google_play_upload_apk.py --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
 
 before_cache:
