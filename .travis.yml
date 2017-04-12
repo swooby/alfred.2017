@@ -3,6 +3,8 @@
 # Swooby Alfred
 #
 
+# TODO:(pv) Trigger build when upstream projects (ex: SmartFoo) change
+
 #sudo: false
 
 before_install:
