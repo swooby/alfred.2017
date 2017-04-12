@@ -630,6 +630,17 @@ public class AlfredManager
         return getString(resId, appName);
     }
 
+    private void onNotificationParsed(@NonNull AbstractNotificationParser parser)
+    {
+        if (parser instanceof AlfredNotificationParser)
+        {
+            onAlfredNotificationParsed((AlfredNotificationParser) parser);
+        }
+    }
+
+    private void onAlfredNotificationParsed(AlfredNotificationParser parser)
+    {
+    }
     //
     //
     //
