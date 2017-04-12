@@ -4,6 +4,13 @@
 (answer: probably because he has billions of dollars and hundreds of
  assistants.)
 
+### 2017/04/06:
+
+Alfred is stable and functional, but I am not comfortable releasing him
+until I finish code to disable him while in a phone call. This is a
+blocking issue that prevents the app from being useful in the
+real-world.
+
 ### 2017/03/31:
 
 I've been working fairly solid on this project since early March. A lot

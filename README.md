@@ -52,7 +52,6 @@ environment might find this app useful.
 
 ### M2:
 * Offline Storage (Firebase?)
-* Phone Call Listener
 * Location Listener
 * Bluetooth Headset Listener
 * Wifi/Cellular Data Listener
@@ -66,6 +65,7 @@ environment might find this app useful.
 * Notification Parsers:
   * Pandora
   * Spotify
+* PHONE CALL LISTENER AND FORCE DISABLED WHILE OFFHOOK
 * Release to store
 
 ### Unscheduled:

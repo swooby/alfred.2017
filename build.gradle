@@ -16,7 +16,7 @@ buildscript {
          *  http://developer.android.com/tools/revisions/gradle-plugin.html
          *  http://tools.android.com/tech-docs/new-build-system
          */
-        classpath 'com.android.tools.build:gradle:2.3.0' // last checked 2017/03/14
+        classpath 'com.android.tools.build:gradle:2.3.1' // last checked 2017/03/14
 
         //classpath 'me.tatarka:gradle-retrolambda:3.2.5'
         //retrolambdaConfig 'net.orfjackal.retrolambda:retrolambda:+'
@@ -85,6 +85,22 @@ def getIsLocalDevelopmentBuild() {
     return isLocalDevelopmentBuild
 }
 
+/**
+ * Uses project properties to determine if the build should be signed. A project with non-null KEY_ALIAS, KEY_PASSWORD, KEYSTORE, and KEYSTORE_PASSWORD properties is considered a signed build.
+ *
+ * @return true if the build should be signed, otherwise false
+ */
+def getIsSignedBuild() {
+    def hasKeyStore = project.hasProperty('KEYSTORE')
+    def hasKeyStorePassword = project.hasProperty('KEYSTORE_PASSWORD')
+    def hasKeyAlias = project.hasProperty('KEY_ALIAS')
+    def hasKeyPassword = project.hasProperty('KEY_PASSWORD')
+    def isSignedBuild = (hasKeyAlias && hasKeyPassword && hasKeyStore && hasKeyStorePassword)
+    println 'getIsSignedBuild: isSignedBuild=' + isSignedBuild
+    return isSignedBuild
+}
+
 ext {
     getIsLocalDevelopmentBuild = this.&getIsLocalDevelopmentBuild
+    getIsSignedBuild = this.&getIsSignedBuild
 }

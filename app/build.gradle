@@ -20,8 +20,22 @@ android {
         versionName '1.0'
     }
 
+    if (getIsSignedBuild()) {
+        signingConfigs {
+            release {
+                storeFile file(project.KEYSTORE)
+                storePassword project.KEYSTORE_PASSWORD
+                keyAlias project.KEY_ALIAS
+                keyPassword project.KEY_PASSWORD
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (getIsSignedBuild()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -39,7 +53,6 @@ android {
     }
 
     dexOptions {
-        javaMaxHeapSize "2g"
     }
 }
 
