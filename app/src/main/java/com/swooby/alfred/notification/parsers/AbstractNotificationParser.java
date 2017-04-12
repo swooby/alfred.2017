@@ -47,8 +47,8 @@ public abstract class AbstractNotificationParser
      * @return NotificationParseResult
      */
     public static NotificationParseResult defaultOnNotificationPosted(
-            Context context,
-            StatusBarNotification sbn,
+            @NonNull Context context,
+            @NonNull StatusBarNotification sbn,
             TextToSpeechManager textToSpeechManager,
             String packageAppSpokenName)
     {
@@ -65,13 +65,6 @@ public abstract class AbstractNotificationParser
         }
         FooLog.v(TAG, "defaultOnNotificationPosted: packageAppSpokenName=" + FooString.quote(packageAppSpokenName));
         FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(packageAppSpokenName, "packageAppSpokenName");
-
-        //String groupKey = sbn.getGroupKey();
-        //String key = sbn.getKey();
-        //UserHandle user = sbn.getUser();
-        //long postTime = sbn.getPostTime();
-        //int id = sbn.getId();
-        //String tag = sbn.getTag();
 
         Notification notification = NotificationParserUtils.getNotification(sbn);
         FooLog.v(TAG, "defaultOnNotificationPosted: notification=" + notification);

@@ -17,13 +17,6 @@ import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getActions;
-import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getAndroidText;
-import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getAndroidTitle;
-import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getCompactActions;
-import static com.swooby.alfred.notification.parsers.NotificationParserUtils.getExtras;
-import static com.swooby.alfred.notification.parsers.NotificationParserUtils.unknownIfNullOrEmpty;
-
 public class SpotifyNotificationParser
         extends AbstractMediaPlayerNotificiationParser
 {
@@ -55,7 +48,7 @@ public class SpotifyNotificationParser
 
         final String prefix = hashtag("onNotificationPosted");
 
-        Bundle extras = getExtras(sbn);
+        Bundle extras = NotificationParserUtils.getExtras(sbn);
         FooLog.v(TAG, prefix + " extras=" + FooPlatformUtils.toString(extras));
         if (extras == null)
         {
@@ -63,9 +56,9 @@ public class SpotifyNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        CharSequence textTitle = getAndroidTitle(extras);
+        CharSequence textTitle = NotificationParserUtils.getAndroidTitle(extras);
         FooLog.v(TAG, prefix + " textTitle=" + FooString.quote(textTitle));
-        CharSequence textArtist = getAndroidText(extras);
+        CharSequence textArtist = NotificationParserUtils.getAndroidText(extras);
         FooLog.v(TAG, prefix + " textArtist=" + FooString.quote(textArtist));
 
         Context context = getContext();
@@ -78,9 +71,9 @@ public class SpotifyNotificationParser
             return NotificationParseResult.Unparsable;
         }
 
-        Action[] actions = getActions(sbn);
+        Action[] actions = NotificationParserUtils.getActions(sbn);
         FooLog.v(TAG, prefix + " actions=" + Arrays.toString(actions));
-        int[] compactActions = getCompactActions(extras);
+        int[] compactActions = NotificationParserUtils.getCompactActions(extras);
         FooLog.v(TAG, prefix + " compactActions=" + Arrays.toString(compactActions));
 
         PlaybackState playbackState = mediaController.getPlaybackState();
@@ -122,8 +115,8 @@ public class SpotifyNotificationParser
         //
         //
 
-        textArtist = unknownIfNullOrEmpty(context, textArtist);
-        textTitle = unknownIfNullOrEmpty(context, textTitle);
+        textArtist = NotificationParserUtils.unknownIfNullOrEmpty(context, textArtist);
+        textTitle = NotificationParserUtils.unknownIfNullOrEmpty(context, textTitle);
 
         if (isPlaying == mLastIsPlaying &&
             Objects.equals(textArtist, mLastArtist) &&

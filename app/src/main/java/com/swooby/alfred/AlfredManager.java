@@ -11,7 +11,16 @@ import android.support.annotation.StringRes;
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
+import com.smartfoo.android.core.collections.FooLongSparseArray;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
+import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
+import com.smartfoo.android.core.media.FooAudioUtils;
+import com.smartfoo.android.core.network.FooCellularStateListener;
+import com.smartfoo.android.core.network.FooCellularStateListener.FooCellularHookStateCallbacks;
+import com.smartfoo.android.core.network.FooDataConnectionListener;
+import com.smartfoo.android.core.network.FooDataConnectionListener.FooDataConnectionInfo;
+import com.smartfoo.android.core.network.FooDataConnectionListener.FooDataConnectionListenerCallbacks;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
 import com.smartfoo.android.core.platform.FooChargePortListener;
 import com.smartfoo.android.core.platform.FooChargePortListener.ChargePort;
@@ -55,17 +64,24 @@ public class AlfredManager
         void onProfileEnabled(String profileToken);
 
         void onProfileDisabled(String profileToken);
+
+        void onTextToSpeechAudioStreamVolumeChanged(int audioStreamType, int volume);
     }
 
     private final Context                                    mApplicationContext;
     private final FooHandler                                 mHandler;
     private final AppPreferences                             mAppPreferences;
-    private final NotificationManager                        mNotificationManager;
     private final FooListenerManager<AlfredManagerCallbacks> mListenerManager;
+    private final NotificationManager                        mNotificationManager;
     private final TextToSpeechManager                        mTextToSpeechManager;
     private final NotificationParserManager                  mNotificationParserManager;
     private final FooScreenListener                          mScreenListener;
     private final FooChargePortListener                      mChargePortListener;
+    private final FooCellularStateListener                   mCellularStateListener;
+    private final FooCellularHookStateCallbacks              mCellularHookStateCallbacks;
+    private final FooDataConnectionListener                  mDataConnectionListener;
+    private final FooDataConnectionListenerCallbacks         mDataConnectionListenerCallbacks;
+    private final FooAudioStreamVolumeObserver               mAudioStreamVolumeObserver;
     private final ProfileManager                             mProfileManager;
 
     private boolean mIsStarted;
@@ -85,8 +101,8 @@ public class AlfredManager
         //
         // Create Managers/etc
         //
-        mNotificationManager = new NotificationManager(mApplicationContext);
         mListenerManager = new FooListenerManager<>();
+        mNotificationManager = new NotificationManager(mApplicationContext);
         mTextToSpeechManager = new TextToSpeechManager(mApplicationContext, new TextToSpeechManagerConfiguration()
         {
             @Override
@@ -108,15 +124,15 @@ public class AlfredManager
             }
 
             @Override
-            public boolean isEnabled()
+            public boolean isTextToSpeechEnabled()
             {
-                return AlfredManager.this.isProfileEnabled();
+                return AlfredManager.this.isTextToSpeechEnabled();
             }
         });
         mNotificationParserManager = new NotificationParserManager(mApplicationContext, new NotificationParserManagerConfiguration()
         {
             @Override
-            public boolean isEnabled()
+            public boolean isNotificationParserEnabled()
             {
                 return AlfredManager.this.isProfileEnabled();
             }
@@ -130,6 +146,39 @@ public class AlfredManager
         });
         mScreenListener = new FooScreenListener(mApplicationContext);
         mChargePortListener = new FooChargePortListener(mApplicationContext);
+
+        mCellularStateListener = new FooCellularStateListener(mApplicationContext);
+        mCellularHookStateCallbacks = new FooCellularHookStateCallbacks()
+        {
+            @Override
+            public void onCellularOffHook()
+            {
+                AlfredManager.this.onCellularOffHook();
+            }
+
+            @Override
+            public void onCellularOnHook()
+            {
+                AlfredManager.this.onCellularOnHook();
+            }
+        };
+        mDataConnectionListener = new FooDataConnectionListener(mApplicationContext);
+        mDataConnectionListenerCallbacks = new FooDataConnectionListenerCallbacks()
+        {
+            @Override
+            public void onDataConnected(FooDataConnectionInfo dataConnectionInfo)
+            {
+                AlfredManager.this.onDataConnected(dataConnectionInfo);
+            }
+
+            @Override
+            public void onDataDisconnected(FooDataConnectionInfo dataConnectionInfo)
+            {
+                AlfredManager.this.onDataDisconnected(dataConnectionInfo);
+            }
+        };
+        mAudioStreamVolumeObserver = new FooAudioStreamVolumeObserver(mApplicationContext);
+
         mProfileManager = new ProfileManager(mApplicationContext, new ProfileManagerConfiguration()
         {
             @Override
@@ -252,10 +301,14 @@ public class AlfredManager
                 AlfredManager.this.onChargePortDisconnected(chargePort);
             }
         });
+        mCellularStateListener.start(mCellularHookStateCallbacks, null);
+        mDataConnectionListener.start(mDataConnectionListenerCallbacks);
+        for (int audioStreamType : FooAudioUtils.getAudioStreamTypes())
+        {
+            volumeObserverStart(audioStreamType);
+        }
         // TODO:(pv) Phone doze listener
-        // TODO:(pv) Phone wifi listener
-        // TODO:(pv) Phone cellular listener
-        // TODO:(pv) etc...
+        // TODO:(pv) etc…
         mProfileManager.attach(new ProfileManagerCallbacks()
         {
             @Override
@@ -328,6 +381,11 @@ public class AlfredManager
         return mProfileManager.isEnabled();
     }
 
+    private boolean isTextToSpeechEnabled()
+    {
+        return isProfileEnabled() && mCellularStateListener.isOnHook();
+    }
+
     public boolean isHeadless()
     {
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
@@ -339,10 +397,6 @@ public class AlfredManager
         }
         mListenerManager.endTraversing();
         return true;
-    }
-
-    private void onNotificationParsed(@NonNull AbstractNotificationParser parser)
-    {
     }
 
     private void notification(@NonNull NotificationStatus notificationStatus,
@@ -731,5 +785,122 @@ public class AlfredManager
             speech = getString(R.string.alfred_X_disconnected, chargePortName);
         }
         mTextToSpeechManager.speak(speech);
+    }
+
+    //
+    // Data Connection…
+    //
+
+    private void updateDataConnectionInfo()
+    {
+        FooDataConnectionInfo dataConnectionInfo = mDataConnectionListener.getDataConnectionInfo();
+        if (dataConnectionInfo.isConnected())
+        {
+            onDataConnected(dataConnectionInfo);
+        }
+        else
+        {
+            onDataDisconnected(dataConnectionInfo);
+        }
+    }
+
+    private void onCellularOffHook()
+    {
+        mTextToSpeechManager.speak("Phone Call Started");
+    }
+
+    private void onCellularOnHook()
+    {
+        mTextToSpeechManager.speak("Phone Call Ended");
+    }
+
+    private final FooLongSparseArray<Long> mTimeDataConnected    = new FooLongSparseArray<>();
+    private final FooLongSparseArray<Long> mTimeDataDisconnected = new FooLongSparseArray<>();
+
+    private void onDataConnected(FooDataConnectionInfo dataConnectionInfo)
+    {
+        FooLog.i(TAG, "onDataConnected(dataConnectionInfo=" + dataConnectionInfo + ')');
+
+        long now = System.currentTimeMillis();
+
+        int dataConnectionType = dataConnectionInfo.getType();
+
+        mTimeDataConnected.put(dataConnectionType, now);
+
+        String speech;
+        String dataConnectionTypeName = getString(dataConnectionInfo.getNetworkTypeResourceId(BuildConfig.DEBUG));
+        //FooLog.i(TAG, "onDataConnected: dataConnectionTypeName == " + FooString.quote(dataConnectionTypeName));
+        Long timeDataDisconnectedMs = mTimeDataDisconnected.remove(dataConnectionType);
+        if (timeDataDisconnectedMs != null)
+        {
+            long elapsedMs = now - timeDataDisconnectedMs;
+            speech = dataConnectionTypeName + " connected after being disconnected for " +
+                     FooString.getTimeDurationString(mApplicationContext, elapsedMs, TimeUnit.SECONDS);
+        }
+        else
+        {
+            speech = dataConnectionTypeName + " connected";
+        }
+        mTextToSpeechManager.speak(speech);
+    }
+
+    private void onDataDisconnected(FooDataConnectionInfo dataConnectionInfo)
+    {
+        FooLog.i(TAG, "onDataDisconnected(dataConnectionInfo=" + dataConnectionInfo + ')');
+
+        long now = System.currentTimeMillis();
+
+        int dataConnectionType = dataConnectionInfo.getType();
+
+        mTimeDataDisconnected.put(dataConnectionType, now);
+
+        String speech;
+        String dataConnectionTypeName = getString(dataConnectionInfo.getNetworkTypeResourceId(BuildConfig.DEBUG));
+        //FooLog.i(TAG, "onDataDisconnected: dataConnectionTypeName == " + FooString.quote(dataConnectionTypeName));
+        Long timeDataConnectedMs = mTimeDataConnected.remove(dataConnectionType);
+        if (timeDataConnectedMs != null)
+        {
+            long elapsedMs = now - timeDataConnectedMs;
+            speech = dataConnectionTypeName + " disconnected after being connected for " +
+                     FooString.getTimeDurationString(mApplicationContext, elapsedMs, TimeUnit.SECONDS);
+        }
+        else
+        {
+            speech = dataConnectionTypeName + " disconnected";
+        }
+        mTextToSpeechManager.speak(speech);
+    }
+
+    //
+    // Volume (candidate for a dedicated class)
+    //
+
+    private void volumeObserverStart(int audioStreamType)
+    {
+        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedListener()
+        {
+            @Override
+            public void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
+            {
+                AlfredManager.this.onAudioStreamVolumeChanged(audioStreamType, volume, volumeMax, volumePercent);
+            }
+        });
+    }
+
+    private void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
+    {
+        String audioStreamTypeName = FooAudioUtils.audioStreamTypeToString(mApplicationContext, audioStreamType);
+
+        String text = getString(R.string.alfred_X_volume_Y_percent, audioStreamTypeName, volumePercent);
+        mTextToSpeechManager.speak(text);
+
+        if (audioStreamType == mTextToSpeechManager.getAudioStreamType())
+        {
+            for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
+            {
+                callbacks.onTextToSpeechAudioStreamVolumeChanged(audioStreamType, volume);
+            }
+            mListenerManager.endTraversing();
+        }
     }
 }

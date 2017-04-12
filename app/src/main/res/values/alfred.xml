@@ -55,4 +55,7 @@
     </plurals>
     <string name="alfred_X_says">%1$s says</string>
 
+    <string name="alfred_X_volume_Y_of_Z">%1$s Volume %2$s of %3$s</string>
+    <string name="alfred_X_volume_Y_percent">%1$s Volume %2$d percent</string>
+
 </resources>

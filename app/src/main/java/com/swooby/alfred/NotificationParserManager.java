@@ -2,6 +2,7 @@ package com.swooby.alfred;
 
 import android.app.Notification;
 import android.content.Context;
+import android.os.UserHandle;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 
@@ -39,7 +40,7 @@ public class NotificationParserManager
 
     public interface NotificationParserManagerConfiguration
     {
-        boolean isEnabled();
+        boolean isNotificationParserEnabled();
 
         @NonNull
         TextToSpeechManager getTextToSpeech();
@@ -141,7 +142,7 @@ public class NotificationParserManager
 
     private boolean isEnabled()
     {
-        return mConfiguration.isEnabled();
+        return mConfiguration.isNotificationParserEnabled();
     }
 
     public boolean isInitialized()

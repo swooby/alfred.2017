@@ -30,9 +30,4 @@
     <string name="profile_headphones_only">Headphones Only</string>
     <string name="profile_always_on">Always On</string>
 
-    <!-- Audio Stream names: May these ever be spoken? -->
-    <string name="audio_stream_notification">Notification</string>
-    <string name="audio_stream_media">Media</string>
-    <string name="audio_stream_alarm">Alarm</string>
-
 </resources>

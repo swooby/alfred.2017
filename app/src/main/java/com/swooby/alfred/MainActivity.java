@@ -39,7 +39,6 @@ import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment
 import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment.GenericPromptPositiveNegativeDialogFragmentCallbacks;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
-import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
@@ -91,6 +90,12 @@ public class MainActivity
         @Override
         public void onProfileDisabled(String profileToken)
         {
+        }
+
+        @Override
+        public void onTextToSpeechAudioStreamVolumeChanged(int audioStreamType, int volume)
+        {
+            MainActivity.this.onTextToSpeechAudioStreamVolumeChanged(audioStreamType, volume, true, false);
         }
     };
 
@@ -516,7 +521,6 @@ public class MainActivity
         mAlfredManager.detach(mMainApplicationCallbacks);
         mTextToSpeechManager.detach(mTextToSpeechManagerCallbacks);
 
-        volumeObserverStop();
 
         FooLog.v(TAG, "-onPause()");
     }
@@ -583,7 +587,6 @@ public class MainActivity
         int volume = FooAudioUtils.getVolumeAbsolute(mAudioManager, textToSpeechAudioStreamType);
         onTextToSpeechAudioStreamVolumeChanged(textToSpeechAudioStreamType, volume, true, false);
 
-        volumeObserverStart(textToSpeechAudioStreamType);
     }
 
     private void onTextToSpeechAudioStreamVolumeChanged(int volume, boolean updateSeekbar, boolean updateStreamVolume)
@@ -605,30 +608,6 @@ public class MainActivity
         {
             mAudioManager.setStreamVolume(audioStreamType, volume, 0);
         }
-    }
-
-    private void volumeObserverStop()
-    {
-        if (mAudioStreamVolumeObserver != null)
-        {
-            mAudioStreamVolumeObserver.stop();
-            mAudioStreamVolumeObserver = null;
-        }
-    }
-
-    private void volumeObserverStart(int audioStreamType)
-    {
-        volumeObserverStop();
-
-        mAudioStreamVolumeObserver = new FooAudioStreamVolumeObserver(this);
-        mAudioStreamVolumeObserver.start(audioStreamType, new OnAudioStreamVolumeChangedListener()
-        {
-            @Override
-            public void onAudioStreamVolumeChanged(int audioStreamType, int volume)
-            {
-                onTextToSpeechAudioStreamVolumeChanged(audioStreamType, volume, true, false);
-            }
-        });
     }
 
     private void profilesUpdate()

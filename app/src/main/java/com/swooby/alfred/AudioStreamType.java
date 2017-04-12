@@ -12,7 +12,7 @@ public class AudioStreamType
 {
     private static ArrayList<AudioStreamType> sTypes;
 
-    public static final ArrayList<AudioStreamType> getTypes(@NonNull Context context)
+    public static ArrayList<AudioStreamType> getTypes(@NonNull Context context)
     {
         if (sTypes == null)
         {

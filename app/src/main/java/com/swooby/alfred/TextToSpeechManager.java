@@ -32,7 +32,7 @@ public class TextToSpeechManager
 
         int getAudioStreamType();
 
-        boolean isEnabled();
+        boolean isTextToSpeechEnabled();
     }
 
     public static class TextToSpeechManagerCallbacks
@@ -92,7 +92,7 @@ public class TextToSpeechManager
 
     public boolean isEnabled()
     {
-        return mConfiguration.isEnabled();
+        return mConfiguration.isTextToSpeechEnabled();
     }
 
     public Set<Voice> getVoices()
