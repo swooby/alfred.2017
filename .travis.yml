@@ -45,11 +45,9 @@ android:
 
 script:
   - '[ "${TRAVIS_PULL_REQUEST}" == "false" ] && ./gradlew assembleRelease || ./gradlew assembleDebug'
-
-after_success:
   - sudo apt-get install python-openssl
   - sudo pip install google-api-python-client
-  - python ci/google_play_upload_apk.py --keyFilename=Swooby\ Play\ Android\ Dev-159296a07371.json --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
+  - python ci/google_play_upload_apk.py --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
