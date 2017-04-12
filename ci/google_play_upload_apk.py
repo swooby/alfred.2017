@@ -5,6 +5,7 @@
 import argparse
 from googleapiclient.discovery import build
 from oauth2client.service_account import ServiceAccountCredentials
+from oauth2client.client import GoogleCredentials
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument('--track', choices=['alpha', 'beta', 'production', 'rollout'],
@@ -29,7 +30,8 @@ def main():
     keyFilename = flags.keyFilename
     apkFilename = flags.apkFilename
 
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(keyFilename)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(keyFilename) \
+        if keyFilename else GoogleCredentials.get_application_default()
     service = build('androidpublisher', 'v2', credentials=credentials)
 
     result = service.edits().insert(
