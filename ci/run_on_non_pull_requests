@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -ev
 ./gradlew assembleRelease -PKEYSTORE=${KEYSTORE} -PKEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -PKEY_ALIAS=${KEY_ALIAS} -PKEY_PASSWORD=${KEY_PASSWORD}
 #ls -la app/build/outputs/apk/
 sudo apt-get install python-openssl
