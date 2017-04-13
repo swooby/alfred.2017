@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
 import android.support.v4.app.DialogFragment;
@@ -292,6 +291,7 @@ public class MainActivity
             }
         });
 
+        /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null)
         {
@@ -304,6 +304,7 @@ public class MainActivity
                 }
             });
         }
+        */
 
         if (savedInstanceState == null)
         {
@@ -864,13 +865,15 @@ public class MainActivity
         return false;
     }
 
+    /*
     private void onFloatingActionButtonClick()
     {
         /*
         Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null)
                 .show();
-        */
+        * /
         //mMainApplication.startScanning();
     }
+    */
 }
