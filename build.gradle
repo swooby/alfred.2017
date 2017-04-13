@@ -16,10 +16,19 @@ buildscript {
          *  http://developer.android.com/tools/revisions/gradle-plugin.html
          *  http://tools.android.com/tech-docs/new-build-system
          */
-        classpath 'com.android.tools.build:gradle:2.3.1' // last checked 2017/03/14
+        classpath 'com.android.tools.build:gradle:2.3.1' // last checked 2017/04/12
 
-        //classpath 'me.tatarka:gradle-retrolambda:3.2.5'
-        //retrolambdaConfig 'net.orfjackal.retrolambda:retrolambda:+'
+        /**
+         * Updates:
+         *  https://developers.google.com/android/guides/google-services-plugin
+         */
+        classpath 'com.google.gms:google-services:3.0.0' // last checked 2017/04/12
+
+        /**
+         * Updates:
+         *  https://firebase.google.com/docs/crash/android#uploading_proguard_mapping_files_with_gradle
+         */
+        classpath 'com.google.firebase:firebase-plugins:1.0.5' // last checked 2017/04/12
 
         ///**
         // * Updates:
@@ -37,13 +46,13 @@ buildscript {
          * Updates:
          *  https://bintray.com/dcendents/gradle-plugins/com.github.dcendents%3Aandroid-maven-gradle-plugin
          */
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5' // last checked 2017/03/14
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5' // last checked 2017/04/12
 
         /**
          * Updates:
          *  https://bintray.com/jfrog/jfrog-jars/gradle-bintray-plugin
          */
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3' // last checked 2017/03/14
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3' // last checked 2017/04/12
     }
 }
 
