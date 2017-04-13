@@ -2,6 +2,15 @@
 #
 # Swooby Alfred
 #
+# References:
+#   http://jeremie-martinez.com/2016/01/14/devops-on-android/
+#   https://github.com/codepath/android_guides/wiki/Automating-Publishing-to-the-Play-Store
+#   https://fatminmin.com/blog/deploying-mmg-using-travis.html
+#   http://stackoverflow.com/a/30105668/252308
+#   https://github.com/NonameDev/math-app/blob/master/.travis.yml
+#   https://docs.travis-ci.com/user/deployment/releases/
+#   https://github.com/mg6maciej/VielenGamesAndroidClient/tree/develop/ci
+#   https://gist.github.com/marta-rodriguez/20b8684e76fb1262576e
 
 # TODO:(pv) Trigger build when upstream projects (ex: SmartFoo) change
 
@@ -47,14 +56,9 @@ android:
     # - sys-img-x86-android-17
 
 script:
-  - '[ "${TRAVIS_PULL_REQUEST}" == "false" ] && ./gradlew assembleRelease || ./gradlew assembleDebug'
-  - pwd
-  - ls -la app/build/outputs/apk/
-  - sudo apt-get install python-openssl
-  - sudo pip install google-api-python-client
-  - python ci/google_play_upload_apk.py --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
-# TODO:(pv) Upload mapping.txt to Firebase [and Google Play?]
-# TODO:(pv) Upload APK to GitHub
+  #- pwd
+  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then bash ./ci/run_on_pull_requests; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./ci/run_on_non_pull_requests; fi'
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

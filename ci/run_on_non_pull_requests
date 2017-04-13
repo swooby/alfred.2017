@@ -1,0 +1,10 @@
+#!/bin/bash
+
+./gradlew assembleRelease -PKEYSTORE=${KEYSTORE} -PKEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -PKEY_ALIAS=${KEY_ALIAS} -PKEY_PASSWORD=${KEY_PASSWORD}
+#ls -la app/build/outputs/apk/
+sudo apt-get install python-openssl
+sudo pip install google-api-python-client
+python ci/google_play_upload_apk.py --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
+
+# TODO:(pv) Upload mapping.txt to Firebase [and Google Play?]
+# TODO:(pv) Upload APK to GitHub
