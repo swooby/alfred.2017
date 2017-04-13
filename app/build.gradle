@@ -25,7 +25,7 @@ android {
     if (getIsSignedBuild()) {
         signingConfigs {
             release {
-                storeFile file(project.KEYSTORE)
+                storeFile rootProject.file(project.KEYSTORE)
                 storePassword project.KEYSTORE_PASSWORD
                 keyAlias project.KEY_ALIAS
                 keyPassword project.KEY_PASSWORD
