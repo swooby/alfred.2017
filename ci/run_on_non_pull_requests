@@ -1,5 +1,6 @@
 #!/bin/bash
-set -ev
+set -e
+#set -ev
 
 if [ "$TRAVIS" != "true" ]; then
   pushd `dirname $0` > /dev/null
@@ -9,8 +10,8 @@ if [ "$TRAVIS" != "true" ]; then
   FirebaseServiceAccountFilePath=$SCRIPTPATH/../alfred-mobile-firebase-crashreporting-nlf98-ef1a85c614.json
 fi
 
-echo FirebaseServiceAccountFilePath=$FirebaseServiceAccountFilePath
-ls -la $FirebaseServiceAccountFilePath
+#echo FirebaseServiceAccountFilePath=$FirebaseServiceAccountFilePath
+#ls -la $FirebaseServiceAccountFilePath
 
 ./gradlew :app:firebaseUploadReleaseProguardMapping -PFirebaseServiceAccountFilePath=${FirebaseServiceAccountFilePath} -PKEYSTORE=${KEYSTORE} -PKEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -PKEY_ALIAS=${KEY_ALIAS} -PKEY_PASSWORD=${KEY_PASSWORD}
 
@@ -19,5 +20,4 @@ ls -la $FirebaseServiceAccountFilePath
 sudo -H easy_install --upgrade google-api-python-client
 python ci/google_play_upload_apk.py --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
 
-# TODO:(pv) Upload mapping.txt to Firebase [and Google Play?]
 # TODO:(pv) Upload APK to GitHub
