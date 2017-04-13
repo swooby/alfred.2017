@@ -10,6 +10,7 @@ if [ "$TRAVIS" != "true" ]; then
 fi
 
 echo FirebaseServiceAccountFilePath=$FirebaseServiceAccountFilePath
+ls -la $FirebaseServiceAccountFilePath
 
 ./gradlew :app:firebaseUploadReleaseProguardMapping -PFirebaseServiceAccountFilePath=${FirebaseServiceAccountFilePath} -PKEYSTORE=${KEYSTORE} -PKEYSTORE_PASSWORD=${KEYSTORE_PASSWORD} -PKEY_ALIAS=${KEY_ALIAS} -PKEY_PASSWORD=${KEY_PASSWORD}
 
