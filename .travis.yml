@@ -57,8 +57,7 @@ android:
 
 script:
   #- pwd
-  - 'if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then bash ./ci/run_on_pull_requests; fi'
-  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./ci/run_on_non_pull_requests; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then bash ./ci/run_on_pull_requests; else bash ./ci/run_on_non_pull_requests; fi'
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
