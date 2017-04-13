@@ -4,8 +4,6 @@
 #
 
 # TODO:(pv) Trigger build when upstream projects (ex: SmartFoo) change
-# TODO:(pv) Upload APK to GitHub
-# TODO:(pv) Upload mapping.txt to Firebase [and Google Play?]
 
 #sudo: false
 sudo: required
@@ -50,9 +48,13 @@ android:
 
 script:
   - '[ "${TRAVIS_PULL_REQUEST}" == "false" ] && ./gradlew assembleRelease || ./gradlew assembleDebug'
+  - pwd
+  - ls -la app/build/outputs/apk/
   - sudo apt-get install python-openssl
   - sudo pip install google-api-python-client
   - python ci/google_play_upload_apk.py --packageName=com.swooby.alfred --apkFilename=app/build/outputs/apk/swooby-android-app-alfred-release.apk
+# TODO:(pv) Upload mapping.txt to Firebase [and Google Play?]
+# TODO:(pv) Upload APK to GitHub
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
