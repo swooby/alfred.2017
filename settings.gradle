@@ -1,2 +1,24 @@
-include ':smartfoo-android-lib-core'
+if (hasProperty('LOCAL_DEVELOPMENT_BUILD') && getProperty('LOCAL_DEVELOPMENT_BUILD').toBoolean()) {
+
+    /**
+     * You have several options for local development; choose the one that you find easiest to work in.
+     *
+     * Option 1: Point the project to a relative working directory
+     * <pre>
+     *     include ':smartfoo-android-lib-core'
+     *     project(':smartfoo-android-lib-core').projectDir = new File('../../SmartFoo/smartfoo/android/smartfoo-android-lib-core/')
+     * </pre>
+     * Option 2: Add a symbolic link to a relative working directory
+     * <pre>
+     *     $ ln -s ../../SmartFoo/smartfoo/android/smartfoo-android-lib-core
+     * </pre>
+     */
+
+    include ':smartfoo-android-lib-core'
+    project(':smartfoo-android-lib-core').projectDir = new File('../../SmartFoo/smartfoo/android/smartfoo-android-lib-core/')
+
+    include ':audiofocusthief'
+    project(':audiofocusthief').projectDir = new File('../../SmartFoo/smartfoo/android/audiofocusthief/')
+}
+
 include ':app'

@@ -1,0 +1,70 @@
+
+#
+# Swooby Alfred
+#
+# References:
+#   http://jeremie-martinez.com/2016/01/14/devops-on-android/
+#   https://github.com/codepath/android_guides/wiki/Automating-Publishing-to-the-Play-Store
+#   https://fatminmin.com/blog/deploying-mmg-using-travis.html
+#   http://stackoverflow.com/a/30105668/252308
+#   https://github.com/NonameDev/math-app/blob/master/.travis.yml
+#   https://docs.travis-ci.com/user/deployment/releases/
+#   https://github.com/mg6maciej/VielenGamesAndroidClient/tree/develop/ci
+#   https://gist.github.com/marta-rodriguez/20b8684e76fb1262576e
+
+# TODO:(pv) Trigger build when upstream projects (ex: SmartFoo) change
+
+#sudo: false
+sudo: required
+
+before_install:
+  # Per: https://docs.travis-ci.com/user/encrypting-files/#Encrypting-multiple-files
+  - openssl aes-256-cbc -K $encrypted_5730ce148624_key -iv $encrypted_5730ce148624_iv -in secrets.tar.enc -out secrets.tar -d
+  - tar xvf secrets.tar
+
+language: android
+
+jdk:
+  - oraclejdk8
+
+android:
+  components:
+    #
+    # To get a list of components:
+    # $ android list sdk --no-ui --all --extended
+    # $ $ANDROID_HOME/tools/bin/sdkmanager --list
+    #
+
+    # The latest version of Android SDK Tools
+    - tools
+    - platform-tools
+    # The BuildTools version used by your project
+    - build-tools-25.0.2
+    # The SDK version used to compile your project
+    - android-25
+
+    # Additional components
+    - extra-google-google_play_services
+    - extra-google-m2repository
+    - extra-android-m2repository
+    #- addon-google_apis-google-19
+
+    # Specify at least one system image,
+    # if you need to run emulator(s) during your tests
+    # - sys-img-armeabi-v7a-android-19
+    # - sys-img-x86-android-17
+
+script:
+  #- pwd
+  - ./ci/travis-ci.sh
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches
+    - $HOME/.gradle/daemon
+    - $HOME/.gradle/native
+    - $HOME/.gradle/wrapper
+    - $HOME/.android/build-cache

@@ -2,22 +2,114 @@
 
 buildscript {
     repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.5.0'
+        // NOTE: Do not place your application dependencies here;
+        //  they belong in the individual module build.gradle files
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        /**
+         * Updates:
+         *  http://developer.android.com/tools/revisions/gradle-plugin.html
+         *  http://tools.android.com/tech-docs/new-build-system
+         */
+        classpath 'com.android.tools.build:gradle:2.3.1' // last checked 2017/04/12
+
+        /**
+         * Updates:
+         *  https://developers.google.com/android/guides/google-services-plugin
+         */
+        classpath 'com.google.gms:google-services:3.0.0' // last checked 2017/04/12
+
+        /**
+         * Updates:
+         *  https://firebase.google.com/docs/crash/android#uploading_proguard_mapping_files_with_gradle
+         */
+        classpath 'com.google.firebase:firebase-plugins:1.0.5' // last checked 2017/04/12
+
+        ///**
+        // * Updates:
+        // *  http://search.maven.org/#search|ga|1|g%3Aorg.jacoco
+        // */
+        //classpath 'org.jacoco:org.jacoco.core:0.7.7.201606060606' // last checked 2016/08/19
+
+        ///**
+        // * Updates:
+        // *  https://plugins.gradle.org/plugin/org.sonarqube
+        // */
+        //classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.0.1' // last checked 2016/08/19
+
+        /**
+         * Updates:
+         *  https://bintray.com/dcendents/gradle-plugins/com.github.dcendents%3Aandroid-maven-gradle-plugin
+         */
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5' // last checked 2017/04/12
+
+        /**
+         * Updates:
+         *  https://bintray.com/jfrog/jfrog-jars/gradle-bintray-plugin
+         */
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3' // last checked 2017/04/12
     }
 }
 
 allprojects {
     repositories {
+        maven {
+            url 'http://build.pebblebee.com:8090/artifactory/libs-release/'
+        }
+        maven {
+            url  "http://dl.bintray.com/smartfoo/maven"
+        }
         jcenter()
+    }
+
+    //
+    // Required to poll for new versions of dependencies on each build rather than every 24 hours (the default)
+    //
+    //noinspection GroovyAssignabilityCheck
+    configurations.all {
+        resolutionStrategy {
+            cacheChangingModulesFor 0, 'seconds'
+            cacheDynamicVersionsFor 0, 'seconds'
+        }
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+/**
+ * Checks for project.LOCAL_DEVELOPMENT_BUILD and uses local only projects
+ *
+ * @return true if project.LOCAL_DEVELOPMENT_BUILD == true, else false
+ */
+def getIsLocalDevelopmentBuild() {
+    def isLocalDevelopmentBuild = project.hasProperty('LOCAL_DEVELOPMENT_BUILD') ? project.LOCAL_DEVELOPMENT_BUILD.toBoolean() : false
+    println 'getIsLocalDevelopmentBuild: isLocalDevelopmentBuild=' + isLocalDevelopmentBuild
+    return isLocalDevelopmentBuild
+}
+
+/**
+ * Uses project properties to determine if the build should be signed. A project with non-null KEY_ALIAS, KEY_PASSWORD, KEYSTORE, and KEYSTORE_PASSWORD properties is considered a signed build.
+ *
+ * @return true if the build should be signed, otherwise false
+ */
+def getIsSignedBuild() {
+    def hasKeyStore = project.hasProperty('KEYSTORE')
+    def hasKeyStorePassword = project.hasProperty('KEYSTORE_PASSWORD')
+    def hasKeyAlias = project.hasProperty('KEY_ALIAS')
+    def hasKeyPassword = project.hasProperty('KEY_PASSWORD')
+    def isSignedBuild = (hasKeyAlias && hasKeyPassword && hasKeyStore && hasKeyStorePassword)
+    println 'getIsSignedBuild: isSignedBuild=' + isSignedBuild
+    return isSignedBuild
+}
+
+ext {
+    getIsLocalDevelopmentBuild = this.&getIsLocalDevelopmentBuild
+    getIsSignedBuild = this.&getIsSignedBuild
 }

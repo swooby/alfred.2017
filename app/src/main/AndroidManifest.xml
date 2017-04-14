@@ -1,23 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.swooby.alfred"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    package="com.swooby.alfred"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <permission
+        android:name="com.swooby.alfred.permission.C2D_MESSAGE"
+        android:protectionLevel="signature"/>
+
+    <uses-permission android:name="com.swooby.alfred.permission.C2D_MESSAGE"/>
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!--
+    <meta-data
+        android:name="com.google.android.gms.version"
+        android:value="@integer/google_play_services_version"/>
+        -->
 
     <application
+        android:name=".MainApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        >
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.smartfoo.android.core.app.FooDebugActivity"
+            android:label="@string/activity_debug_title"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"
+                />
+        </activity>
+
+        <service
+            android:name="com.smartfoo.android.core.notification.FooNotificationListenerManager$FooNotificationListener"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            >
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+                <action android:name="com.smartfoo.android.core.notification.FooNotificationListener.ACTION_BIND_REMOTE_CONTROLLER"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="com.smartfoo.android.core.notification.FooNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            />
+
     </application>
 
 </manifest>

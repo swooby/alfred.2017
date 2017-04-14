@@ -1,8 +1,33 @@
 <resources>
-    <string name="app_name">Alfred for Android</string>
 
+    <string name="app_name">Alfred</string>
+
+    <!-- Common: Navigation Drawer -->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-
     <string name="action_settings">Settings</string>
+    <string name="action_application_info">Application Info</string>
+    <string name="action_notification_access">Notification Access</string>
+    <string name="action_text_to_speech">Text-To-Speech</string>
+    <string name="action_debug_show_debug_log">Show Debug Log</string>
+    <string name="action_debug_clear_debug_log">Clear Debug Log</string>
+    <!--
+    <string name="action_debug_disable_debug_mode">Disable Debug Mode</string>
+    -->
+
+    <!-- MainActivity: May these ever be spoken? -->
+    <string name="voice">Voice:</string>
+    <string name="stream">Stream:</string>
+    <string name="volume">Volume:</string>
+    <string name="profile">Profile:</string>
+    <string name="enable_notification_access">Enable Notification Access</string>
+    <string name="process_notifications">Process Notifications</string>
+    <string name="clear_text_to_speech">Clear Text To Speech</string>
+
+    <!-- Profile names: May these ever be spoken? -->
+    <string name="profile_disabled">Disabled</string>
+    <string name="profile_wired_headphones_only">Wired Headphones Only</string>
+    <string name="profile_headphones_only">Headphones Only</string>
+    <string name="profile_always_on">Always On</string>
+
 </resources>
