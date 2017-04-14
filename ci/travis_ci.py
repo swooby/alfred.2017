@@ -32,6 +32,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 def call(args):
+    print 'call(%r)' % args
     returncode = subprocess.call(args)
     print 'returncode == %r' % returncode
     if returncode != 0:
@@ -46,65 +47,38 @@ def get_script_path():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
 
 
-def main():
-    travis_branch = environ('TRAVIS_BRANCH')
-    print 'travis_branch == %r' % travis_branch
-    travis_tag = environ('TRAVIS_TAG')
-    print 'travis_tag == %r' % travis_tag
+def is_release():
+    result = False
     travis_pull_request = environ('TRAVIS_PULL_REQUEST')
     print 'travis_pull_request == %r' % travis_pull_request
-    if travis_pull_request != 'false':
-        buildDebug()
-    else:
-        buildRelease()
-
-
-def buildDebug():
-    call(['./gradlew', ':app:assembleDebug'])
-
-
-def buildRelease():
-    is_release = False
-
     travis_branch = environ('TRAVIS_BRANCH')
     print 'travis_branch == %r' % travis_branch
     travis_tag = environ('TRAVIS_TAG')
     print 'travis_tag == %r' % travis_tag
-    if travis_branch == travis_tag and re.match('^v\d+\.\d+(\.\d+)?(-\S*)?$', travis_branch):
+    if (travis_pull_request == 'false' and travis_branch == travis_tag and
+            re.match('^v\d+\.\d+(\.\d+)?(-\S*)?$', travis_branch)):
         response = requests.get('https://api.github.com/repos/swooby/alfred/releases/tags/%s' % travis_tag)
         response = response.json()
         # print 'response == %r' % response
         release_name = response.get('name')
         print 'release_name == %r' % release_name
-        is_release = travis_branch == travis_tag == release_name
-    print 'is_release == %r' % is_release
+        result = travis_branch == travis_tag == release_name
 
-    call(['./gradlew', ':app:assembleRelease',
-          '-PKEYSTORE=%s' % environ('KEYSTORE'),
-          '-PKEYSTORE_PASSWORD=%s' % environ('KEYSTORE_PASSWORD'),
-          '-PKEY_ALIAS=%s' % environ('KEY_ALIAS'),
-          '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
-
-    if not is_release:
-        return
-
-    uploadGooglePlay()
-    uploadFirebase()
-    # TODO:(pv) Upload APK to GitHub...
+    return result
 
 
 def uploadGooglePlay():
-    script_path = get_script_path()
-    print 'script_path == %r' % script_path
+    scriptPath = get_script_path()
+    print 'scriptPath == %r' % scriptPath
     packageName = 'com.swooby.alfred'
     print 'packageName == %r' % packageName
     track = 'alpha'
     print 'track == %r' % track
-    keyFilename = '%s/../Swooby Play Android Dev-159296a07371.json' % script_path
+    keyFilename = '%s/../Swooby Play Android Dev-159296a07371.json' % scriptPath
     print 'keyFilename == %r' % keyFilename
-    apkFilename = '%s/../app/build/outputs/apk/swooby-android-app-alfred-release.apk' % script_path
+    apkFilename = '%s/../app/build/outputs/apk/swooby-android-app-alfred-release.apk' % scriptPath
     print 'apkFilename == %r' % apkFilename
-    mappingFilename = '%s/../app/build/outputs/mapping/release/mapping.txt' % script_path
+    mappingFilename = '%s/../app/build/outputs/mapping/release/mapping.txt' % scriptPath
     print 'mappingFilename == %r' % mappingFilename
 
     credentials = ServiceAccountCredentials.from_json_keyfile_name(keyFilename)
@@ -152,15 +126,38 @@ def uploadGooglePlay():
 
 
 def uploadFirebase():
-    script_path = get_script_path()
-    print 'script_path == %r' % script_path
-    FirebaseServiceAccountFilePath = '%s/../alfred-mobile-firebase-crashreporting-nlf98-ef1a85c614.json' % script_path
+    scriptPath = get_script_path()
+    print 'scriptPath == %r' % scriptPath
+    FirebaseServiceAccountFilePath = '%s/../alfred-mobile-firebase-crashreporting-nlf98-ef1a85c614.json' % scriptPath
     call(['./gradlew', ':app:firebaseUploadReleaseProguardMapping',
           '-PFirebaseServiceAccountFilePath=%s' % FirebaseServiceAccountFilePath,
           '-PKEYSTORE=%s' % environ('KEYSTORE'),
           '-PKEYSTORE_PASSWORD=%s' % environ('KEYSTORE_PASSWORD'),
           '-PKEY_ALIAS=%s' % environ('KEY_ALIAS'),
           '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
+
+
+def main():
+    isRelease = is_release()
+    print 'isRelease == %r' % isRelease
+
+    f = open('alfred.properties', 'w')
+    f.write('ALFRED_IS_RELEASE=%s' % ('true' if isRelease else 'false'))
+    f.close()
+
+    command = ['./gradlew', ':app:assembleRelease']
+    if isRelease:
+        command.extend(['-PKEYSTORE=%s' % environ('KEYSTORE'),
+                        '-PKEYSTORE_PASSWORD=%s' % environ('KEYSTORE_PASSWORD'),
+                        '-PKEY_ALIAS=%s' % environ('KEY_ALIAS'),
+                        '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
+    call(command)
+
+    if not isRelease:
+        return
+
+    uploadGooglePlay()
+    uploadFirebase()
 
 
 if __name__ == '__main__':

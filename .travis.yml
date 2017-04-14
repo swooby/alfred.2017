@@ -56,7 +56,7 @@ android:
 
 script:
   #- pwd
-  - ./ci/travis-ci.sh
+  - ./ci/travis_ci.sh
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -68,3 +68,15 @@ cache:
     - $HOME/.gradle/native
     - $HOME/.gradle/wrapper
     - $HOME/.android/build-cache
+
+deploy:
+  provider: releases
+  api_key:
+    secure: rZT9dxfBkJT4Hzw9gJim4gvnEwoN9VrNJ7QTFeHQvqmiM/eiSVA0Dv2jn2KpizEYws4UPlDzao3n43jqbFsXqokF4Zu67ikfilDA6LH8d6+E6SmsrZFnkt+9DSNWPQ0dfnZ7pJPzFjdrAUxgfOJ5A9YbmibDVwuPE3PQAab+A+hEMm/XBCQ85dh/+1M4/3ediphWShpkEyFMpmDJ2hj1jTj1S7loD3r1pakMOiGMmJYIntgXstmVJ6VMxJeKR0FXya9TJ+H7SbbyIvxvBn9+SC0pNOBFZ5FPLUtxogyf9t34mJ+V9/ct1ql4zTQ8Uqjz6gHbizUw7nrXyVU/j8fFeLXKB46etUpd/oUq/jisyk486YgrfOpW0KiJM964HmuQ1Q+gmjTfQV6a4CIFWym+/p9qAfoWi2+LjIWuWNgXDlzYVWTgE9Lurx7XLH1dJac7fXCK0sMI+Yzt2gU1HKZPgp9nUUG1gdReax7/CJVfvjGtn/7oy1UAokdsLVXNXkXirj13HFLof7c6ZUB8bqmJrRghI2Me9IlDDdLiyxJBBpDmMEuIhWAOq1FNZstexUDRl5ZZb8jDhtrpd3yXFXBvNZPqgCeOVRJ1Jph8xo7I4LtsGgBkNJKiIe8kmSB2DMAiGtYU8athIY1edlwLpfDxNOQxZV0z5sMS2nEyNvOFKLI=
+  file:
+    - app/build/outputs/apk/swooby-android-app-alfred-release.apk
+    - app/build/outputs/mapping/release/mapping.txt
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: $(grep "^ALFRED_IS_RELEASE=" alfred.properties | cut -d'=' -f2) = 'true'
