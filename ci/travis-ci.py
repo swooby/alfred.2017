@@ -48,10 +48,10 @@ def get_script_path():
 def main():
     travis_pull_request = environ('TRAVIS_PULL_REQUEST')
     print 'travis_pull_request == %s' % travis_pull_request
-    if travis_pull_request == 'true':
-        buildDebug()
-    else:
+    if travis_pull_request == 'false':
         buildRelease()
+    else:
+        buildDebug()
 
 
 def buildDebug():
