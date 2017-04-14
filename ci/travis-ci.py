@@ -86,7 +86,7 @@ def buildRelease():
 
     uploadGooglePlay()
     uploadFirebase()
-    # TODO:(pv) Upload APK to GitHub...
+    # TODO:(pv) Upload APK to GitHub....
 
 
 def uploadGooglePlay():
