@@ -32,7 +32,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 def call(args):
     returncode = subprocess.call(args)
-    print 'returncode == %s' % returncode
+    print 'returncode == %r' % returncode
     if returncode != 0:
         sys.exit(returncode)
 
@@ -47,7 +47,7 @@ def get_script_path():
 
 def main():
     travis_pull_request = environ('TRAVIS_PULL_REQUEST')
-    print 'travis_pull_request == %s' % travis_pull_request
+    print 'travis_pull_request == %r' % travis_pull_request
     if travis_pull_request == 'false':
         buildRelease()
     else:
@@ -61,16 +61,15 @@ def buildDebug():
 def buildRelease():
     release_name = None
     travis_branch = environ('TRAVIS_BRANCH')
-    print 'travis_branch == %s' % travis_branch
-    if travis_branch == 'master':
-        travis_tag = environ('TRAVIS_TAG')
-        print 'travis_tag == %s' % travis_tag
-        if travis_tag:
-            response = requests.get('https://api.github.com/repos/swooby/alfred/releases/tags/%s' % travis_tag)
-            response = response.json()
-            print 'response == %s' % response
-            release_name = response.get('name')
-    print 'release_name == %s' % release_name
+    print 'travis_branch == %r' % travis_branch
+    travis_tag = environ('TRAVIS_TAG')
+    print 'travis_tag == %r' % travis_tag
+    if travis_branch == 'master' and travis_tag:
+        response = requests.get('https://api.github.com/repos/swooby/alfred/releases/tags/%s' % travis_tag)
+        response = response.json()
+        print 'response == %r' % response
+        release_name = response.get('name')
+    print 'release_name == %r' % release_name
 
     call(['./gradlew', ':app:assembleRelease',
           '-PKEYSTORE=%s' % environ('KEYSTORE'),
@@ -83,21 +82,22 @@ def buildRelease():
 
     uploadGooglePlay()
     uploadFirebase()
+    # TODO:(pv) Upload APK to GitHub...
 
 
 def uploadGooglePlay():
     script_path = get_script_path()
-    print 'script_path == %s' % script_path
+    print 'script_path == %r' % script_path
     packageName = 'com.swooby.alfred'
-    print 'packageName == %s' % packageName
+    print 'packageName == %r' % packageName
     track = 'alpha'
-    print 'track == %s' % track
+    print 'track == %r' % track
     keyFilename = '%s/../Swooby Play Android Dev-159296a07371.json' % script_path
-    print 'keyFilename == %s' % keyFilename
+    print 'keyFilename == %r' % keyFilename
     apkFilename = '%s/../app/build/outputs/apk/swooby-android-app-alfred-release.apk' % script_path
-    print 'apkFilename == %s' % apkFilename
+    print 'apkFilename == %r' % apkFilename
     mappingFilename = '%s/../app/build/outputs/mapping/release/mapping.txt' % script_path
-    print 'mappingFilename == %s' % mappingFilename
+    print 'mappingFilename == %r' % mappingFilename
 
     credentials = ServiceAccountCredentials.from_json_keyfile_name(keyFilename)
     service = build('androidpublisher', 'v2', credentials=credentials)
@@ -115,7 +115,7 @@ def uploadGooglePlay():
         media_body=apkFilename) \
         .execute()
     versionCode = result['versionCode']
-    print 'Uploaded APK file versionCode=%d, path=%s' % (versionCode, apkFilename)
+    print 'Uploaded APK file versionCode=%d, path=%r' % (versionCode, apkFilename)
 
     if mappingFilename:
         mediaUpload = MediaFileUpload(mappingFilename, mimetype='application/octet-stream')
@@ -126,7 +126,7 @@ def uploadGooglePlay():
             apkVersionCode=versionCode,
             media_body=mediaUpload) \
             .execute()
-        print 'Uploaded mapping file versionCode=%d, path=%s' % (versionCode, mappingFilename)
+        print 'Uploaded mapping file versionCode=%d, path=%r' % (versionCode, mappingFilename)
 
     result = serviceEdits.tracks().update(
         editId=editId,
@@ -134,18 +134,18 @@ def uploadGooglePlay():
         track=track,
         body={u'versionCodes': [versionCode]}) \
         .execute()
-    print 'Track %s set for versionCode=%d' % (result['track'], versionCode)
+    print 'Track %r set for versionCode=%d' % (result['track'], versionCode)
 
     serviceEdits.commit(
         editId=editId,
         packageName=packageName) \
         .execute()
-    print 'Committed editId %s' % editId
+    print 'Committed editId %r' % editId
 
 
 def uploadFirebase():
     script_path = get_script_path()
-    print 'script_path == %s' % script_path
+    print 'script_path == %r' % script_path
     FirebaseServiceAccountFilePath = '%s/../alfred-mobile-firebase-crashreporting-nlf98-ef1a85c614.json' % script_path
     call(['./gradlew', ':app:firebaseUploadReleaseProguardMapping',
           '-PFirebaseServiceAccountFilePath=%s' % FirebaseServiceAccountFilePath,
