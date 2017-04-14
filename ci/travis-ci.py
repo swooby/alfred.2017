@@ -22,6 +22,7 @@ Client Source:
 """
 
 import os
+import re
 import requests
 import subprocess
 import sys
@@ -63,17 +64,20 @@ def buildDebug():
 
 
 def buildRelease():
-    release_name = None
+    is_release = False
+
     travis_branch = environ('TRAVIS_BRANCH')
     print 'travis_branch == %r' % travis_branch
     travis_tag = environ('TRAVIS_TAG')
     print 'travis_tag == %r' % travis_tag
-    if travis_branch == 'master' and travis_tag:
+    if travis_branch == travis_tag and re.match('^v\d+\.\d+(\.\d+)?(-\S*)?$', travis_branch):
         response = requests.get('https://api.github.com/repos/swooby/alfred/releases/tags/%s' % travis_tag)
         response = response.json()
-        print 'response == %r' % response
+        # print 'response == %r' % response
         release_name = response.get('name')
-    print 'release_name == %r' % release_name
+        print 'release_name == %r' % release_name
+        is_release = travis_branch == travis_tag == release_name
+    print 'is_release == %r' % is_release
 
     call(['./gradlew', ':app:assembleRelease',
           '-PKEYSTORE=%s' % environ('KEYSTORE'),
@@ -81,12 +85,12 @@ def buildRelease():
           '-PKEY_ALIAS=%s' % environ('KEY_ALIAS'),
           '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
 
-    if not release_name:
+    if not is_release:
         return
 
     uploadGooglePlay()
     uploadFirebase()
-    # TODO:(pv) Upload APK to GitHub....
+    # TODO:(pv) Upload APK to GitHub...
 
 
 def uploadGooglePlay():
