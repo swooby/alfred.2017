@@ -35,10 +35,8 @@ android:
     # $ $ANDROID_HOME/tools/bin/sdkmanager --list
     #
 
-    # Uncomment the lines below if you want to
-    # use the latest revision of Android SDK Tools
-    - tools # to get the new `repository-11.xml`
-    #- tools # see https://github.com/travis-ci/travis-ci/issues/6040#issuecomment-219367943)
+    # The latest version of Android SDK Tools
+    - tools
     - platform-tools
     # The BuildTools version used by your project
     - build-tools-25.0.2
@@ -58,8 +56,7 @@ android:
 
 script:
   #- pwd
-  # Per: https://docs.travis-ci.com/user/pull-requests/#Pull-Requests-and-Security-Restrictions
-  - 'if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then bash ./ci/run_on_pull_requests; else bash ./ci/run_on_non_pull_requests; fi'
+  - ./ci/travis-ci.sh
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
