@@ -46,12 +46,16 @@ def get_script_path():
 
 
 def main():
+    travis_branch = environ('TRAVIS_BRANCH')
+    print 'travis_branch == %r' % travis_branch
+    travis_tag = environ('TRAVIS_TAG')
+    print 'travis_tag == %r' % travis_tag
     travis_pull_request = environ('TRAVIS_PULL_REQUEST')
     print 'travis_pull_request == %r' % travis_pull_request
-    if travis_pull_request == 'false':
-        buildRelease()
-    else:
+    if travis_pull_request != 'false':
         buildDebug()
+    else:
+        buildRelease()
 
 
 def buildDebug():
