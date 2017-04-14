@@ -47,7 +47,7 @@ def get_script_path():
 
 def main():
     travis_pull_request = environ('TRAVIS_PULL_REQUEST')
-    print 'travis_pull_request=%s' % travis_pull_request
+    print 'travis_pull_request == %s' % travis_pull_request
     if travis_pull_request == 'true':
         buildDebug()
     else:
@@ -55,7 +55,7 @@ def main():
 
 
 def buildDebug():
-    call(['./gradlew', 'assembleDebug'])
+    call(['./gradlew', ':app:assembleDebug'])
 
 
 def buildRelease():
@@ -149,10 +149,10 @@ def uploadFirebase():
     FirebaseServiceAccountFilePath = '%s/../alfred-mobile-firebase-crashreporting-nlf98-ef1a85c614.json' % script_path
     call(['./gradlew', ':app:firebaseUploadReleaseProguardMapping',
           '-PFirebaseServiceAccountFilePath=%s' % FirebaseServiceAccountFilePath,
-          '-PKEYSTORE=%s' % environ.get('KEYSTORE'),
-          '-PKEYSTORE_PASSWORD=%s' % environ.get('KEYSTORE_PASSWORD'),
-          '-PKEY_ALIAS=%s' % environ.get('KEY_ALIAS'),
-          '-PKEY_PASSWORD=%s' % environ.get('KEY_PASSWORD')])
+          '-PKEYSTORE=%s' % environ('KEYSTORE'),
+          '-PKEYSTORE_PASSWORD=%s' % environ('KEYSTORE_PASSWORD'),
+          '-PKEY_ALIAS=%s' % environ('KEY_ALIAS'),
+          '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
 
 
 if __name__ == '__main__':
