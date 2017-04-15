@@ -36,15 +36,20 @@ environment might find this app useful.
 
 ## Milestones
 
-* M1: Generally reliable speaking of the notifications that I encounter on a daily basis.
-    * Status: As of 2016/06 this is almost complete. The few remaining issues I know about are:
-        1. Phone numbers are spoken as "six billion one hundred ninety seven million nine hundred sixty six thousand two hundred ninety nine".
-        2. Every determinate progress indicator increment, such as used by Google Play Updates, is spoken.
-        3. Attenuation often gets stuck on when multiple texts are spoken consecutively.
-* M2: More useful app state and UI  
-  This is where the app starts to crystallize in to something useful.
-* M3: BLE Scanner that detects button press
 * M4: Speech-To-Text
+* M3: BLE Scanner that detects button press
+* M2: More useful app state and UI
+  This is where the app starts to crystallize in to something useful.
+* M1: Generally reliable speaking of the notifications that I encounter on a daily basis.
+  * Release to store
+  * Sign TravisCI build
+  * Upload TravisCI build to Store
+  * Force disabled while Phone offhook
+  * Notification Parsers:
+    * Pandora
+    * Spotify
+  * Speak Volume, Cellular, WiFi, Screen, Charging, Phone states
+  * Reliable startup and detection of profiles and notification access
 
 ## TODO
 ### M3:
@@ -53,22 +58,27 @@ environment might find this app useful.
 ### M2:
 * Offline Storage (Firebase?)
 * Location Listener
-* Bluetooth Headset Listener
-* Wifi/Cellular Data Listener
-* Sign TravisCI build
-* Upload TravisCI build to Store
+* Bluetooth Headset Listener and Profile Handling
 * Analytics
-    * Volume up/down; time in song
+  * Volume up/down; time in song
+  * ...
 
-### M1:
-* Reliable startup and detection of profiles and notification access
-* Notification Parsers:
-  * Pandora
-  * Spotify
-* PHONE CALL LISTENER AND FORCE DISABLED WHILE OFFHOOK
-* Release to store
+### Issues:
+1. Phone numbers may be spoken as "six billion one hundred ninety seven million nine hundred sixty six thousand two hundred ninety nine".
+2. Every determinate progress indicator increment, such as used by Google Play Updates, is spoken.
+3. Many other Notifications also repeat a lot (ex: MyGlass Connected, Chrome Media Playing, etc)
 
 ### Unscheduled:
+* Add ability to go in to Debug Mode
+* Optimize the Volume Observer?
+* Have Android debugging/charging parser add/remove announce charger stat (and remove ChargePortListener?)
+* Not getting told when BT headset disconnected?
+* Media Button Controller or Notification Action to repeat last speech or specifically Song info.
+  Maybe to also just enable/disable Profile?
+* Bluetooth controls to like/add song or start new station from song
+* Notification bottom text should indicate Notification Listener status
+* Option to speak volume only when screen off
+* Better queueing of Notification processing to only process the next one after the current one finishes speaking
 * DEBUG mode to better catch broken parsers
   * Notify parsers that don't have app installed
   * Shortcut/Action to install app
@@ -87,7 +97,7 @@ environment might find this app useful.
 * Option to announce time
 * Per-Parser User-Option to not announce app name?
 
-### Research:
+### R&D:
 * Google Now output Intents
   https://developer.android.com/guide/components/intents-common.html#Now
 * Launch Google Now
@@ -96,4 +106,5 @@ environment might find this app useful.
   http://stackoverflow.com/questions/22230937/how-can-i-launch-googlenow-by-an-intent-with-adding-a-search-query
   http://stackoverflow.com/questions/18049157/how-to-programmatically-initiate-a-google-now-voice-search
   https://www.reddit.com/r/tasker/comments/3eyezg/launch_google_now_via_intent/
+* Voice Recognition
 

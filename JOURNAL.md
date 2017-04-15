@@ -4,6 +4,22 @@
 (answer: probably because he has billions of dollars and hundreds of
  assistants.)
 
+### 2017/04/14:
+
+Alfred shipped to Google Play this week, and I spent the rest of it cleaning
+up the build scripts and automating it nicely. Every branch gets built now
+as assembleRelease (proguarded [since that often breaks], but not signed),
+and all I have to do to automatically push to Google Play is create a Release
+on GitHub and the Travis CI will take care of the rest (sign, upload APK
+to Google Play and GitHub and mapping.txt to GooglePlay, Firebase, and GitHub).
+
+I have a normal job that I need to concentrate on for a few weeks, and during
+that time I am going to work on some non-coding tasks such as finishing my
+11'x4' whiteboard wall at home and organizing Alfred's next tasks.
+
+I'll be back working on Alfred soon after I bang out a strategy and tactics
+on how to do what needs to be done next.
+
 ### 2017/04/06:
 
 Alfred is stable and functional, but I am not comfortable releasing him
