@@ -35,11 +35,18 @@ Anyone that regularly finds themself using a hands-and-screen-free
 environment might find this app useful.
 
 ## Milestones
+\* = Not Yet Implemented
 
-* M4: Speech-To-Text
-* M3: BLE Scanner that detects button press
+* M4: Speech-To-Text (aka: Voice Recognition & Commands)
+* M3: BLE Scanner that detects button presses
 * M2: More useful app state and UI
   This is where the app starts to crystallize in to something useful.
+  * *Bluetooth Headset Listener and Profile Handling
+  * *Offline Storage (Firebase?)
+  * *Location Listener
+  * *Analytics
+      * *Volume up/down; time in song
+      * *...
 * M1: Generally reliable speaking of the notifications that I encounter on a daily basis.
   * Release to store
   * Sign TravisCI build
@@ -50,18 +57,6 @@ environment might find this app useful.
     * Spotify
   * Speak Volume, Cellular, WiFi, Screen, Charging, Phone states
   * Reliable startup and detection of profiles and notification access
-
-## TODO
-### M3:
-* BLE Scanner
-
-### M2:
-* Offline Storage (Firebase?)
-* Location Listener
-* Bluetooth Headset Listener and Profile Handling
-* Analytics
-  * Volume up/down; time in song
-  * ...
 
 ### Issues:
 1. Phone numbers may be spoken as "six billion one hundred ninety seven million nine hundred sixty six thousand two hundred ninety nine".
