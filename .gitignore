@@ -8,3 +8,8 @@
 /captures
 .idea
 *.pyc
+alfred-mobile-firebase-*.json
+alfred.properties
+android_alfred.jks
+secrets.tar
+Swooby Play Android Dev-*.json

@@ -32,7 +32,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 def call(args):
-    print 'call(%r)' % args
+    # IMPORTANT: Don't print out the KEYSTORE_PASSWORD/KEY_PASSWORD!
+    #ci = environ('CI')
+    #if ci != 'true':
+    #    print 'call(%r)' % args
     returncode = subprocess.call(args)
     print 'returncode == %r' % returncode
     if returncode != 0:
@@ -129,6 +132,7 @@ def uploadFirebase():
     scriptPath = get_script_path()
     print 'scriptPath == %r' % scriptPath
     FirebaseServiceAccountFilePath = '%s/../alfred-mobile-firebase-crashreporting-nlf98-ef1a85c614.json' % scriptPath
+    print './gradlew :app:firebaseUploadReleaseProguardMapping ...'
     call(['./gradlew', ':app:firebaseUploadReleaseProguardMapping',
           '-PFirebaseServiceAccountFilePath=%s' % FirebaseServiceAccountFilePath,
           '-PKEYSTORE=%s' % environ('KEYSTORE'),
@@ -141,9 +145,8 @@ def main():
     isRelease = is_release()
     print 'isRelease == %r' % isRelease
 
-    f = open('alfred.properties', 'w')
-    f.write('ALFRED_IS_RELEASE=%s' % ('true' if isRelease else 'false'))
-    f.close()
+    with open('alfred.properties', 'w') as f:
+        f.write('ALFRED_IS_RELEASE=%s' % ('true' if isRelease else 'false'))
 
     command = ['./gradlew', ':app:assembleRelease']
     if isRelease:
@@ -151,6 +154,8 @@ def main():
                         '-PKEYSTORE_PASSWORD=%s' % environ('KEYSTORE_PASSWORD'),
                         '-PKEY_ALIAS=%s' % environ('KEY_ALIAS'),
                         '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
+
+    print './gradlew :app:assembleRelease ...'
     call(command)
 
     if not isRelease:
