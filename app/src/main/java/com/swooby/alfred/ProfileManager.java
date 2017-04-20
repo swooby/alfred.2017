@@ -77,7 +77,7 @@ public class ProfileManager
 
         mContext = context;
         mConfiguration = configuration;
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerManager<>(this);
         mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(context);
         mBluetoothHeadsetConnectionListener = new FooBluetoothHeadsetConnectionListener(context);
 

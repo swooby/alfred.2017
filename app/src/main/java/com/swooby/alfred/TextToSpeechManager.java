@@ -65,7 +65,7 @@ public class TextToSpeechManager
         mContext = context;
         mConfiguration = configuration;
 
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerManager<>(this);
 
         mTextToSpeech = FooTextToSpeech.getInstance();
         mTextToSpeech.attach(new FooTextToSpeechCallbacks()

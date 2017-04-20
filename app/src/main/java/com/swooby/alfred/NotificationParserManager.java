@@ -50,7 +50,7 @@ public class NotificationParserManager
     {
         boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications);
 
-        void onNotificationListenerNotConnected(NotConnectedReason reason);
+        void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis);
 
         void onNotificationParsed(@NonNull AbstractNotificationParser parser);
     }
@@ -75,7 +75,7 @@ public class NotificationParserManager
         mContext = context;
         mConfiguration = configuration;
 
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerManager<>(this);
 
         mFooNotificationListenerManager = FooNotificationListenerManager.getInstance();
 
@@ -88,9 +88,9 @@ public class NotificationParserManager
             }
 
             @Override
-            public void onNotificationListenerNotConnected(@NonNull NotConnectedReason reason)
+            public void onNotificationListenerNotConnected(@NonNull NotConnectedReason reason, long elapsedMillis)
             {
-                NotificationParserManager.this.onNotificationListenerNotConnected(reason);
+                NotificationParserManager.this.onNotificationListenerNotConnected(reason, elapsedMillis);
             }
 
             @Override
@@ -267,13 +267,13 @@ public class NotificationParserManager
         return true;
     }
 
-    private void onNotificationListenerNotConnected(NotConnectedReason reason)
+    private void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
     {
-        FooLog.i(TAG, "onNotificationListenerNotConnected(reason=" + reason + ')');
+        FooLog.i(TAG, "onNotificationListenerNotConnected(reason=" + reason + ", elapsedMillis=" + elapsedMillis + ')');
         mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationListenerNotConnected(reason);
+            callbacks.onNotificationListenerNotConnected(reason, elapsedMillis);
         }
         mListenerManager.endTraversing();
     }

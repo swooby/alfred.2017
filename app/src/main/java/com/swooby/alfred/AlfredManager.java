@@ -101,7 +101,7 @@ public class AlfredManager
         //
         // Create Managers/etc
         //
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerManager<>(this);
         mNotificationManager = new NotificationManager(mApplicationContext);
         mTextToSpeechManager = new TextToSpeechManager(mApplicationContext, new TextToSpeechManagerConfiguration()
         {
@@ -262,9 +262,9 @@ public class AlfredManager
             }
 
             @Override
-            public void onNotificationListenerNotConnected(NotConnectedReason reason)
+            public void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
             {
-                AlfredManager.this.onNotificationListenerNotConnected(reason, 200);
+                AlfredManager.this.onNotificationListenerNotConnected(reason, elapsedMillis, 200);
             }
 
             @Override
@@ -486,17 +486,19 @@ public class AlfredManager
         private final String TAG = FooLog.TAG(DelayedRunnableNotificationListenerNotConnected.class);
 
         private final NotConnectedReason mReason;
+        private final long               mElapsedMillis;
 
-        public DelayedRunnableNotificationListenerNotConnected(NotConnectedReason reason)
+        public DelayedRunnableNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
         {
             mReason = reason;
+            mElapsedMillis = elapsedMillis;
         }
 
         @Override
         public void run()
         {
             FooLog.v(TAG, "+run()");
-            onNotificationListenerNotConnected(mReason, 0);
+            onNotificationListenerNotConnected(mReason, mElapsedMillis, 0);
             FooLog.v(TAG, "-run()");
         }
     }
@@ -536,11 +538,13 @@ public class AlfredManager
 
     /**
      * @param reason                reason
-     * @param ifHeadlessDelayMillis > 0 to delay the given milliseconds if no UI is attached
+     * @param elapsedMillis         elapsedMillis
+     * @param ifHeadlessDelayMillis &gt; 0 to delay the given milliseconds if no UI is attached
      */
-    private void onNotificationListenerNotConnected(NotConnectedReason reason, int ifHeadlessDelayMillis)
+    private void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis, int ifHeadlessDelayMillis)
     {
         FooLog.w(TAG, "onNotificationListenerNotConnected(reason=" + reason +
+                      ", elapsedMillis=" + elapsedMillis +
                       ", ifHeadlessDelayMillis=" + ifHeadlessDelayMillis + ')');
 
         boolean headless = true;
@@ -554,7 +558,7 @@ public class AlfredManager
 
         if (headless && ifHeadlessDelayMillis > 0)
         {
-            mDelayedRunnableNotificationAccessSettingDisabled = new DelayedRunnableNotificationListenerNotConnected(reason);
+            mDelayedRunnableNotificationAccessSettingDisabled = new DelayedRunnableNotificationListenerNotConnected(reason, elapsedMillis);
             mHandler.postDelayed(mDelayedRunnableNotificationAccessSettingDisabled, ifHeadlessDelayMillis);
             return;
         }

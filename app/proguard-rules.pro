@@ -15,3 +15,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# Make crash call-stacks debuggable
+-keepnames class com.swooby.** { <methods>; }
+-keepattributes SourceFile,LineNumberTable
