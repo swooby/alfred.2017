@@ -6,7 +6,8 @@ import android.os.UserHandle;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.NonNull;
 
-import com.smartfoo.android.core.FooListenerManager;
+import com.smartfoo.android.core.FooListenerAutoStartManager;
+import com.smartfoo.android.core.FooListenerAutoStartManager.FooListenerAutoStartManagerCallbacks;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
@@ -55,13 +56,13 @@ public class NotificationParserManager
         void onNotificationParsed(@NonNull AbstractNotificationParser parser);
     }
 
-    private final Context                                                mContext;
-    private final NotificationParserManagerConfiguration                 mConfiguration;
-    private final FooListenerManager<NotificationParserManagerCallbacks> mListenerManager;
-    private final FooNotificationListenerManager                         mFooNotificationListenerManager;
-    private final FooNotificationListenerManagerCallbacks                mFooNotificationListenerManagerCallbacks;
-    private final NotificationParserCallbacks                            mNotificationParserCallbacks;
-    private final Map<String, AbstractNotificationParser>                mNotificationParsers;
+    private final Context                                                         mContext;
+    private final NotificationParserManagerConfiguration                          mConfiguration;
+    private final FooListenerAutoStartManager<NotificationParserManagerCallbacks> mListenerManager;
+    private final FooNotificationListenerManager                                  mFooNotificationListenerManager;
+    private final FooNotificationListenerManagerCallbacks                         mFooNotificationListenerManagerCallbacks;
+    private final NotificationParserCallbacks                                     mNotificationParserCallbacks;
+    private final Map<String, AbstractNotificationParser>                         mNotificationParsers;
 
     private boolean mIsInitialized;
 
@@ -69,13 +70,27 @@ public class NotificationParserManager
     {
         FooLog.v(TAG, "+NotificationParserManager(...)");
 
-        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
-        FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
+        mContext = FooRun.toNonNull(context, "context");
+        mConfiguration = FooRun.toNonNull(configuration, "configuration");
 
-        mContext = context;
-        mConfiguration = configuration;
+        mListenerManager = new FooListenerAutoStartManager<>(this);
+        mListenerManager.attach(new FooListenerAutoStartManagerCallbacks()
+        {
+            @Override
+            public void onFirstAttach()
+            {
+                if (mNotificationParsers.size() == 0)
+                {
+                    start();
+                }
+            }
 
-        mListenerManager = new FooListenerManager<>(this);
+            @Override
+            public boolean onLastDetach()
+            {
+                return false;
+            }
+        });
 
         mFooNotificationListenerManager = FooNotificationListenerManager.getInstance();
 
@@ -203,11 +218,6 @@ public class NotificationParserManager
     public void attach(NotificationParserManagerCallbacks callbacks)
     {
         mListenerManager.attach(callbacks);
-
-        if (mListenerManager.size() == 1 && mNotificationParsers.size() == 0)
-        {
-            start();
-        }
     }
 
     public void detach(NotificationParserManagerCallbacks callbacks)

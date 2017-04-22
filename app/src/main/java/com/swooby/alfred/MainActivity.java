@@ -48,6 +48,7 @@ import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity
@@ -251,7 +252,7 @@ public class MainActivity
         });
 
         mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
-        ArrayList<Profile> profiles = mProfileManager.getProfiles();
+        List<Profile> profiles = mProfileManager.getProfiles(this);
         ArrayAdapter profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()

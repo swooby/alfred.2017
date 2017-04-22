@@ -7,21 +7,24 @@ import android.support.annotation.NonNull;
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
-import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener;
-import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectionCallbacks;
+import com.smartfoo.android.core.bluetooth.FooBluetoothAudioConnectionListener;
+import com.smartfoo.android.core.bluetooth.FooBluetoothAudioConnectionListener.OnBluetoothAudioConnectionCallbacks;
+import com.smartfoo.android.core.bluetooth.FooBluetoothManager;
+import com.smartfoo.android.core.bluetooth.FooBluetoothUtils;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener;
 import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener.OnWiredHeadsetConnectionCallbacks;
 import com.swooby.alfred.Profile.Tokens;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
+import java.util.Set;
 
 public class ProfileManager
 {
     private static final String TAG = FooLog.TAG(ProfileManager.class);
 
-    public static String DEFAULT_PROFILE_TOKEN = Tokens.WIRED_HEADPHONES_ONLY;
+    public static String DEFAULT_PROFILE_TOKEN = Tokens.HEADPHONES_WIRED;
 
     public enum HeadsetType
     {
@@ -63,7 +66,8 @@ public class ProfileManager
     private final ProfileManagerConfiguration                 mConfiguration;
     private final FooListenerManager<ProfileManagerCallbacks> mListenerManager;
     private final FooWiredHeadsetConnectionListener           mWiredHeadsetConnectionListener;
-    private final FooBluetoothHeadsetConnectionListener       mBluetoothHeadsetConnectionListener;
+    private final FooBluetoothManager                         mBluetoothManager;
+    private final FooBluetoothAudioConnectionListener         mBluetoothAudioConnectionListener;
 
     private String mProfileTokenEnabled;
 
@@ -79,7 +83,8 @@ public class ProfileManager
         mConfiguration = configuration;
         mListenerManager = new FooListenerManager<>(this);
         mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(context);
-        mBluetoothHeadsetConnectionListener = new FooBluetoothHeadsetConnectionListener(context);
+        mBluetoothManager = new FooBluetoothManager(context);
+        mBluetoothAudioConnectionListener = mBluetoothManager.getBluetoothAudioConnectionListener();
 
         updateProfileTokenEnabled();
 
@@ -98,18 +103,18 @@ public class ProfileManager
             }
         });
 
-        mBluetoothHeadsetConnectionListener.attach(new OnBluetoothHeadsetConnectionCallbacks()
+        mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
         {
             @Override
-            public void onBluetoothHeadsetConnected(BluetoothDevice bluetoothDevice)
+            public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
             {
-                ProfileManager.this.onBluetoothHeadsetConnected(bluetoothDevice);
+                ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
             }
 
             @Override
-            public void onBluetoothHeadsetDisconnected(BluetoothDevice bluetoothDevice)
+            public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
             {
-                ProfileManager.this.onBluetoothHeadsetDisconnected(bluetoothDevice);
+                ProfileManager.this.onBluetoothAudioDisconnected(bluetoothDevice);
             }
         });
 
@@ -117,22 +122,28 @@ public class ProfileManager
     }
 
     @NonNull
-    public ArrayList<Profile> getProfiles()
+    public List<Profile> getProfiles(@NonNull Context context)
     {
-        ArrayList<Profile> profiles = new ArrayList<>();
+        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
 
-        profiles.add(getProfile(profiles.size(), R.string.profile_disabled, Tokens.DISABLED));
-        profiles.add(getProfile(profiles.size(), R.string.profile_wired_headphones_only, Tokens.WIRED_HEADPHONES_ONLY));
-        //profiles.add(profileCreate(profiles.size(), R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
-        profiles.add(getProfile(profiles.size(), R.string.profile_always_on, Tokens.ALWAYS_ON));
+        List<Profile> profiles = new ArrayList<>();
+
+        addProfile(profiles, context, R.string.profile_disabled, Tokens.DISABLED);
+        addProfile(profiles, context, R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
+
+        addProfile(profiles, context, R.string.profile_always_on, Tokens.ALWAYS_ON);
 
         return profiles;
     }
 
-    private Profile getProfile(int index, int resIdName, String token)
+    private void addProfile(List<Profile> profiles, Context context, int resIdName, String token)
     {
-        String name = mContext.getString(resIdName);
-        return new Profile(index, name, token);
+        addProfile(profiles, context.getString(resIdName), token);
+    }
+
+    private void addProfile(List<Profile> profiles, String name, String token)
+    {
+        profiles.add(new Profile(profiles.size(), name, token));
     }
 
     public boolean isEnabled()
@@ -178,26 +189,32 @@ public class ProfileManager
         return true;
     }
 
+    /*
     public boolean isHeadsetConnected()
     {
-        return isWiredHeadsetConnected() || isBluetoothHeadsetConnected();
+        return isWiredHeadsetConnected() || isBluetoothAudioConnected();
     }
+    */
 
     public boolean isWiredHeadsetConnected()
     {
         return mWiredHeadsetConnectionListener.isWiredHeadsetConnected();
     }
 
-    public boolean isBluetoothHeadsetConnected()
+    /*
+    public boolean isBluetoothAudioConnected()
     {
-        return mBluetoothHeadsetConnectionListener.isBluetoothHeadsetConnected();
+        return mBluetoothAudioConnectionListener.isBluetoothAudioConnected();
     }
+    */
 
+    /*
     @NonNull
     public Map<String, BluetoothDevice> getConnectedBluetoothHeadsets()
     {
-        return mBluetoothHeadsetConnectionListener.getConnectedBluetoothHeadsets();
+        return mBluetoothAudioConnectionListener.getConnectedBluetoothHeadsets();
     }
+    */
 
     public void attach(@NonNull ProfileManagerCallbacks callbacks)
     {
@@ -220,16 +237,16 @@ public class ProfileManager
         mListenerManager.detach(callbacks);
     }
 
-    private void onBluetoothHeadsetConnected(BluetoothDevice bluetoothDevice)
+    private void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
     {
-        FooLog.v(TAG, "onBluetoothHeadsetConnected(bluetoothDevice=" + bluetoothDevice + ')');
+        FooLog.v(TAG, "onBluetoothAudioConnected(bluetoothDevice=" + bluetoothDevice + ')');
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, true);
     }
 
-    private void onBluetoothHeadsetDisconnected(BluetoothDevice bluetoothDevice)
+    private void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
     {
-        FooLog.v(TAG, "onBluetoothHeadsetDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
+        FooLog.v(TAG, "onBluetoothAudioDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, false);
     }
@@ -271,10 +288,10 @@ public class ProfileManager
         String newProfileTokenEnabled = null;
         switch (profileToken)
         {
-            case Tokens.WIRED_HEADPHONES_ONLY:
+            case Tokens.HEADPHONES_WIRED:
                 if (isWiredHeadsetConnected())
                 {
-                    newProfileTokenEnabled = Tokens.WIRED_HEADPHONES_ONLY;
+                    newProfileTokenEnabled = Tokens.HEADPHONES_WIRED;
                 }
                 break;
             /*

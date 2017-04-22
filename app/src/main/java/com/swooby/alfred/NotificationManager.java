@@ -176,7 +176,7 @@ public class NotificationManager
             {
                 case Tokens.DISABLED:
                     return context.getString(R.string.alfred_manually_disabled);
-                case Tokens.WIRED_HEADPHONES_ONLY:
+                case Tokens.HEADPHONES_WIRED:
                     s = context.getString(R.string.alfred_wired_headphone);
                     break;
             }

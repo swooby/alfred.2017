@@ -9,10 +9,9 @@ public class Profile
 {
     public static abstract class Tokens
     {
-        public static final String DISABLED              = "profile.disabled";
-        public static final String WIRED_HEADPHONES_ONLY = "profile.wired_headphones_only";
-        //public static final String HEADPHONES_ONLY       = "profile.headphones_only";
-        public static final String ALWAYS_ON             = "profile.always_on";
+        public static final String DISABLED                 = "profile.disabled";
+        public static final String HEADPHONES_WIRED         = "profile.headphones_wired";
+        public static final String ALWAYS_ON                = "profile.always_on";
 
         public static boolean isDisabled(String value)
         {

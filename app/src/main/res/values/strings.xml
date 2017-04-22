@@ -26,8 +26,10 @@
 
     <!-- Profile names: May these ever be spoken? -->
     <string name="profile_disabled">Disabled</string>
-    <string name="profile_wired_headphones_only">Wired Headphones Only</string>
-    <string name="profile_headphones_only">Headphones Only</string>
+    <string name="profile_headphones_wired">Headphones: Wired</string>
+    <string name="profile_headphones_bluetooth_any">Headphones: Bluetooth Any</string>
+    <string name="profile_headphones_bluetooth_X">\tBluetooth: \"%1$s\"</string>
+    <string name="profile_headphones_any">Headphones: Any</string>
     <string name="profile_always_on">Always On</string>
 
 </resources>
