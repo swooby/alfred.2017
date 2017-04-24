@@ -14,7 +14,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.collections.FooLongSparseArray;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
-import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
+import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedCallbacks;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.network.FooCellularStateListener;
 import com.smartfoo.android.core.network.FooCellularStateListener.FooCellularHookStateCallbacks;
@@ -892,7 +892,7 @@ public class AlfredManager
 
     private void volumeObserverStart(int audioStreamType)
     {
-        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedListener()
+        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedCallbacks()
         {
             @Override
             public void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
