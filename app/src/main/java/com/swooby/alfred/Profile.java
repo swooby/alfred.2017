@@ -11,6 +11,8 @@ public class Profile
     {
         public static final String DISABLED                 = "profile.disabled";
         public static final String HEADPHONES_WIRED         = "profile.headphones_wired";
+        public static final String HEADPHONES_BLUETOOTH_ANY = "profile.headphones_bluetooth_any";
+        public static final String HEADPHONES_ANY           = "profile.headphones_any";
         public static final String ALWAYS_ON                = "profile.always_on";
 
         public static boolean isDisabled(String value)

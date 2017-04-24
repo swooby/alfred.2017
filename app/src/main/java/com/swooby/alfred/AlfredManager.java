@@ -905,7 +905,6 @@ public class AlfredManager
     private void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
     {
         String audioStreamTypeName = FooAudioUtils.audioStreamTypeToString(mApplicationContext, audioStreamType);
-
         String text = getString(R.string.alfred_X_volume_Y_percent, audioStreamTypeName, volumePercent);
         mTextToSpeechManager.speak(text);
 

@@ -130,7 +130,22 @@ public class ProfileManager
 
         addProfile(profiles, context, R.string.profile_disabled, Tokens.DISABLED);
         addProfile(profiles, context, R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
+        addProfile(profiles, context, R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
 
+        Set<BluetoothDevice> bluetoothDevices = mBluetoothManager.getBondedDevices();
+        for (BluetoothDevice bluetoothDevice : bluetoothDevices)
+        {
+            String deviceAddress = bluetoothDevice.getAddress();
+            String deviceName = bluetoothDevice.getName();
+            boolean isAudioOutput = FooBluetoothUtils.isAudioOutput(bluetoothDevice);
+            if (isAudioOutput)
+            {
+                String name = context.getString(R.string.profile_headphones_bluetooth_X, deviceName);
+                addProfile(profiles, name, deviceAddress);
+            }
+        }
+
+        addProfile(profiles, context, R.string.profile_headphones_any, Tokens.HEADPHONES_ANY);
         addProfile(profiles, context, R.string.profile_always_on, Tokens.ALWAYS_ON);
 
         return profiles;
@@ -201,12 +216,15 @@ public class ProfileManager
         return mWiredHeadsetConnectionListener.isWiredHeadsetConnected();
     }
 
-    /*
     public boolean isBluetoothAudioConnected()
     {
         return mBluetoothAudioConnectionListener.isBluetoothAudioConnected();
     }
-    */
+
+    public boolean isBluetoothAudioConnected(String deviceMacAddress)
+    {
+        return mBluetoothAudioConnectionListener.isBluetoothAudioConnected(deviceMacAddress);
+    }
 
     /*
     @NonNull
@@ -294,14 +312,24 @@ public class ProfileManager
                     newProfileTokenEnabled = Tokens.HEADPHONES_WIRED;
                 }
                 break;
-            /*
-            case Tokens.HEADPHONES_ONLY:
-                if (isHeadsetConnected())
+            case Tokens.HEADPHONES_BLUETOOTH_ANY:
+                if (isBluetoothAudioConnected())
                 {
-                    profileTokenEnabled = Tokens.HEADPHONES_ONLY;
+                    newProfileTokenEnabled = Tokens.HEADPHONES_BLUETOOTH_ANY;
                 }
                 break;
-                */
+            default:
+                if (isBluetoothAudioConnected(profileToken))
+                {
+                    newProfileTokenEnabled = profileToken;
+                }
+                break;
+            case Tokens.HEADPHONES_ANY:
+                if (isWiredHeadsetConnected() || isBluetoothAudioConnected())
+                {
+                    newProfileTokenEnabled = Tokens.HEADPHONES_ANY;
+                }
+                break;
             case Tokens.ALWAYS_ON:
                 newProfileTokenEnabled = Tokens.ALWAYS_ON;
                 break;
