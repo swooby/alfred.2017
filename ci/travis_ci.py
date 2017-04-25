@@ -163,7 +163,7 @@ def waitWhileDependenciesRunning():
             continue
 
         seconds = 60
-        print 'Build running on %r; waiting %d sec…' % (dependency, millis)
+        print 'Build running on %r; waiting %d seconds…' % (dependency, seconds)
         time.sleep(seconds)
 
 
