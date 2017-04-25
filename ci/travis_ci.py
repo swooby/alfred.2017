@@ -162,9 +162,9 @@ def waitWhileDependenciesRunning():
             dependencies.pop(0)
             continue
 
-        millis = 60 * 1000
-        print 'Build running on %r; waiting %d ms…' % (dependency, millis)
-        time.sleep(millis)
+        seconds = 60
+        print 'Build running on %r; waiting %d sec…' % (dependency, millis)
+        time.sleep(seconds)
 
 
 def main():
