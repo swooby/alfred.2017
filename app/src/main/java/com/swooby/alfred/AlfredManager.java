@@ -3,6 +3,8 @@ package com.swooby.alfred;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler.Callback;
+import android.os.Message;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
@@ -94,7 +96,14 @@ public class AlfredManager
 
         mApplicationContext = applicationContext;
 
-        mHandler = new FooHandler();
+        mHandler = new FooHandler(new Callback()
+        {
+            @Override
+            public boolean handleMessage(Message msg)
+            {
+                return AlfredManager.this.handleMessage(msg);
+            }
+        });
 
         mAppPreferences = new AppPreferences(mApplicationContext);
 
@@ -178,7 +187,6 @@ public class AlfredManager
             }
         };
         mAudioStreamVolumeObserver = new FooAudioStreamVolumeObserver(mApplicationContext);
-        mAudioStreamVolumeObserver.setDelayedMilliseconds(800);
 
         mProfileManager = new ProfileManager(mApplicationContext, new ProfileManagerConfiguration()
         {
@@ -905,10 +913,9 @@ public class AlfredManager
 
     private void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
     {
-        String audioStreamTypeName = FooAudioUtils.audioStreamTypeToString(mApplicationContext, audioStreamType);
-        //String text = getString(R.string.alfred_X_volume_Y_of_Z, audioStreamTypeName, volume, volumeMax);
-        String text = getString(R.string.alfred_X_volume_Y_percent, audioStreamTypeName, volumePercent);
-        mTextToSpeechManager.speak(text);
+        //FooLog.d(TAG, "onAudioStreamVolumeChanged: MESSAGE_VOLUME_CHANGED audioStreamType volume");
+        mHandler.removeMessages(Messages.VOLUME_CHANGED);
+        mHandler.obtainAndSendMessageDelayed(Messages.VOLUME_CHANGED, audioStreamType, volumePercent, 800);
 
         if (audioStreamType == mTextToSpeechManager.getAudioStreamType())
         {
@@ -918,5 +925,41 @@ public class AlfredManager
             }
             mListenerManager.endTraversing();
         }
+    }
+
+    private interface Messages
+    {
+        /**
+         * <ul>
+         * <li>msg.arg1: audioStreamType</li>
+         * <li>msg.arg2: volumePercent</li>
+         * <li>msg.obj: ?</li>
+         * </ul>
+         */
+        int VOLUME_CHANGED = 100;
+    }
+
+    private boolean handleMessage(Message msg)
+    {
+        switch (msg.what)
+        {
+            case Messages.VOLUME_CHANGED:
+                onAudioStreamVolumeChanged(msg);
+                break;
+        }
+        return false;
+    }
+
+    private void onAudioStreamVolumeChanged(Message msg)
+    {
+        int audioStreamType = msg.arg1;
+        //FooLog.v(TAG, "onAudioStreamVolumeChanged: audioStreamType == " + audioStreamType);
+        int volumePercent = msg.arg2;
+        //FooLog.v(TAG, "onAudioStreamVolumeChanged: volume == " + volume);
+
+        String audioStreamTypeName = FooAudioUtils.audioStreamTypeToString(mApplicationContext, audioStreamType);
+        //String text = getString(R.string.alfred_X_volume_Y_of_Z, audioStreamTypeName, volume, volumeMax);
+        String text = getString(R.string.alfred_X_volume_Y_percent, audioStreamTypeName, volumePercent);
+        mTextToSpeechManager.speak(text);
     }
 }
