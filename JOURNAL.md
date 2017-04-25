@@ -4,6 +4,18 @@
 (answer: probably because he has billions of dollars and hundreds of
  assistants.)
 
+### 2017/04/20:
+
+For future reference, here is Zuck's results from 2016:
+* https://www.facebook.com/notes/mark-zuckerberg/building-jarvis/10154361492931634/
+And a few other related articles:
+* https://www.youtube.com/watch?v=AFvPeZXqU5A
+* http://www.theverge.com/2016/12/20/14028744/mark-zuckerberg-jarvis-home-ai-video-watch
+* https://techcrunch.com/2016/12/20/watch-mark-zuckerbergs-morgan-freeman-voiced-jarvis-ai-in-action/
+* https://www.washingtonpost.com/news/business/wp/2016/12/20/mark-zuckerberg-builds-an-artificial-intelligence-assistant-to-run-his-house-and-entertain-his-toddler/
+* https://www.engadget.com/2016/12/19/mark-zuckerberg-on-writing-his-own-ai/
+* https://www.fastcompany.com/3066478/mark-zuckerberg-jarvis
+
 ### 2017/04/14:
 
 Alfred shipped to Google Play this week, and I spent the rest of it cleaning

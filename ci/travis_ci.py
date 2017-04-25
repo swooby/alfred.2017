@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# coding=utf-8
 
 """
 Uploads an apk to Google Play
@@ -26,6 +27,7 @@ import re
 import requests
 import subprocess
 import sys
+import time
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from oauth2client.service_account import ServiceAccountCredentials
@@ -33,8 +35,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 def call(args):
     # IMPORTANT: Don't print out the KEYSTORE_PASSWORD/KEY_PASSWORD!
-    #ci = environ('CI')
-    #if ci != 'true':
+    # ci = environ('CI')
+    # if ci != 'true':
     #    print 'call(%r)' % args
     returncode = subprocess.call(args)
     print 'returncode == %r' % returncode
@@ -141,7 +143,33 @@ def uploadFirebase():
           '-PKEY_PASSWORD=%s' % environ('KEY_PASSWORD')])
 
 
+def getDependencyState(dependency):
+    build = requests.get(dependency).json()
+    branch = build.get('branch')
+    state = branch.get('state')
+    return state
+
+
+def waitWhileDependenciesRunning():
+    dependencies = \
+        [
+            'https://api.travis-ci.org/repos/SmartFoo/smartfoo/branches/master',
+        ]
+    while dependencies:
+        dependency = dependencies[0]
+        state = getDependencyState(dependency)
+        if state != 'started':
+            dependencies.pop(0)
+            continue
+
+        millis = 60 * 1000
+        print 'Build running on %r; waiting %d ms…' % (dependency, millis)
+        time.sleep(millis)
+
+
 def main():
+    waitWhileDependenciesRunning()
+
     isRelease = is_release()
     print 'isRelease == %r' % isRelease
 
