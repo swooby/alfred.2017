@@ -63,11 +63,26 @@ public class Profile
     @Override
     public String toString()
     {
+        return getName();
+    }
+
+    public String getName()
+    {
         return mName;
     }
 
     public String getToken()
     {
         return mToken;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof Profile)
+        {
+            return mName.equals(((Profile) obj).mName);
+        }
+        return false;
     }
 }

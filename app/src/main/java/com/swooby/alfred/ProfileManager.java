@@ -3,6 +3,7 @@ package com.swooby.alfred;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -17,7 +18,9 @@ import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener.OnWired
 import com.swooby.alfred.Profile.Tokens;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ProfileManager
@@ -46,17 +49,17 @@ public class ProfileManager
             // ignore
         }
 
-        void onProfileEnabled(String profileToken)
+        void onProfileEnabled(Profile profile)
         {
             // ignore
         }
 
-        void onProfileDisabled(String profileToken)
+        void onProfileDisabled(Profile profile)
         {
             // ignore
         }
 
-        void onProfileTokenSet(String profileToken)
+        void onProfileSet(Profile profile)
         {
             // ignore
         }
@@ -85,8 +88,6 @@ public class ProfileManager
         mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(context);
         mBluetoothManager = new FooBluetoothManager(context);
         mBluetoothAudioConnectionListener = mBluetoothManager.getBluetoothAudioConnectionListener();
-
-        updateProfileTokenEnabled();
 
         mWiredHeadsetConnectionListener.attach(new OnWiredHeadsetConnectionCallbacks()
         {
@@ -118,47 +119,69 @@ public class ProfileManager
             }
         });
 
+        updateProfiles();
+
         FooLog.v(TAG, "-ProfileManager(...)");
     }
 
-    @NonNull
-    public List<Profile> getProfiles(@NonNull Context context)
+    Map<String, Profile> mProfiles = new LinkedHashMap<>();
+
+    private void updateProfiles()
     {
-        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
+        mProfiles.clear();
 
-        List<Profile> profiles = new ArrayList<>();
-
-        addProfile(profiles, context, R.string.profile_disabled, Tokens.DISABLED);
-        addProfile(profiles, context, R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
-        addProfile(profiles, context, R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
+        addProfile(R.string.profile_disabled, Tokens.DISABLED);
+        addProfile(R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
+        addProfile(R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
 
         Set<BluetoothDevice> bluetoothDevices = mBluetoothManager.getBondedDevices();
         for (BluetoothDevice bluetoothDevice : bluetoothDevices)
         {
+            //FooLog.v(TAG, "getProfiles: bluetoothDevice == " + bluetoothDevice);
             String deviceAddress = bluetoothDevice.getAddress();
+            //FooLog.v(TAG, "getProfiles: deviceAddress == " + FooString.quote(deviceAddress));
             String deviceName = bluetoothDevice.getName();
+            //FooLog.v(TAG, "getProfiles: deviceName == " + FooString.quote(deviceName));
             boolean isAudioOutput = FooBluetoothUtils.isAudioOutput(bluetoothDevice);
+            //FooLog.v(TAG, "getProfiles: isAudioOutput == " + isAudioOutput);
             if (isAudioOutput)
             {
-                String name = context.getString(R.string.profile_headphones_bluetooth_X, deviceName);
-                addProfile(profiles, name, deviceAddress);
+                //deviceName = deviceName + " (" + deviceAddress + ')';
+                String name = mContext.getString(R.string.profile_headphones_bluetooth_X, deviceName);
+                addProfile(name, deviceAddress);
             }
         }
 
-        addProfile(profiles, context, R.string.profile_headphones_any, Tokens.HEADPHONES_ANY);
-        addProfile(profiles, context, R.string.profile_always_on, Tokens.ALWAYS_ON);
+        addProfile(R.string.profile_headphones_any, Tokens.HEADPHONES_ANY);
+        addProfile(R.string.profile_always_on, Tokens.ALWAYS_ON);
 
-        return profiles;
+        updateProfileTokenEnabled();
     }
 
-    private void addProfile(List<Profile> profiles, Context context, int resIdName, String token)
+    private void addProfile(@StringRes int resIdName, String token)
     {
-        addProfile(profiles, context.getString(resIdName), token);
+        addProfile(mContext.getString(resIdName), token);
     }
 
-    private void addProfile(List<Profile> profiles, String name, String token)
+    private void addProfile(String name, String token)
     {
-        profiles.add(new Profile(profiles.size(), name, token));
+        mProfiles.put(token, new Profile(mProfiles.size(), name, token));
+    }
+
+    private Profile getProfile(String profileToken)
+    {
+        Profile profile = mProfiles.get(profileToken);
+        if (profile == null)
+        {
+            profile = mProfiles.get(DEFAULT_PROFILE_TOKEN);
+        }
+        return profile;
+    }
+
+    @NonNull
+    public List<Profile> getProfiles()
+    {
+        return new ArrayList<>(mProfiles.values());
     }
 
     public boolean isEnabled()
@@ -166,24 +189,26 @@ public class ProfileManager
         return Tokens.isNotDisabled(mProfileTokenEnabled);
     }
 
-    public String getProfileToken()
+    @NonNull
+    public Profile getProfile()
     {
-        return mConfiguration.getProfileToken();
+        String profileToken = mConfiguration.getProfileToken();
+        return getProfile(profileToken);
     }
 
-    public boolean setProfileToken(String value)
+    public boolean setProfileToken(String profileToken)
     {
-        if (FooString.isNullOrEmpty(value))
+        if (FooString.isNullOrEmpty(profileToken))
         {
-            value = DEFAULT_PROFILE_TOKEN;
+            profileToken = DEFAULT_PROFILE_TOKEN;
         }
 
-        FooLog.v(TAG, "setProfileToken: value == " + FooString.quote(value));
-
-        String profileToken = getProfileToken();
         FooLog.v(TAG, "setProfileToken: profileToken == " + FooString.quote(profileToken));
 
-        if (profileToken.equals(value))
+        Profile profile = getProfile();
+        FooLog.v(TAG, "setProfileToken: profile == " + profile);
+
+        if (profile.getToken().equals(profileToken))
         {
             FooLog.v(TAG, "updateProfileToken: profileToken == value; ignoring");
             return false;
@@ -191,15 +216,17 @@ public class ProfileManager
 
         FooLog.i(TAG, "updateProfileToken: profileToken != value; updating");
 
-        mConfiguration.setProfileToken(value);
+        profile = getProfile(profileToken);
 
-        updateProfileTokenEnabled();
+        mConfiguration.setProfileToken(profileToken);
 
         for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onProfileTokenSet(value);
+            callbacks.onProfileSet(profile);
         }
         mListenerManager.endTraversing();
+
+        updateProfileTokenEnabled();
 
         return true;
     }
@@ -238,14 +265,14 @@ public class ProfileManager
     {
         FooRun.throwIllegalArgumentExceptionIfNull(callbacks, "callbacks");
         mListenerManager.attach(callbacks);
-        String profileToken = getProfileToken();
+        Profile profile = getProfile();
         if (isEnabled())
         {
-            callbacks.onProfileEnabled(profileToken);
+            callbacks.onProfileEnabled(profile);
         }
         else
         {
-            callbacks.onProfileDisabled(profileToken);
+            callbacks.onProfileDisabled(profile);
         }
     }
 
@@ -300,12 +327,16 @@ public class ProfileManager
 
     private void updateProfileTokenEnabled()
     {
-        String profileToken = getProfileToken();
+        Profile profile = getProfile();
+        String profileToken = profile.getToken();
         FooLog.v(TAG, "updateProfileTokenEnabled: profileToken == " + FooString.quote(profileToken));
 
         String newProfileTokenEnabled = null;
         switch (profileToken)
         {
+            case Tokens.DISABLED:
+                // ignore
+                break;
             case Tokens.HEADPHONES_WIRED:
                 if (isWiredHeadsetConnected())
                 {
@@ -355,15 +386,16 @@ public class ProfileManager
         {
             for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
             {
-                callbacks.onProfileDisabled(profileToken);
+                callbacks.onProfileDisabled(profile);
             }
             mListenerManager.endTraversing();
         }
         else
         {
+            profile = getProfile(newProfileTokenEnabled);
             for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
             {
-                callbacks.onProfileEnabled(profileToken);
+                callbacks.onProfileEnabled(profile);
             }
             mListenerManager.endTraversing();
         }

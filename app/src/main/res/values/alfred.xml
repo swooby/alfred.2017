@@ -12,12 +12,10 @@
 
     <string name="alfred_manually_disabled">Manually Disabled</string>
     <string name="alfred_waiting_for_X">Waiting for %1$s</string>
-    <string name="alfred_wired_headphone">Wired Headphone</string>
-
-    <string name="alfred_bluetooth_headphone_X_connected">Bluetooth Headphone %1$s connected</string>
-    <string name="alfred_bluetooth_headphone_X_disconnected">Bluetooth Headphone %1$s connected</string>
-    <string name="alfred_wired_headphone_X_connected">Wired Headphone %1$s connected</string>
-    <string name="alfred_wired_headphone_X_disconnected">Wired Headphone %1$s disconnected</string>
+    <string name="alfred_headphone_wired">Wired Headphone</string>
+    <string name="alfred_headphone_bluetooth_any">Any Bluetooth Headphone</string>
+    <string name="alfred_headphone_bluetooth_X">Bluetooth Headphone %1$s</string>
+    <string name="alfred_headphone_any">Any Headphone</string>
 
     <string name="alfred_screen_on">Screen On</string>
     <string name="alfred_screen_on_after_being_off_for_X">Screen On After Being Off For %1$s</string>
@@ -34,7 +32,7 @@
     <string name="alfred_notification_access_not_enabled">Notification Access Not Enabled</string>
     <string name="alfred_notification_listener_bind_timeout">Notification Listener Bind Timeout</string>
     <string name="alfred_please_enable_notification_access_for_the_X_application">Please enable Notification Access for the \"%1$s\" application.</string>
-    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, reboot your device.</string>
+    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, restart your device.</string>
     <string name="alfred_visual_only_tap_to_configure">Tap to configure.</string>
 
     <!-- TODO:(pv) Better sentence concatenation strategy... -->

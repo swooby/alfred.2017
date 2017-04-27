@@ -169,29 +169,37 @@ public class NotificationManager
     static class NotificationStatusProfileNotEnabled
             extends NotificationStatus
     {
-        private static String toString(@NonNull Context context, @NonNull String token)
+        private static String toString(@NonNull Context context, @NonNull Profile profile)
         {
-            String s = null;
-            switch (token)
+            String s;
+
+            String profileToken = profile.getToken();
+            switch (profileToken)
             {
                 case Tokens.DISABLED:
                     return context.getString(R.string.alfred_manually_disabled);
                 case Tokens.HEADPHONES_WIRED:
-                    s = context.getString(R.string.alfred_wired_headphone);
+                    s = context.getString(R.string.alfred_headphone_wired);
                     break;
+                case Tokens.HEADPHONES_BLUETOOTH_ANY:
+                    s = context.getString(R.string.alfred_headphone_bluetooth_any);
+                    break;
+                default:
+                    s = profile.getName().trim();
+                    break;
+                case Tokens.HEADPHONES_ANY:
+                    s = context.getString(R.string.alfred_headphone_any);
+                    break;
+                case Tokens.ALWAYS_ON:
+                    throw new IllegalStateException("Unexpected ALWAYS_ON");
             }
 
-            if (s != null)
-            {
-                s = context.getString(R.string.alfred_waiting_for_X, s);
-            }
-
-            return s;
+            return context.getString(R.string.alfred_waiting_for_X, s);
         }
 
-        NotificationStatusProfileNotEnabled(@NonNull Context context, String profileToken)
+        NotificationStatusProfileNotEnabled(@NonNull Context context, Profile profile)
         {
-            super(context, R.drawable.ic_alfred_paused_white_18dp, FooRes.getString(context, R.string.alfred_paused), toString(context, profileToken), null);
+            super(context, R.drawable.ic_alfred_paused_white_18dp, FooRes.getString(context, R.string.alfred_paused), toString(context, profile), null);
         }
     }
 

@@ -83,12 +83,12 @@ public class MainActivity
         }
 
         @Override
-        public void onProfileEnabled(String profileToken)
+        public void onProfileEnabled(Profile profile)
         {
         }
 
         @Override
-        public void onProfileDisabled(String profileToken)
+        public void onProfileDisabled(Profile profile)
         {
         }
 
@@ -252,7 +252,7 @@ public class MainActivity
         });
 
         mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
-        List<Profile> profiles = mProfileManager.getProfiles(this);
+        List<Profile> profiles = mProfileManager.getProfiles();
         ArrayAdapter profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
@@ -620,13 +620,11 @@ public class MainActivity
 
         int selectedIndex = -1;
 
-        String profileToken = mProfileManager.getProfileToken();
+        Profile profile = mProfileManager.getProfile();
 
         for (int i = 0; i < profileAdapter.getCount(); i++)
         {
-            Profile profile = profileAdapter.getItem(i);
-            //noinspection ConstantConditions
-            if (profile.getToken().equals(profileToken))
+            if (profile.equals(profileAdapter.getItem(i)))
             {
                 selectedIndex = i;
                 break;

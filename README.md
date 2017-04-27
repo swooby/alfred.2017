@@ -64,6 +64,13 @@ environment might find this app useful.
 3. Many other Notifications also repeat a lot (ex: MyGlass Connected, Chrome Media Playing, etc)
 
 ### Unscheduled:
+* https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognitionApi
+* https://docs.api.ai/
+  * https://github.com/api-ai/apiai-android-client
+* https://developers.google.com/actions/
+  * https://github.com/actions-on-google/actions-on-google-nodejs
+  * https://github.com/frogermcs/Google-Actions-Java-SDK
+* http://stackoverflow.com/questions/41410211/how-to-open-maps-and-calls-using-action-recognize-speech
 * Add ability to go in to Debug Mode
 * Optimize the Volume Observer?
 * Have Android debugging/charging parser add/remove announce charger stat (and remove ChargePortListener?)

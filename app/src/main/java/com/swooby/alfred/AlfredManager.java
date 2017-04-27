@@ -63,9 +63,9 @@ public class AlfredManager
 
         boolean onNotificationListenerNotConnected(NotConnectedReason reason);
 
-        void onProfileEnabled(String profileToken);
+        void onProfileEnabled(Profile profile);
 
-        void onProfileDisabled(String profileToken);
+        void onProfileDisabled(Profile profile);
 
         void onTextToSpeechAudioStreamVolumeChanged(int audioStreamType, int volume);
     }
@@ -327,15 +327,15 @@ public class AlfredManager
             }
 
             @Override
-            void onProfileEnabled(String profileToken)
+            void onProfileEnabled(Profile profile)
             {
-                AlfredManager.this.onProfileEnabled(profileToken);
+                AlfredManager.this.onProfileEnabled(profile);
             }
 
             @Override
-            void onProfileDisabled(String profileToken)
+            void onProfileDisabled(Profile profile)
             {
-                AlfredManager.this.onProfileDisabled(profileToken);
+                AlfredManager.this.onProfileDisabled(profile);
             }
             /*
             @Override
@@ -432,9 +432,9 @@ public class AlfredManager
         }
     }
 
-    private void onProfileEnabled(String profileToken)
+    private void onProfileEnabled(Profile profile)
     {
-        FooLog.i(TAG, "onProfileEnabled(profileToken=" + FooString.quote(profileToken) + ')');
+        FooLog.i(TAG, "onProfileEnabled(profile=" + profile + ')');
 
         mTextToSpeechManager.clear();
 
@@ -459,7 +459,7 @@ public class AlfredManager
 
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onProfileEnabled(profileToken);
+            callbacks.onProfileEnabled(profile);
         }
         mListenerManager.endTraversing();
 
@@ -469,18 +469,18 @@ public class AlfredManager
         }
     }
 
-    private void onProfileDisabled(String profileToken)
+    private void onProfileDisabled(Profile profile)
     {
-        FooLog.i(TAG, "onProfileDisabled(profileToken=" + FooString.quote(profileToken) + ')');
+        FooLog.i(TAG, "onProfileDisabled(profile=" + profile + ')');
 
-        NotificationStatus notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
+        NotificationStatus notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profile);
         notification(notificationStatus, "TBD text", "onProfileDisabled");
 
         mTextToSpeechManager.clear();
 
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onProfileDisabled(profileToken);
+            callbacks.onProfileDisabled(profile);
         }
         mListenerManager.endTraversing();
     }
@@ -537,8 +537,8 @@ public class AlfredManager
         }
         else
         {
-            String profileToken = mProfileManager.getProfileToken();
-            notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
+            Profile profile = mProfileManager.getProfile();
+            notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profile);
         }
         notification(notificationStatus, "TBD text", "onNotificationAccessSettingConfirmedEnabled");
 
@@ -598,8 +598,8 @@ public class AlfredManager
         }
         else
         {
-            String profileToken = mProfileManager.getProfileToken();
-            notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profileToken);
+            Profile profile = mProfileManager.getProfile();
+            notificationStatus = new NotificationStatusProfileNotEnabled(mApplicationContext, profile);
         }
         notification(notificationStatus, "TBD text", "onNotificationAccessSettingDisabled");
     }
@@ -654,6 +654,7 @@ public class AlfredManager
     private void onAlfredNotificationParsed(AlfredNotificationParser parser)
     {
     }
+
     //
     //
     //
@@ -668,20 +669,23 @@ public class AlfredManager
             headsetName = "";
         }
 
-        int resId;
+        int resIdConnection = isConnected ? R.string.alfred_X_connected : R.string.alfred_X_disconnected;
+
+        int resIdHeadphone;
         switch (headsetType)
         {
             case Bluetooth:
-                resId = isConnected ? R.string.alfred_bluetooth_headphone_X_connected : R.string.alfred_bluetooth_headphone_X_disconnected;
+                resIdHeadphone = R.string.alfred_headphone_bluetooth_X;
                 break;
             case Wired:
-                resId = isConnected ? R.string.alfred_wired_headphone_X_connected : R.string.alfred_wired_headphone_X_disconnected;
+                resIdHeadphone = R.string.alfred_headphone_wired;
                 break;
             default:
                 throw new IllegalArgumentException("Unhandled headsetType == " + headsetType);
         }
 
-        String speech = getString(resId, headsetName);
+        String textHeadphone = getString(resIdHeadphone, headsetName);
+        String speech = getString(resIdConnection, textHeadphone);
         mTextToSpeechManager.speak(speech);
     }
 
