@@ -18,6 +18,7 @@ import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParserCallbacks;
 import com.swooby.alfred.notification.parsers.AlfredNotificationParser;
+import com.swooby.alfred.notification.parsers.ChromeNotificationParser;
 import com.swooby.alfred.notification.parsers.DownloadManagerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
@@ -239,6 +240,7 @@ public class NotificationParserManager
         // TODO:(pv) Not all of these parsers may be required, and could rely on a decent default implementation that walks and talks all visible text elements
         addNotificationParser(new AlfredNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new AndroidSystemNotificationParser(mNotificationParserCallbacks));
+        addNotificationParser(new ChromeNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new FacebookNotificationParser(mNotificationParserCallbacks));
         //addNotificationParser(new GmailNotificationParser(mNotificationParserCallbacks));
         addNotificationParser(new DownloadManagerNotificationParser(mNotificationParserCallbacks));
