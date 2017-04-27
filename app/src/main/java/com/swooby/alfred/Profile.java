@@ -3,6 +3,8 @@ package com.swooby.alfred;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import com.smartfoo.android.core.annotations.NonNullNonEmpty;
+
 import java.util.Comparator;
 
 public class Profile
@@ -45,7 +47,9 @@ public class Profile
     };
 
     private final int    mForcedOrder;
+    @NonNullNonEmpty
     private final String mName;
+    @NonNullNonEmpty
     private final String mToken;
 
     public Profile(@NonNull BluetoothDevice bluetoothDevice)
@@ -53,7 +57,7 @@ public class Profile
         this(Integer.MAX_VALUE, bluetoothDevice.getName(), bluetoothDevice.getAddress());
     }
 
-    public Profile(int forcedOrder, @NonNull String name, @NonNull String token)
+    public Profile(int forcedOrder, @NonNullNonEmpty String name, @NonNullNonEmpty String token)
     {
         mForcedOrder = forcedOrder;
         mName = name;
@@ -66,11 +70,13 @@ public class Profile
         return getName();
     }
 
+    @NonNullNonEmpty
     public String getName()
     {
         return mName;
     }
 
+    @NonNullNonEmpty
     public String getToken()
     {
         return mToken;
@@ -79,10 +85,6 @@ public class Profile
     @Override
     public boolean equals(Object obj)
     {
-        if (obj instanceof Profile)
-        {
-            return mName.equals(((Profile) obj).mName);
-        }
-        return false;
+        return obj instanceof Profile && mName.equals(((Profile) obj).mName);
     }
 }

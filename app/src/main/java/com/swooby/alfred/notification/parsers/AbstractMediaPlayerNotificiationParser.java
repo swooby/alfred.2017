@@ -13,6 +13,7 @@ import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioFocusListener;
 import com.smartfoo.android.core.media.FooAudioFocusListener.FooAudioFocusListenerCallbacks;
+import com.swooby.alfred.R;
 
 public abstract class AbstractMediaPlayerNotificiationParser
         extends AbstractNotificationParser
@@ -120,7 +121,9 @@ public abstract class AbstractMediaPlayerNotificiationParser
         {
             mIsCommercialSpoken = true;
 
-            getTextToSpeech().speak("attenuating " + getPackageAppSpokenName() + " commercial");
+            String speech = getString(R.string.alfred_attenuating_X_commercial, getPackageAppSpokenName());
+
+            speak(speech);
         }
 
         FooLog.w(TAG, prefix + " onCommercial(...); return ParsedIgnored");

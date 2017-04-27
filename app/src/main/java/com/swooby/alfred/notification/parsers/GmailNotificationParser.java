@@ -260,7 +260,7 @@ walkView: view=null
             return NotificationParseResult.Unparsable;
         }
 
-        getTextToSpeech().speak(builder);
+        speak(builder);
 
         return NotificationParseResult.ParsedHandled;
     }

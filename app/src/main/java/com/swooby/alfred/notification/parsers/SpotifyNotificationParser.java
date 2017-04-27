@@ -13,6 +13,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.swooby.alfred.R;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -130,26 +131,26 @@ public class SpotifyNotificationParser
         mLastArtist = textArtist;
         mLastTitle = textTitle;
 
-        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getPackageAppSpokenName());
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getContext(), getPackageAppSpokenName());
 
         if (isPlaying)
         {
             FooLog.w(TAG, prefix + " playing");
 
-            builder.appendSpeech("playing");
+            builder.appendSpeech(R.string.alfred_media_playing);
             builder.appendSilenceWordBreak();
-            builder.appendSpeech("artist " + textArtist);
+            builder.appendSpeech(R.string.alfred_media_artist, textArtist);
             builder.appendSilenceWordBreak();
-            builder.appendSpeech("title " + textTitle);
+            builder.appendSpeech(R.string.alfred_media_title, textTitle);
         }
         else
         {
             FooLog.w(TAG, prefix + " paused");
 
-            builder.appendSpeech("paused");
+            builder.appendSpeech(R.string.alfred_media_paused);
         }
 
-        getTextToSpeech().speak(builder);
+        speak(builder);
 
         return NotificationParseResult.ParsedHandled;
     }

@@ -231,13 +231,6 @@ public class ProfileManager
         return true;
     }
 
-    /*
-    public boolean isHeadsetConnected()
-    {
-        return isWiredHeadsetConnected() || isBluetoothAudioConnected();
-    }
-    */
-
     public boolean isWiredHeadsetConnected()
     {
         return mWiredHeadsetConnectionListener.isWiredHeadsetConnected();
@@ -251,6 +244,11 @@ public class ProfileManager
     public boolean isBluetoothAudioConnected(String deviceMacAddress)
     {
         return mBluetoothAudioConnectionListener.isBluetoothAudioConnected(deviceMacAddress);
+    }
+
+    public boolean isWiredHeadsetOrBluetoothAudioConnected()
+    {
+        return isWiredHeadsetConnected() || isBluetoothAudioConnected();
     }
 
     /*
@@ -356,7 +354,7 @@ public class ProfileManager
                 }
                 break;
             case Tokens.HEADPHONES_ANY:
-                if (isWiredHeadsetConnected() || isBluetoothAudioConnected())
+                if (isWiredHeadsetOrBluetoothAudioConnected())
                 {
                     newProfileTokenEnabled = Tokens.HEADPHONES_ANY;
                 }

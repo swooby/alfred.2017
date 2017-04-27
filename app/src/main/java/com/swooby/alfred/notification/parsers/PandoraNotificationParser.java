@@ -19,6 +19,7 @@ import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.smartfoo.android.core.view.FooViewUtils;
+import com.swooby.alfred.R;
 import com.swooby.alfred.notification.parsers.NotificationParserUtils.ActionInfo;
 import com.swooby.alfred.notification.parsers.NotificationParserUtils.ActionInfos;
 import com.swooby.alfred.notification.parsers.NotificationParserUtils.ActionValueType;
@@ -349,28 +350,28 @@ public class PandoraNotificationParser
         mLastArtist = textArtist;
         mLastStationOrAlbum = textStationOrAlbum;
 
-        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getPackageAppSpokenName());
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getContext(), getPackageAppSpokenName());
 
         if (isPausedByUser)
         {
             FooLog.w(TAG, prefix + " paused");
 
-            builder.appendSpeech("paused");
+            builder.appendSpeech(R.string.alfred_media_paused);
         }
         else
         {
             FooLog.w(TAG, prefix + " playing");
 
-            builder.appendSpeech("playing")
+            builder.appendSpeech(R.string.alfred_media_playing)
                     .appendSilenceWordBreak()
-                    .appendSpeech("artist " + textArtist)
+                    .appendSpeech(R.string.alfred_media_artist, textArtist)
                     .appendSilenceWordBreak()
-                    .appendSpeech("title " + textTitle);
+                    .appendSpeech(R.string.alfred_media_title, textTitle);
             //.appendSilenceWordBreak(500)
             //.appendSpeech("station " + textStationOrAlbum);
         }
 
-        getTextToSpeech().speak(builder);
+        speak(builder);
 
         return NotificationParseResult.ParsedHandled;
     }

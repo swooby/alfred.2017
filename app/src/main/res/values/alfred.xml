@@ -27,6 +27,9 @@
     <string name="alfred_X_disconnected">%1$s Disconnected</string>
     <string name="alfred_X_disconnected_after_being_connected_for_Y">%1$s Disconnected After Being Connected For %2$s</string>
 
+    <string name="alfred_X_volume_Y_percent">%1$s Volume %2$d percent</string>
+    <string name="alfred_X_volume_Y_of_Z">%1$s Volume %2$s of %3$s</string>
+
     <string name="alfred_waiting_for_notification_access">Waiting For Notification Access</string>
     <string name="alfred_notification_listener_connected">Notification Listener Connected</string>
     <string name="alfred_notification_access_not_enabled">Notification Access Not Enabled</string>
@@ -42,6 +45,8 @@
     <!-- Notification Parsers... -->
     <string name="alfred_unknown">Unknown</string>
 
+    <string name="alfred_attenuating_X_commercial">attenuating %1$s commercial</string>
+
     <string name="alfred_pandora_package_app_name">Pandora</string>
 
     <string name="alfred_spotify_package_app_name">Spotify</string>
@@ -53,7 +58,9 @@
     </plurals>
     <string name="alfred_X_says">%1$s says</string>
 
-    <string name="alfred_X_volume_Y_of_Z">%1$s Volume %2$s of %3$s</string>
-    <string name="alfred_X_volume_Y_percent">%1$s Volume %2$d percent</string>
+    <string name="alfred_media_playing">playing</string>
+    <string name="alfred_media_paused">paused</string>
+    <string name="alfred_media_artist">artist %1$s</string>
+    <string name="alfred_media_title">title %1$s</string>
 
 </resources>

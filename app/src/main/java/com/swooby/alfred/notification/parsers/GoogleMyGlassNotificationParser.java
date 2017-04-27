@@ -60,7 +60,7 @@ public class GoogleMyGlassNotificationParser
                 .appendSilenceSentenceBreak()
                 .appendSpeech(androidTitle);
 
-        getTextToSpeech().speak(builder);
+        speak(builder);
 
         return NotificationParseResult.ParsedHandled;
     }

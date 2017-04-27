@@ -159,7 +159,7 @@ public class GoogleHangoutsNotificationParser
             builder.appendSpeech(textMessage.mMessage);
         }
 
-        getTextToSpeech().speak(builder);
+        speak(builder);
 
         return NotificationParseResult.ParsedHandled;
     }

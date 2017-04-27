@@ -14,6 +14,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.platform.FooPlatformUtils;
+import com.smartfoo.android.core.platform.FooRes;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
 import com.swooby.alfred.TextToSpeechManager;
 import com.swooby.alfred.notification.parsers.NotificationParserUtils.WalkViewCallbacks;
@@ -216,7 +217,10 @@ public abstract class AbstractNotificationParser
     private final   String                      mHashtag;
     protected final NotificationParserCallbacks mCallbacks;
 
-    protected AbstractNotificationParser(@NonNull String hashtag, @NonNull NotificationParserCallbacks callbacks)
+    protected String                 mLastTextToSpeechString;
+    protected FooTextToSpeechBuilder mLastTextToSpeechBuilder;
+
+    protected AbstractNotificationParser(@NonNullNonEmpty String hashtag, @NonNull NotificationParserCallbacks callbacks)
     {
         mHashtag = FooRun.toNonNullNonEmpty(hashtag, "hashtag").startsWith("#") ? hashtag : ("#" + hashtag);
         mCallbacks = FooRun.toNonNull(callbacks, "callbacks");
@@ -245,6 +249,11 @@ public abstract class AbstractNotificationParser
         return mCallbacks.getContext();
     }
 
+    protected String getString(int resId, Object... formatArgs)
+    {
+        return FooRes.getString(getContext(), resId, formatArgs);
+    }
+
     protected TextToSpeechManager getTextToSpeech()
     {
         return mCallbacks.getTextToSpeech();
@@ -265,5 +274,25 @@ public abstract class AbstractNotificationParser
 
     public void onNotificationRemoved(StatusBarNotification sbn)
     {
+    }
+
+    protected void speak(@NonNullNonEmpty String speech)
+    {
+        if (speech.equals(mLastTextToSpeechString))
+        {
+            return;
+        }
+
+        getTextToSpeech().speak(speech);
+    }
+
+    protected void speak(@NonNull FooTextToSpeechBuilder builder)
+    {
+        if (builder.equals(mLastTextToSpeechBuilder))
+        {
+            return;
+        }
+
+        getTextToSpeech().speak(builder);
     }
 }
