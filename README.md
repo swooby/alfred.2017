@@ -19,9 +19,9 @@ Alfred is an Open Source personal project of mine to get my Android to
  eventually do all of the following [and more]:
 
 1. Text-To-Speech all current/incoming notifications.
-2. BT/BLE Scanner that detects when a button is pressed on certain BT/BLE devices.
-3. Speech-To-Text various commands.
-4. Do all of this in an always helpful non-annoying way.
+1. BT/BLE Scanner that detects when a button is pressed on certain BT/BLE devices.
+1. Speech-To-Text various commands.
+1. Do all of this in an always helpful non-annoying way.
 
 The target audience is me: I ride my motorcycle a lot and do not have
  any desire to look at or manipulate the screen. I would like to know
@@ -60,10 +60,26 @@ environment might find this app useful.
 
 ### Issues:
 1. Phone numbers may be spoken as "six billion one hundred ninety seven million nine hundred sixty six thousand two hundred ninety nine".
-2. Every determinate progress indicator increment, such as used by Google Play Updates, is spoken.
-3. Many other Notifications also repeat a lot (ex: MyGlass Connected, Chrome Media Playing, etc)
+1. Many Notifications repeat a lot (ex: MyGlass Connected, Chrome Media Playing, Google Play Updates, etc)
 
 ### Unscheduled:
+* Better handling of startup on some problematic devices:
+  * http://stackoverflow.com/a/41627296/252308
+* Interop w/ http://x.ai?
+* Support "Direct Boot"
+  * https://developer.android.com/training/articles/direct-boot.html
+  * https://android-developers.googleblog.com/2016/04/developing-for-direct-boot.html
+* Option to not speak volume if screen unlocked (or some other way to defeat speech)
+* Options to not speak some other things if screen unlocked
+* Better Facebook messenger parsing
+* How to detect phone boot and launch app without requiring screen unlock?
+* Screen unlock/lock listener
+* Button to test adding two notifications and reading them serially but cancelable
+* Button to test repetitive notifications
+* "Share to Alfred" could read whatever is being shared
+* When you plug in, Alfred says "Good Morning|Afternoon|Evening Sir|Mame" and then runs down general status
+* Speak "Shutting down" (and/or detect "Restarting") when power off/reboot detected
+* Detect volume up/down and play bonk sound if at max/min
 * https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognitionApi
 * https://docs.api.ai/
   * https://github.com/api-ai/apiai-android-client
@@ -72,22 +88,18 @@ environment might find this app useful.
   * https://github.com/frogermcs/Google-Actions-Java-SDK
 * http://stackoverflow.com/questions/41410211/how-to-open-maps-and-calls-using-action-recognize-speech
 * Add ability to go in to Debug Mode
-* Optimize the Volume Observer?
 * Have Android debugging/charging parser add/remove announce charger stat (and remove ChargePortListener?)
-* Not getting told when BT headset disconnected?
 * Media Button Controller or Notification Action to repeat last speech or specifically Song info.
   Maybe to also just enable/disable Profile?
 * Bluetooth controls to like/add song or start new station from song
 * Notification bottom text should indicate Notification Listener status
-* Option to speak volume only when screen off
-* Better queueing of Notification processing to only process the next one after the current one finishes speaking
+* Better queueing of Notification processing to only process/speak the next one after the current one finishes speaking
 * DEBUG mode to better catch broken parsers
   * Notify parsers that don't have app installed
   * Shortcut/Action to install app
   * Listener for when app is updated
   * Extract resource from app and mock a notification to see if it still works.
 * Log notification content to location
-* Screen unlock listener
 * Widget that allows shortcut of another name
 * FooTTSBuilder equals and cache to not say if recently spoken
 * Notification controls to disable/enable/snooze/etc
@@ -96,8 +108,9 @@ environment might find this app useful.
 * Always snooze at this time
 * Always snooze at this location
 * Option to remind me every X minutes/hours that Alfred is disabled
-* Option to announce time
+* Option to announce time [quarter, bottom, or top of hour]
 * Per-Parser User-Option to not announce app name?
+* Per-Parser User-Option to turn off parser
 
 ### R&D:
 * Google Now output Intents
@@ -109,4 +122,15 @@ environment might find this app useful.
   http://stackoverflow.com/questions/18049157/how-to-programmatically-initiate-a-google-now-voice-search
   https://www.reddit.com/r/tasker/comments/3eyezg/launch_google_now_via_intent/
 * Voice Recognition
+
+### Related Projects:
+* https://github.com/futhrevo/SpeechTrials
+* https://github.com/Kaljurand/speechutils
+  * https://github.com/Kaljurand/K6nele
+  * https://github.com/Kaljurand/Arvutaja
+  * https://github.com/willblaschko/AlexaAndroid
+* https://github.com/mayurkharche/VoiceAssistant
+  Shows how to use ai.api.android.AIService
+* https://github.com/AnnaForAndroid/ANNA
+* https://github.com/abhi007tyagi/JARVIS
 
