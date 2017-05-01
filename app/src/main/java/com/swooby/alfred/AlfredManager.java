@@ -484,7 +484,7 @@ public class AlfredManager
         {
             FooLog.i(TAG, "onProfileEnabled: mIsUserUnlocked == false");
 
-            mTextToSpeechManager.speak("Your device has just been rebooted and the screen needs to be unlocked before I can read your notifications.");
+            mTextToSpeechManager.speak("Your device has just been rebooted and needs to be unlocked before I can read notifications to you.");
         }
 
         NotificationStatus notificationStatus;
@@ -768,8 +768,9 @@ public class AlfredManager
 
     private void updateScreenInfo()
     {
+        boolean isScreenOn = mScreenListener.isScreenOn();
         String speech;
-        if (mScreenListener.isScreenOn())
+        if (isScreenOn)
         {
             mTimeScreenOnMs = System.currentTimeMillis();
 

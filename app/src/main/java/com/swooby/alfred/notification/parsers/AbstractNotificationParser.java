@@ -283,6 +283,8 @@ public abstract class AbstractNotificationParser
             return;
         }
 
+        mLastTextToSpeechString = speech;
+
         getTextToSpeech().speak(speech);
     }
 
@@ -292,6 +294,8 @@ public abstract class AbstractNotificationParser
         {
             return;
         }
+
+        mLastTextToSpeechBuilder = new FooTextToSpeechBuilder(builder);
 
         getTextToSpeech().speak(builder);
     }
