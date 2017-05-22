@@ -126,6 +126,26 @@ public class TextToSpeechManager
         mListenerManager.endTraversing();
     }
 
+    public float getVoiceSpeed()
+    {
+        return mTextToSpeech.getVoiceSpeed();
+    }
+
+    public void setVoiceSpeed(float voiceSpeed)
+    {
+        mTextToSpeech.setVoiceSpeed(voiceSpeed);
+    }
+
+    public float getVoicePitch()
+    {
+        return mTextToSpeech.getVoicePitch();
+    }
+
+    public void setVoicePitch(float voicePitch)
+    {
+        mTextToSpeech.setVoicePitch(voicePitch);
+    }
+
     /*
     public boolean isInitialized()
     {

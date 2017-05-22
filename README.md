@@ -60,9 +60,12 @@ environment might find this app useful.
 
 ### Issues:
 1. Phone numbers may be spoken as "six billion one hundred ninety seven million nine hundred sixty six thousand two hundred ninety nine".
-1. Many Notifications repeat a lot (ex: MyGlass Connected, Chrome Media Playing, Google Play Updates, etc)
+1. Notifications may repeat a lot (ex: MyGlass Connected, Chrome Media Playing, Google Play Updates, etc)
+I have a temporary mitigation for this, but will hopefully eliminate this with a future refactor of NotificationParserManager.
+1. 20170501: Not disabling when Profile == "Any" and turning off my Bluetooth Interphone F5MC
+1. 20170501: DebugActivity Share doesn't sent file (99% certain this is just a permissions issue)
 
-### Unscheduled:
+### Unscheduled Ideas (Unsorted; typically most recent at top):
 * Better handling of startup on some problematic devices:
   * http://stackoverflow.com/a/41627296/252308
 * Interop w/ http://x.ai?

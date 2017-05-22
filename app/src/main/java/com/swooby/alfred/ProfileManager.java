@@ -314,7 +314,7 @@ public class ProfileManager
                       ", headsetName=" + FooString.quote(headsetName) +
                       ", isConnected=" + isConnected + ')');
 
-        updateProfileTokenEnabled();
+        updateProfiles();
 
         for (ProfileManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {

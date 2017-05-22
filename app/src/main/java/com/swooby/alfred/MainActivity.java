@@ -124,6 +124,8 @@ public class MainActivity
     private NavigationView        mNavigationView;
 
     private Spinner mSpinnerTextToSpeechVoices;
+    private SeekBar mSeekbarTextToSpeechVoiceSpeed;
+    private SeekBar mSeekbarTextToSpeechVoicePitch;
     private Spinner mSpinnerTextToSpeechAudioStreamType;
     private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
     private Spinner mSpinnerProfiles;
@@ -196,6 +198,56 @@ public class MainActivity
         }
 
         mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
+
+        mSeekbarTextToSpeechVoiceSpeed = (SeekBar) findViewById(R.id.seekbarTextToSpeechVoiceSpeed);
+        mSeekbarTextToSpeechVoiceSpeed.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+            {
+                if (fromUser)
+                {
+                    float voiceSpeed = getRateFromSeekBarProgress(seekBar);
+                    mTextToSpeechManager.setVoiceSpeed(voiceSpeed);
+                    mTextToSpeechManager.speak("Good morning, sir");
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar)
+            {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar)
+            {
+            }
+        });
+
+        mSeekbarTextToSpeechVoicePitch = (SeekBar) findViewById(R.id.seekbarTextToSpeechVoicePitch);
+        mSeekbarTextToSpeechVoicePitch.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+            {
+                if (fromUser)
+                {
+                    float voicePitch = getRateFromSeekBarProgress(seekBar);
+                    mTextToSpeechManager.setVoicePitch(voicePitch);
+                    mTextToSpeechManager.speak("Good morning, sir");
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar)
+            {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar)
+            {
+            }
+        });
 
         mSpinnerTextToSpeechAudioStreamType = (Spinner) findViewById(R.id.spinnerTextToSpeechAudioStreamType);
         ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
@@ -507,11 +559,42 @@ public class MainActivity
             onNotificationListenerConnected();
         }
 
+        textToSpeechVoiceUpdate();
         textToSpeechAudioStreamTypeUpdate();
 
         profilesUpdate();
 
         FooLog.v(TAG, "-onResume()");
+    }
+
+    private void textToSpeechVoiceUpdate()
+    {
+        float voiceSpeed = mTextToSpeechManager.getVoiceSpeed();
+        setSeekBarProgressFromRate(mSeekbarTextToSpeechVoiceSpeed, voiceSpeed);
+
+        float voicePitch = mTextToSpeechManager.getVoicePitch();
+        setSeekBarProgressFromRate(mSeekbarTextToSpeechVoicePitch, voicePitch);
+    }
+
+    private float getRateFromSeekBarProgress(SeekBar seekBar)
+    {
+        int seekBarProgress = seekBar.getProgress();
+
+        //noinspection UnnecessaryLocalVariable
+        float rate = seekBarProgress * 0.1f;
+
+        return rate;
+    }
+
+    private void setSeekBarProgressFromRate(SeekBar seekBar, float rate)
+    {
+        int seekBarProgress = Math.round(rate * 10);
+
+        float seekBarMax = seekBar.getMax();
+
+        seekBarProgress = (int) Math.max(1, Math.min(seekBarProgress, seekBarMax));
+
+        seekBar.setProgress(seekBarProgress);
     }
 
     @Override

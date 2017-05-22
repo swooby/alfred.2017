@@ -173,16 +173,9 @@
     </LinearLayout>
     -->
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
-
         <TableLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:ignore="UselessParent"
             >
 
             <TableRow>
@@ -220,11 +213,114 @@
 
             </TableRow>
 
+        <TableRow
+            android:paddingTop="8dp"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_column="1"
+                android:layout_gravity="center_vertical|end"
+                android:paddingEnd="0dp"
+                android:paddingStart="16dp"
+                android:text="@string/speed"
+                />
+
+            <SeekBar
+                android:id="@+id/seekbarTextToSpeechVoiceSpeed"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="30"
+                android:progress="20"
+                />
+
+        </TableRow>
+
+        <TableRow>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_column="2"
+                android:layout_marginEnd="-32dp"
+                android:layout_marginStart="-32dp"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                tools:ignore="SmallSp"
+                >
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="@string/one_tenth"
+                    android:textSize="10sp"
+                    />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="@string/one"
+                    android:textSize="10sp"
+                    />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="@string/two"
+                    android:textSize="10sp"
+                    />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
+                    android:text="@string/three"
+                    android:textSize="10sp"
+                    />
+
+            </LinearLayout>
+
+        </TableRow>
+
             <TableRow>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                android:layout_column="1"
+                android:layout_gravity="center_vertical|end"
+                android:paddingEnd="0dp"
+                android:paddingStart="16dp"
+                android:text="@string/pitch"
+                />
+
+            <SeekBar
+                android:id="@+id/seekbarTextToSpeechVoicePitch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="30"
+                android:progress="10"
+                />
+
+        </TableRow>
+
+        <TableRow
+            android:paddingTop="16dp"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical|end"
                     android:text="@string/stream"
                     />
@@ -246,11 +342,7 @@
 
             </TableRow>
 
-            <TableRow
-                android:paddingBottom="16dp"
-                >
-
-                <TextView/>
+        <TableRow>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -271,7 +363,9 @@
 
             </TableRow>
 
-            <TableRow>
+        <TableRow
+            android:paddingTop="16dp"
+            >
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -411,7 +505,5 @@
             -->
 
         </TableLayout>
-
-    </LinearLayout>
 
 </ScrollView>

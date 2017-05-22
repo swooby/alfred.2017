@@ -17,6 +17,12 @@
 
     <!-- MainActivity: May these ever be spoken? -->
     <string name="voice">Voice:</string>
+    <string name="speed">Speed:</string>
+    <string name="pitch">Pitch:</string>
+    <string name="one_tenth">⅒</string>
+    <string name="one">1</string>
+    <string name="two">2</string>
+    <string name="three">3</string>
     <string name="stream">Stream:</string>
     <string name="volume">Volume:</string>
     <string name="profile">Profile:</string>
