@@ -6,8 +6,9 @@ import android.os.Handler.Callback;
 import android.os.Message;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;

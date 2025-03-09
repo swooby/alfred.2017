@@ -6,7 +6,6 @@ import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -41,6 +40,8 @@ import static com.swooby.alfred.notification.parsers.NotificationParserUtils.toV
 import static com.swooby.alfred.notification.parsers.NotificationParserUtils.unknownIfNullOrEmpty;
 import static com.swooby.alfred.notification.parsers.NotificationParserUtils.walkActions;
 import static com.swooby.alfred.notification.parsers.NotificationParserUtils.walkView;
+
+import androidx.annotation.NonNull;
 
 public class PandoraNotificationParser
         extends AbstractMediaPlayerNotificiationParser

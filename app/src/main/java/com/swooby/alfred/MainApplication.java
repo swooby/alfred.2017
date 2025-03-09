@@ -2,7 +2,8 @@ package com.swooby.alfred;
 
 import android.app.Application;
 import android.content.Context;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.app.FooDebugApplication;

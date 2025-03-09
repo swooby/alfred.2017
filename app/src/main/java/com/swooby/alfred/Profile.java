@@ -1,7 +1,8 @@
 package com.swooby.alfred;
 
 import android.bluetooth.BluetoothDevice;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 
