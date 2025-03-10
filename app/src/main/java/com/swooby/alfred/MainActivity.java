@@ -51,6 +51,7 @@ import java.util.Set;
 
 import com.swooby.alfred.databinding.ActivityMainBinding;
 
+/** @noinspection CommentedOutCode*/
 public class MainActivity
         extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -265,7 +266,7 @@ public class MainActivity
 
         mSpinnerTextToSpeechAudioStreamType = (Spinner) findViewById(R.id.spinnerTextToSpeechAudioStreamType);
         ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
-        ArrayAdapter textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
+        ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
         mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
         {
@@ -387,7 +388,7 @@ public class MainActivity
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig)
+    public void onConfigurationChanged(@NonNull Configuration newConfig)
     {
         super.onConfigurationChanged(newConfig);
         if (mDrawerToggle != null)
@@ -399,17 +400,13 @@ public class MainActivity
     @Override
     public void onBackPressed()
     {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer != null)
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START))
         {
-            if (drawer.isDrawerOpen(GravityCompat.START))
-            {
-                drawer.closeDrawer(GravityCompat.START);
-            }
-            else
-            {
-                super.onBackPressed();
-            }
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        }
+        else
+        {
+            super.onBackPressed();
         }
     }
 
@@ -513,7 +510,6 @@ public class MainActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item)
     {
@@ -547,11 +543,8 @@ public class MainActivity
         }
         */
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer != null)
-        {
-            drawer.closeDrawer(GravityCompat.START);
-        }
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+
         return true;
     }
 
@@ -645,6 +638,7 @@ public class MainActivity
         mNotificationParserManager.startActivityNotificationListenerSettings();
     }
 
+    /** @noinspection UnusedReturnValue*/
     private int textToSpeechAudioStreamTypeUpdate()
     {
         //noinspection unchecked
@@ -688,6 +682,7 @@ public class MainActivity
 
     }
 
+    /** @noinspection SameParameterValue*/
     private void onTextToSpeechAudioStreamVolumeChanged(int volume, boolean updateSeekbar, boolean updateStreamVolume)
     {
         int audioStreamType = mTextToSpeechManager.getAudioStreamType();
@@ -740,10 +735,12 @@ public class MainActivity
         FooLog.v(TAG, "onActivityResult(...)");
         super.onActivityResult(requestCode, resultCode, data);
 
+        //noinspection SwitchStatementWithTooFewBranches
         switch (requestCode)
         {
             case REQUEST_ACTION_CHECK_TTS_DATA:
             {
+                //noinspection SwitchStatementWithTooFewBranches
                 switch (resultCode)
                 {
                     case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
@@ -774,6 +771,7 @@ public class MainActivity
             return mVoice;
         }
 
+        @NonNull
         @Override
         public String toString()
         {
@@ -952,6 +950,7 @@ public class MainActivity
     @Override
     public boolean onGenericPromptPositiveNegativeDialogFragmentResult(@NonNull GenericPromptPositiveNegativeDialogFragment dialogFragment)
     {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (dialogFragment.getResult())
         {
             case Positive:

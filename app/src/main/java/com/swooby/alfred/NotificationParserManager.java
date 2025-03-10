@@ -80,7 +80,7 @@ public class NotificationParserManager
             @Override
             public void onFirstAttach()
             {
-                if (mNotificationParsers.size() == 0)
+                if (mNotificationParsers.isEmpty())
                 {
                     start();
                 }
@@ -156,6 +156,7 @@ public class NotificationParserManager
         return mConfiguration.getTextToSpeech();
     }
 
+    /** @noinspection BooleanMethodIsAlwaysInverted*/
     private boolean isEnabled()
     {
         return mConfiguration.isNotificationParserEnabled();
@@ -206,6 +207,7 @@ public class NotificationParserManager
                     Notification notification = statusBarNotification.getNotification();
                     if ((notification.flags & Notification.FLAG_ONGOING_EVENT) == Notification.FLAG_ONGOING_EVENT)
                     {
+                        //noinspection SequencedCollectionMethodCanBeUsed
                         prioritized.add(0, statusBarNotification);
                         continue;
                     }

@@ -31,6 +31,7 @@ public class NotificationManager
 
     public static final int FOREGROUND_SERVICE_TYPE = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
 
+    /** @noinspection DataFlowIssue*/
     private static final String PACKAGE_NAME        = NotificationManager.class.getPackage().getName();
     public static final  String EXTRA_ALFRED_EXTRAS = PACKAGE_NAME + ".EXTRAS";
     /**
@@ -194,14 +195,14 @@ public class NotificationManager
                 case Tokens.HEADPHONES_BLUETOOTH_ANY:
                     s = context.getString(R.string.alfred_headphone_bluetooth_any);
                     break;
-                default:
-                    s = profile.getName().trim();
-                    break;
                 case Tokens.HEADPHONES_ANY:
                     s = context.getString(R.string.alfred_headphone_any);
                     break;
                 case Tokens.ALWAYS_ON:
                     throw new IllegalStateException("Unexpected ALWAYS_ON");
+                default:
+                    s = profile.getName().trim();
+                    break;
             }
 
             return context.getString(R.string.alfred_waiting_for_X, s);
@@ -244,6 +245,7 @@ public class NotificationManager
         return notification;
     }
 
+    /** @noinspection SameParameterValue*/
     private FooNotification notificationShow(int requestCode,
                                              int foregroundServiceType,
                                              @NonNull NotificationStatus status,
@@ -279,6 +281,7 @@ public class NotificationManager
     //
     //
 
+    /** @noinspection SameParameterValue*/
     void notifyInitializing(@NonNull String statusSubText, @NonNull String contentTitle, String contentText)
     {
         NotificationStatus notificationStatus = new NotificationStatusStarting(mContext, getString(R.string.alfred_initializing), statusSubText, null);

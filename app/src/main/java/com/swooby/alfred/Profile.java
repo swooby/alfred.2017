@@ -1,8 +1,10 @@
 package com.swooby.alfred;
 
+import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 
 import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 
@@ -53,6 +55,7 @@ public class Profile
     @NonNullNonEmpty
     private final String mToken;
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     public Profile(@NonNull BluetoothDevice bluetoothDevice)
     {
         this(Integer.MAX_VALUE, bluetoothDevice.getName(), bluetoothDevice.getAddress());

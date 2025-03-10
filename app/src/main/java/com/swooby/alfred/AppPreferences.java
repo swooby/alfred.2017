@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.content.FooPreferences;
 
+/** @noinspection unused*/
 public class AppPreferences
         extends FooPreferences
 {

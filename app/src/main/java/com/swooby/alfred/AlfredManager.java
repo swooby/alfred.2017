@@ -2,7 +2,6 @@ package com.swooby.alfred;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.Handler.Callback;
 import android.os.Message;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
@@ -101,14 +100,7 @@ public class AlfredManager
 
         mApplicationContext = applicationContext;
 
-        mHandler = new FooHandler(new Callback()
-        {
-            @Override
-            public boolean handleMessage(Message msg)
-            {
-                return AlfredManager.this.handleMessage(msg);
-            }
-        });
+        mHandler = new FooHandler(AlfredManager.this::handleMessage);
 
         mAppPreferences = new AppPreferences(mApplicationContext);
 
@@ -443,6 +435,7 @@ public class AlfredManager
         return true;
     }
 
+    /** @noinspection SameParameterValue*/
     private void notification(@NonNull NotificationStatus notificationStatus,
                               String text,
                               String subtext)
@@ -666,36 +659,24 @@ public class AlfredManager
     public String getNotificationListenerNotConnectedTitle(@NonNull NotConnectedReason reason)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason");
-        int resId;
-        switch (reason)
-        {
-            case ConfirmedNotEnabled:
-                resId = R.string.alfred_notification_access_not_enabled;
-                break;
-            case ConnectedTimeout:
-                resId = R.string.alfred_notification_listener_bind_timeout;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled reason == " + reason);
-        }
+        int resId = switch (reason) {
+            case ConfirmedNotEnabled -> R.string.alfred_notification_access_not_enabled;
+            case ConnectedTimeout -> R.string.alfred_notification_listener_bind_timeout;
+            default -> throw new IllegalArgumentException("Unhandled reason == " + reason);
+        };
         return getString(resId);
     }
 
     public String getNotificationListenerNotConnectedMessage(@NonNull NotConnectedReason reason)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason");
-        int resId;
-        switch (reason)
-        {
-            case ConfirmedNotEnabled:
-                resId = R.string.alfred_please_enable_notification_access_for_the_X_application;
-                break;
-            case ConnectedTimeout:
-                resId = R.string.alfred_please_reenable_notification_access_for_the_X_application;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled reason == " + reason);
-        }
+        int resId = switch (reason) {
+            case ConfirmedNotEnabled ->
+                    R.string.alfred_please_enable_notification_access_for_the_X_application;
+            case ConnectedTimeout ->
+                    R.string.alfred_please_reenable_notification_access_for_the_X_application;
+            default -> throw new IllegalArgumentException("Unhandled reason == " + reason);
+        };
 
         String appName = getString(R.string.alfred_app_name);
 
@@ -730,18 +711,12 @@ public class AlfredManager
 
         int resIdConnection = isConnected ? R.string.alfred_X_connected : R.string.alfred_X_disconnected;
 
-        int resIdHeadphone;
-        switch (headsetType)
-        {
-            case Bluetooth:
-                resIdHeadphone = R.string.alfred_headphone_bluetooth_X;
-                break;
-            case Wired:
-                resIdHeadphone = R.string.alfred_headphone_wired;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled headsetType == " + headsetType);
-        }
+        int resIdHeadphone = switch (headsetType) {
+            case Bluetooth -> R.string.alfred_headphone_bluetooth_X;
+            case Wired -> R.string.alfred_headphone_wired;
+            //noinspection UnnecessaryDefault
+            default -> throw new IllegalArgumentException("Unhandled headsetType == " + headsetType);
+        };
 
         String textHeadphone = getString(resIdHeadphone, headsetName);
         String speech = getString(resIdConnection, textHeadphone);
@@ -1005,6 +980,7 @@ public class AlfredManager
 
     private boolean handleMessage(Message msg)
     {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (msg.what)
         {
             case Messages.VOLUME_CHANGED:

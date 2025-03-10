@@ -36,6 +36,7 @@ public class AudioStreamType
         mAudioStreamType = audioStreamType;
     }
 
+    @NonNull
     @Override
     public String toString()
     {

@@ -1,9 +1,11 @@
 package com.swooby.alfred;
 
+import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringRes;
 
 import com.smartfoo.android.core.FooListenerManager;
@@ -75,6 +77,7 @@ public class ProfileManager
 
     private String mProfileTokenEnabled;
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     public ProfileManager(@NonNull Context context,
                           @NonNull ProfileManagerConfiguration configuration)
     {
@@ -92,12 +95,14 @@ public class ProfileManager
 
         mWiredHeadsetConnectionListener.attach(new OnWiredHeadsetConnectionCallbacks()
         {
+            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onWiredHeadsetConnected(String name, boolean hasMicrophone)
             {
                 ProfileManager.this.onWiredHeadsetConnected(name, hasMicrophone);
             }
 
+            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onWiredHeadsetDisconnected(String name, boolean hasMicrophone)
             {
@@ -107,12 +112,14 @@ public class ProfileManager
 
         mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
         {
+            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
             {
                 ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
             }
 
+            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
             {
@@ -127,6 +134,7 @@ public class ProfileManager
 
     Map<String, Profile> mProfiles = new LinkedHashMap<>();
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void updateProfiles()
     {
         mProfiles.clear();
@@ -197,6 +205,7 @@ public class ProfileManager
         return getProfile(profileToken);
     }
 
+    /** @noinspection UnusedReturnValue*/
     public boolean setProfileToken(String profileToken)
     {
         if (FooString.isNullOrEmpty(profileToken))
@@ -281,6 +290,7 @@ public class ProfileManager
         mListenerManager.detach(callbacks);
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.v(TAG, "onBluetoothAudioConnected(bluetoothDevice=" + bluetoothDevice + ')');
@@ -288,6 +298,7 @@ public class ProfileManager
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, true);
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.v(TAG, "onBluetoothAudioDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
@@ -295,6 +306,7 @@ public class ProfileManager
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, false);
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onWiredHeadsetConnected(String headsetName, boolean hasMicrophone)
     {
         FooLog.v(TAG, "onWiredHeadsetConnected(headsetName=" + FooString.quote(headsetName) +
@@ -302,6 +314,7 @@ public class ProfileManager
         onHeadsetConnectionChanged(HeadsetType.Wired, headsetName, true);
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onWiredHeadsetDisconnected(String headsetName, boolean hasMicrophone)
     {
         FooLog.v(TAG, "onWiredHeadsetDisconnected(headsetName=" + FooString.quote(headsetName) +
@@ -309,6 +322,7 @@ public class ProfileManager
         onHeadsetConnectionChanged(HeadsetType.Wired, headsetName, false);
     }
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
     {
         FooLog.v(TAG, "onHeadsetConnectionChanged(headsetType=" + headsetType +
@@ -348,12 +362,6 @@ public class ProfileManager
                     newProfileTokenEnabled = Tokens.HEADPHONES_BLUETOOTH_ANY;
                 }
                 break;
-            default:
-                if (isBluetoothAudioConnected(profileToken))
-                {
-                    newProfileTokenEnabled = profileToken;
-                }
-                break;
             case Tokens.HEADPHONES_ANY:
                 if (isWiredHeadsetOrBluetoothAudioConnected())
                 {
@@ -362,6 +370,12 @@ public class ProfileManager
                 break;
             case Tokens.ALWAYS_ON:
                 newProfileTokenEnabled = Tokens.ALWAYS_ON;
+                break;
+            default:
+                if (isBluetoothAudioConnected(profileToken))
+                {
+                    newProfileTokenEnabled = profileToken;
+                }
                 break;
         }
         FooLog.v(TAG, "updateProfileTokenEnabled: newProfileTokenEnabled == " +

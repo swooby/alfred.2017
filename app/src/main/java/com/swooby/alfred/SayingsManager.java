@@ -15,7 +15,7 @@ public class SayingsManager
     private static final Formality FORMALITY_DEFAULT = Formality.Formal;
 
     /**
-     * https://www.altalang.com/beyond-words/2012/05/01/how-did-that-register-five-levels-of-formality-in-language/
+     * <a href="https://www.altalang.com/beyond-words/2012/05/01/how-did-that-register-five-levels-of-formality-in-language/">...</a>
      */
     public enum Formality
     {
@@ -47,6 +47,7 @@ public class SayingsManager
         return randomFormality(null);
     }
 
+    /** @noinspection SameParameterValue*/
     @NonNull
     Formality randomFormality(Formality minimum)
     {
