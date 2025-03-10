@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.content.Context;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.TextView;
@@ -21,6 +20,8 @@ import com.swooby.alfred.notification.parsers.NotificationParserUtils.WalkViewCa
 
 import static com.swooby.alfred.notification.parsers.NotificationParserUtils.inflateRemoteView;
 import static com.swooby.alfred.notification.parsers.NotificationParserUtils.walkView;
+
+import androidx.annotation.NonNull;
 
 public abstract class AbstractNotificationParser
 {

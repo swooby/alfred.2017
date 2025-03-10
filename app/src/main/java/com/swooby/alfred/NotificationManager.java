@@ -1,12 +1,13 @@
 package com.swooby.alfred;
 
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Bundle;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
@@ -21,6 +22,14 @@ import com.swooby.alfred.Profile.Tokens;
 public class NotificationManager
 {
     private static final String TAG = FooLog.TAG(NotificationManager.class);
+
+    public static final FooNotification.ChannelInfo CHANNEL_INFO = new FooNotification.ChannelInfo(
+            "FOREGROUND_SERVICE_CHANNEL",
+            "Foreground Service Channel",
+            android.app.NotificationManager.IMPORTANCE_DEFAULT,
+            "Non-dismissible notifications for session status");
+
+    public static final int FOREGROUND_SERVICE_TYPE = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE;
 
     private static final String PACKAGE_NAME        = NotificationManager.class.getPackage().getName();
     public static final  String EXTRA_ALFRED_EXTRAS = PACKAGE_NAME + ".EXTRAS";
@@ -84,6 +93,7 @@ public class NotificationManager
             mRequestCode = requestCode;
         }
 
+        @NonNull
         @Override
         public String toString()
         {
@@ -216,6 +226,7 @@ public class NotificationManager
     {
         FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
         mContext = context;
+        FooNotification.createNotificationChannel(mContext, CHANNEL_INFO);
     }
 
     private String getString(int resId, Object... formatArgs)
@@ -223,16 +234,18 @@ public class NotificationManager
         return mContext.getString(resId, formatArgs);
     }
 
-    private FooNotification notificationShow(int requestCode, FooNotificationBuilder builder)
+    private FooNotification notificationShow(int requestCode,
+                                             int foregroundServiceType,
+                                             @NonNull FooNotificationBuilder builder)
     {
-        FooNotification notification = new FooNotification(requestCode, builder);
+        FooNotification notification = new FooNotification(requestCode, foregroundServiceType, builder);
         FooLog.v(TAG, "notificationShow: notification=" + notification);
         notification.show(mContext);
         return notification;
     }
 
     private FooNotification notificationShow(int requestCode,
-                                             boolean ongoing,
+                                             int foregroundServiceType,
                                              @NonNull NotificationStatus status,
                                              @NonNull String contentTitle,
                                              String contentText)
@@ -241,9 +254,13 @@ public class NotificationManager
         FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentTitle, "contentTitle");
         //FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentText, "contentText");
 
-        FooNotificationBuilder builder = new FooNotificationBuilder(mContext)
-                .setOngoing(ongoing)
-                .setSmallIcon(status.getSmallIcon())
+        FooNotificationBuilder builder = new FooNotificationBuilder(mContext, CHANNEL_INFO.id);
+
+        if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE) {
+                builder.setOngoing(true);
+        }
+
+        builder.setSmallIcon(status.getSmallIcon())
                 .setSubText(status.getText())
                 .setContentTitle(contentTitle)
                 .setContentIntent(status.getPendingIntent())
@@ -255,7 +272,7 @@ public class NotificationManager
             builder.setContentText(contentText);
         }
 
-        return notificationShow(requestCode, builder);
+        return notificationShow(requestCode, foregroundServiceType, builder);
     }
 
     //
@@ -280,7 +297,7 @@ public class NotificationManager
 
     private void notificationOngoingShow(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
     {
-        mNotificationOngoing = notificationShow(NotificationIds.ONGOING, true, notificationStatus, contentTitle, contentText);
+        mNotificationOngoing = notificationShow(NotificationIds.ONGOING, FOREGROUND_SERVICE_TYPE, notificationStatus, contentTitle, contentText);
     }
 
     private void notificationOngoingCancel()

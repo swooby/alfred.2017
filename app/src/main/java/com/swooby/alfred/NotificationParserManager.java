@@ -2,9 +2,9 @@ package com.swooby.alfred;
 
 import android.app.Notification;
 import android.content.Context;
-import android.os.UserHandle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooListenerAutoStartManager;
 import com.smartfoo.android.core.FooListenerAutoStartManager.FooListenerAutoStartManagerCallbacks;

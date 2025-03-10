@@ -4,7 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;

@@ -1,6 +1,6 @@
 package com.swooby.alfred.notification.parsers;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public class GoogleNowNotificationParser
         extends AbstractNotificationParser

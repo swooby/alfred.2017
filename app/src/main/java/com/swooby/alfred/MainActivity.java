@@ -7,17 +7,6 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +20,15 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+
+import com.google.android.material.navigation.NavigationView;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.app.FooDebugActivity;
 import com.smartfoo.android.core.app.FooDebugConfiguration;
@@ -51,9 +49,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.swooby.alfred.databinding.ActivityMainBinding;
+
 public class MainActivity
         extends AppCompatActivity
-        implements OnNavigationItemSelectedListener,
+        implements NavigationView.OnNavigationItemSelectedListener,
         GenericPromptPositiveNegativeDialogFragmentCallbacks
 {
     private static final String TAG = FooLog.TAG(MainActivity.class);
@@ -123,6 +123,8 @@ public class MainActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
 
+    private ActivityMainBinding binding;
+
     private Spinner mSpinnerTextToSpeechVoices;
     private SeekBar mSeekbarTextToSpeechVoiceSpeed;
     private SeekBar mSeekbarTextToSpeechVoicePitch;
@@ -159,18 +161,21 @@ public class MainActivity
         String intentAction = intent.getAction();
         FooLog.v(TAG, "onCreate: intentAction=" + FooString.quote(intentAction));
 
-        setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        setSupportActionBar(binding.appBarMain.toolbar);
+        /*
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null)
         {
             actionbar.setHomeButtonEnabled(true);
             actionbar.setDisplayHomeAsUpEnabled(true);
         }
+        */
 
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = binding.drawerLayout;
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         {
             @Override
@@ -191,11 +196,20 @@ public class MainActivity
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
 
-        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
-        if (mNavigationView != null)
-        {
-            mNavigationView.setNavigationItemSelectedListener(this);
-        }
+        mNavigationView = binding.navView;
+        mNavigationView.setNavigationItemSelectedListener(this);
+
+        /*
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                .setOpenableLayout(drawer)
+                .build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main2025);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+        */
 
         mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
 
@@ -345,18 +359,15 @@ public class MainActivity
         });
 
         /*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if (fab != null)
-        {
-            fab.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View view)
-                {
-                    MainActivity.this.onFloatingActionButtonClick();
-                }
-            });
-        }
+        binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .setAnchorView(R.id.fab).show();
+                MainActivity.this.onFloatingActionButtonClick();
+            }
+        });
         */
 
         if (savedInstanceState == null)
@@ -401,6 +412,15 @@ public class MainActivity
             }
         }
     }
+
+    /*
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main2025);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -448,44 +468,38 @@ public class MainActivity
 
         boolean isDebugEnabled = isDebugEnabled();
 
-        switch (item.getItemId())
-        {
-            case android.R.id.home:
-                if (mDrawerLayout != null)
-                {
-                    mDrawerLayout.openDrawer(GravityCompat.START);
-                    return true;
-                }
-                break;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            if (mDrawerLayout != null) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                return true;
+            }
             //case R.id.action_settings:
             //    // TODO:(pv) …
             //    return true;
             //case R.id.menu_refresh:
             //    refreshItemsFromTable();
             //    return true;
-            case R.id.action_application_info:
-                FooPlatformUtils.showAppSettings(this);
-                return true;
-            case R.id.action_notification_access:
-                startActivityNotificationListenerSettings();
-                return true;
-            case R.id.action_text_to_speech:
-                startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
-                return true;
-            case R.id.action_debug_show_debug_log:
-            {
-                String username = null;
+        } else if (itemId == R.id.action_application_info) {
+            FooPlatformUtils.showAppSettings(this);
+            return true;
+        } else if (itemId == R.id.action_notification_access) {
+            startActivityNotificationListenerSettings();
+            return true;
+        } else if (itemId == R.id.action_text_to_speech) {
+            startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
+            return true;
+        } else if (itemId == R.id.action_debug_show_debug_log) {
+            String username = null;
 
-                Intent intent = new Intent(this, FooDebugActivity.class);
-                intent.putExtras(FooDebugActivity.makeExtras(null, username));
+            Intent intent = new Intent(this, FooDebugActivity.class);
+            intent.putExtras(FooDebugActivity.makeExtras(null, username));
 
-                startActivity(intent);
+            startActivity(intent);
 
-                return true;
-            }
-            case R.id.action_debug_clear_debug_log:
-                FooLog.clear();
-                break;
+            return true;
+        } else if (itemId == R.id.action_debug_clear_debug_log) {
+            FooLog.clear();
         }
 
         if (mDrawerToggle != null)

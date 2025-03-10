@@ -1,8 +1,61 @@
 # Alfred: Personal Assistant [for Android]
 
-(aka: "If Mark Zuckerberg can attempt to do it, then why can't I?")
-(answer: probably because he has billions of dollars and hundreds of
- assistants.)
+### 2025/03/10:
+
+**8 YEARS?!?!?!***
+
+It has been 8 years since I last updated this code!
+
+Obviously a lot has changed (and nothing has changed).
+
+The main reason I am revisiting this circa 2017 project is because of https://github.com/swooby/AlfredAI,
+an AI based project obviously inspired by **this** project. 
+
+AI became a mortal reality around 2022 and has taken off in 2024; some think that AGI could be reached in 2025 (I am skeptical).
+
+In 2024/12 I was let go from my job (https://swooby.com/pv/resume/) and while unemployed I mashed up
+my Push To Talk experience with my own personal version of OpenAI's Voice Assistant.
+
+The [current] problem with this Alfred project was/is that there isn't any AI in it.
+The [current] problem with the AlfredAI project is that it can't do much.
+
+I loved using Alfred back in 2017; it's most powerful and probably only read feature was reading Notification.
+
+I found this very useful when it worked, playing music or reading texts from my wife.
+
+I always wanted to log these to a personal database that tracked what I did and then use AI to... do something.
+
+I guess this would be for personal historical pseudo-autobiographical reasons.
+
+What was I listening to when ...  
+What was that song that was playing when ...  
+How many gallons of milk did my wife tell me to pick up at the store? 
+
+I am rambling... but this is a Journal.
+
+Point is... this Alfred project is back for a little while; at least until I incorporate its good
+parts into https://github.com/swooby/AlfredAI.
+
+I spent yesterday getting the project to rebuild in 2025 Android Studio Meerkat with mostly current
+dependencies.
+
+Technical note to self (because I have forgotten some of the state of this project):
+* The M2 branch is the default branch because, as you can infer from the
+  https://github.com/swooby/alfred.2017/blob/m2/README.md#milestones section, I deemed that Alfred
+  had reached basic M1 functionality and had moved on to start working on M2 functionality.
+* I don't remember how far I got into getting the M2 functionality working. I see bits and pieces
+  of code that line up with the stated milestone features, but the code smells like it is 
+  incomplete, and the fact that I never moved on to M3 I consider proof that the existing code was
+  left in an incomplete and probably/most-likely non-functional state.
+* Considering this, it may be useful to go back to where M2 was branched off of master to pick up  
+  any working last known good bits.
+* Of course, this means that I would need to go back and 2025 modernize that code too, but that
+  should be easier to do based on the work in M2 2025 modernized branch.
+* I should also just go ahead and audit the changes between master (M1) and
+  [**THE LAST PRE-2025 MODERNIZATION COMMIT**](https://github.com/swooby/alfred.2017/tree/last-pre-2025-modernization)
+  on M2:  
+  https://github.com/swooby/alfred.2017/compare/master...last-pre-2025-modernization?w=1
+
 
 ### 2017/04/20:
 
@@ -74,6 +127,10 @@ My general plan is this:
 3. Start to work on Speech-To-Text.
 
 ### 2016/01/10:
+
+(aka: "If Mark Zuckerberg can attempt to do it, then why can't I?")
+(answer: probably because he has billions of dollars and hundreds of
+assistants.)
 
 On 2016/01/03 MZ announced (via https://www.facebook.com/zuck/posts/10102577175875681):  
 "My personal challenge for 2016 is to build a simple AI to run my home and help me with my work. You can think of it kind of like Jarvis in Iron Man."

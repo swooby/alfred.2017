@@ -1,21 +1,8 @@
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://raw.githubusercontent.com/swooby/alfred/m1/LICENSE)
-[![Stories in Ready](https://badge.waffle.io/swooby/alfred.svg?label=ready&title=Ready)](http://waffle.io/swooby/alfred)
-[![Build Status](https://travis-ci.org/swooby/alfred.svg?branch=master)](https://travis-ci.org/swooby/alfred)
-[![codecov](https://codecov.io/gh/swooby/alfred/branch/m1/graph/badge.svg)](https://codecov.io/gh/swooby/alfred)
-
 # Alfred: Personal Assistant [for Android]
-
-<!--
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://raw.githubusercontent.com/SmartFoo/smartfoo/master/LICENSE)
-[![Stories in Ready](https://badge.waffle.io/SmartFoo/smartfoo.svg?label=ready&title=Ready)](http://waffle.io/SmartFoo/smartfoo)
-[![Build Status](https://travis-ci.org/SmartFoo/smartfoo.svg?branch=master)](https://travis-ci.org/SmartFoo/smartfoo)
-[![codecov](https://codecov.io/gh/SmartFoo/smartfoo/branch/master/graph/badge.svg)](https://codecov.io/gh/SmartFoo/smartfoo)
-[![App](https://api.bintray.com/packages/smartfoo/maven/smartfoo-android-lib-core/images/download.svg)](https://bintray.com/smartfoo/maven/smartfoo-android-lib-core/_latestVersion)
--->
 
 [Journal](JOURNAL.md)
 
-Alfred is an Open Source personal project of mine to get my Android to
+Alfred[.2017] is an Open Source personal project of mine to get my Android to
  eventually do all of the following [and more]:
 
 1. Text-To-Speech all current/incoming notifications.
@@ -60,8 +47,8 @@ environment might find this app useful.
 
 ### Issues:
 1. Phone numbers may be spoken as "six billion one hundred ninety seven million nine hundred sixty six thousand two hundred ninety nine".
-1. Notifications may repeat a lot (ex: MyGlass Connected, Chrome Media Playing, Google Play Updates, etc)
-I have a temporary mitigation for this, but will hopefully eliminate this with a future refactor of NotificationParserManager.
+1. Notifications may repeat a lot (ex: MyGlass Connected, Chrome Media Playing, Google Play Updates, etc).  
+   I have a temporary mitigation for this, but will hopefully eliminate this with a future refactor of NotificationParserManager.
 1. 20170501: Not disabling when Profile == "Any" and turning off my Bluetooth Interphone F5MC
 1. 20170501: DebugActivity Share doesn't sent file (99% certain this is just a permissions issue)
 
