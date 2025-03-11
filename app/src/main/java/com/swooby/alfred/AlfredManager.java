@@ -493,6 +493,7 @@ public class AlfredManager
         {
             FooLog.e(TAG, "onTextToSpeechInitialized: status != TextToSpeech.SUCCESS");
             // TODO: Notify the user that this app, who's whole purpose is to speak, is pretty useless then.
+            // Similar to what `start()`'s `isPermissionGranted_POST_NOTIFICATIONS()` check needs to do.
             return;
         }
     }
