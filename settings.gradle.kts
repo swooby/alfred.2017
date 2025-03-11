@@ -19,7 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Alfred 2017 Redux"
+rootProject.name = "Alfred 2017"
 include(":app")
 
 include(":smartfoo-android-lib-core")

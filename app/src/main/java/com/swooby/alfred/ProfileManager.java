@@ -1,12 +1,15 @@
 package com.swooby.alfred;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -77,7 +80,6 @@ public class ProfileManager
 
     private String mProfileTokenEnabled;
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     public ProfileManager(@NonNull Context context,
                           @NonNull ProfileManagerConfiguration configuration)
     {
@@ -92,6 +94,13 @@ public class ProfileManager
         mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(context);
         mBluetoothManager = new FooBluetoothManager(context);
         mBluetoothAudioConnectionListener = mBluetoothManager.getBluetoothAudioConnectionListener();
+
+        FooLog.v(TAG, "-ProfileManager(...)");
+    }
+
+    void start()
+    {
+        FooLog.v(TAG, "+start()");
 
         mWiredHeadsetConnectionListener.attach(new OnWiredHeadsetConnectionCallbacks()
         {
@@ -112,14 +121,14 @@ public class ProfileManager
 
         mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
         {
-            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            @SuppressLint("MissingPermission")
             @Override
             public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
             {
                 ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
             }
 
-            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            @SuppressLint("MissingPermission")
             @Override
             public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
             {
@@ -129,35 +138,39 @@ public class ProfileManager
 
         updateProfiles();
 
-        FooLog.v(TAG, "-ProfileManager(...)");
+        FooLog.v(TAG, "-start()");
     }
 
     Map<String, Profile> mProfiles = new LinkedHashMap<>();
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void updateProfiles()
     {
         mProfiles.clear();
 
         addProfile(R.string.profile_disabled, Tokens.DISABLED);
         addProfile(R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
-        addProfile(R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
+        //profiles.add(profileCreate(profiles.size(), R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
 
-        Set<BluetoothDevice> bluetoothDevices = mBluetoothManager.getBondedDevices();
-        for (BluetoothDevice bluetoothDevice : bluetoothDevices)
+        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED)
         {
-            //FooLog.v(TAG, "getProfiles: bluetoothDevice == " + bluetoothDevice);
-            String deviceAddress = bluetoothDevice.getAddress();
-            //FooLog.v(TAG, "getProfiles: deviceAddress == " + FooString.quote(deviceAddress));
-            String deviceName = bluetoothDevice.getName();
-            //FooLog.v(TAG, "getProfiles: deviceName == " + FooString.quote(deviceName));
-            boolean isAudioOutput = FooBluetoothUtils.isAudioOutput(bluetoothDevice);
-            //FooLog.v(TAG, "getProfiles: isAudioOutput == " + isAudioOutput);
-            if (isAudioOutput)
+            addProfile(R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
+
+            Set<BluetoothDevice> bluetoothDevices = mBluetoothManager.getBondedDevices();
+            for (BluetoothDevice bluetoothDevice : bluetoothDevices)
             {
-                //deviceName = deviceName + " (" + deviceAddress + ')';
-                String name = mContext.getString(R.string.profile_headphones_bluetooth_X, deviceName);
-                addProfile(name, deviceAddress);
+                //FooLog.v(TAG, "getProfiles: bluetoothDevice == " + bluetoothDevice);
+                String deviceAddress = bluetoothDevice.getAddress();
+                //FooLog.v(TAG, "getProfiles: deviceAddress == " + FooString.quote(deviceAddress));
+                String deviceName = bluetoothDevice.getName();
+                //FooLog.v(TAG, "getProfiles: deviceName == " + FooString.quote(deviceName));
+                boolean isAudioOutput = FooBluetoothUtils.isAudioOutput(bluetoothDevice);
+                //FooLog.v(TAG, "getProfiles: isAudioOutput == " + isAudioOutput);
+                if (isAudioOutput)
+                {
+                    //deviceName = deviceName + " (" + deviceAddress + ')';
+                    String name = mContext.getString(R.string.profile_headphones_bluetooth_X, deviceName);
+                    addProfile(name, deviceAddress);
+                }
             }
         }
 

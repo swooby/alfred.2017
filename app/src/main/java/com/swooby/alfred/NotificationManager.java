@@ -1,5 +1,6 @@
 package com.swooby.alfred;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
@@ -235,6 +237,7 @@ public class NotificationManager
         return mContext.getString(resId, formatArgs);
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private FooNotification notificationShow(int requestCode,
                                              int foregroundServiceType,
                                              @NonNull FooNotificationBuilder builder)
@@ -245,7 +248,7 @@ public class NotificationManager
         return notification;
     }
 
-    /** @noinspection SameParameterValue*/
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private FooNotification notificationShow(int requestCode,
                                              int foregroundServiceType,
                                              @NonNull NotificationStatus status,
@@ -259,7 +262,7 @@ public class NotificationManager
         FooNotificationBuilder builder = new FooNotificationBuilder(mContext, CHANNEL_INFO.id);
 
         if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE) {
-                builder.setOngoing(true);
+            builder.setOngoing(true);
         }
 
         builder.setSmallIcon(status.getSmallIcon())
@@ -281,23 +284,26 @@ public class NotificationManager
     //
     //
 
-    /** @noinspection SameParameterValue*/
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     void notifyInitializing(@NonNull String statusSubText, @NonNull String contentTitle, String contentText)
     {
         NotificationStatus notificationStatus = new NotificationStatusStarting(mContext, getString(R.string.alfred_initializing), statusSubText, null);
         notificationOngoingShow(notificationStatus, contentTitle, contentText);
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     void notifyRunning(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
     {
         notificationOngoingShow(notificationStatus, contentTitle, contentText);
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     void notifyPaused(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
     {
         notificationOngoingShow(notificationStatus, contentTitle, contentText);
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private void notificationOngoingShow(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
     {
         mNotificationOngoing = notificationShow(NotificationIds.ONGOING, FOREGROUND_SERVICE_TYPE, notificationStatus, contentTitle, contentText);

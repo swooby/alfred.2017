@@ -53,19 +53,6 @@
         </activity>
 
         <service
-            android:name="com.smartfoo.android.core.notification.FooNotificationService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse"
-            tools:node="replace"
-            >
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Notification Parsing Voice Assistant Session"
-                />
-        </service>
-
-        <service
             android:name="com.smartfoo.android.core.notification.FooNotificationListenerManager$FooNotificationListener"
             android:enabled="true"
             android:exported="true"
@@ -76,6 +63,18 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
                 <action android:name="com.smartfoo.android.core.notification.FooNotificationListener.ACTION_BIND_REMOTE_CONTROLLER" />
             </intent-filter>
+        </service>
+
+        <service
+            android:name="com.smartfoo.android.core.notification.FooNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            >
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Notification Parsing Voice Assistant Session"
+                />
         </service>
 
         <receiver

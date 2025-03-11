@@ -1,13 +1,17 @@
 package com.swooby.alfred;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Message;
+import android.content.pm.PackageManager;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -253,6 +257,12 @@ public class AlfredManager
 
             mIsStarted = true;
 
+            if (ContextCompat.checkSelfPermission(mApplicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                FooLog.e(TAG, "checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED");
+                //...
+                return;
+            }
+
             mNotificationManager.notifyInitializing("Text To Speech", "TBD text", "TBD subtext");
             final long timeStartMillis = System.currentTimeMillis();
             mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
@@ -308,7 +318,6 @@ public class AlfredManager
             });
             mBootListener.attach(new FooBootListenerCallbacks()
             {
-
                 @Override
                 public void onBootCompleted()
                 {
@@ -348,6 +357,7 @@ public class AlfredManager
             }
             // TODO:(pv) Phone doze listener
             // TODO:(pv) etc…
+            mProfileManager.start();
             mProfileManager.attach(new ProfileManagerCallbacks()
             {
                 @Override
@@ -435,7 +445,7 @@ public class AlfredManager
         return true;
     }
 
-    /** @noinspection SameParameterValue*/
+    @SuppressLint("MissingPermission")
     private void notification(@NonNull NotificationStatus notificationStatus,
                               String text,
                               String subtext)
@@ -599,8 +609,8 @@ public class AlfredManager
     private void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis, int ifHeadlessDelayMillis)
     {
         FooLog.w(TAG, "onNotificationListenerNotConnected(reason=" + reason +
-                      ", elapsedMillis=" + elapsedMillis +
-                      ", ifHeadlessDelayMillis=" + ifHeadlessDelayMillis + ')');
+                ", elapsedMillis=" + elapsedMillis +
+                ", ifHeadlessDelayMillis=" + ifHeadlessDelayMillis + ')');
 
         if (!mIsUserUnlocked)
         {

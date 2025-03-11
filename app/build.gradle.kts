@@ -10,7 +10,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.swooby.alfred2017redux"
+        applicationId = "com.swooby.alfred2017m2"
         minSdk = 34
         targetSdk = 35
         versionCode = 1

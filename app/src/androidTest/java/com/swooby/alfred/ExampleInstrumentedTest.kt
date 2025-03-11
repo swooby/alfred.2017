@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.swooby.alfred2017redux", appContext.packageName)
+        assertEquals("com.swooby.alfred2017m2", appContext.packageName)
     }
 }
