@@ -288,11 +288,6 @@ public class ProfileManager
         return mBluetoothAudioConnectionListener.isBluetoothAudioConnected(deviceMacAddress);
     }
 
-    public boolean isWiredHeadsetOrBluetoothAudioConnected()
-    {
-        return isWiredHeadsetConnected() || isBluetoothAudioConnected();
-    }
-
     /*
     @NonNull
     public Map<String, BluetoothDevice> getConnectedBluetoothHeadsets()
@@ -300,6 +295,11 @@ public class ProfileManager
         return mBluetoothAudioConnectionListener.getConnectedBluetoothHeadsets();
     }
     */
+
+    public boolean isWiredHeadsetOrBluetoothAudioConnected()
+    {
+        return isWiredHeadsetConnected() || isBluetoothAudioConnected();
+    }
 
     //endregion Headset
 
