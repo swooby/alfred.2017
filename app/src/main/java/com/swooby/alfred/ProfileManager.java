@@ -147,6 +147,8 @@ public class ProfileManager
         FooLog.v(TAG, "-start()");
     }
 
+    //region Profile
+
     Map<String, Profile> mProfiles = new LinkedHashMap<>();
 
     @NonNull
@@ -267,6 +269,10 @@ public class ProfileManager
         updateProfileTokenEnabled();
     }
 
+    //endregion Profile
+
+    //region Headset
+
     public boolean isWiredHeadsetConnected()
     {
         return mWiredHeadsetConnectionListener.isWiredHeadsetConnected();
@@ -294,6 +300,10 @@ public class ProfileManager
         return mBluetoothAudioConnectionListener.getConnectedBluetoothHeadsets();
     }
     */
+
+    //endregion Headset
+
+    //region Callbacks
 
     public void attach(@NonNull ProfileManagerCallbacks callbacks)
     {
@@ -360,6 +370,8 @@ public class ProfileManager
         }
         mListenerManager.endTraversing();
     }
+
+    //endregion Callbacks
 
     private void updateProfileTokenEnabled()
     {
