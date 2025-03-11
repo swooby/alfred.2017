@@ -27,7 +27,6 @@ import com.smartfoo.android.core.network.FooDataConnectionListener.FooDataConnec
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
 import com.smartfoo.android.core.permissions.FooPermissionsChecker;
 import com.smartfoo.android.core.platform.FooBootListener;
-import com.smartfoo.android.core.platform.FooBootListener.FooBootListenerCallbacks;
 import com.smartfoo.android.core.platform.FooChargePortListener;
 import com.smartfoo.android.core.platform.FooChargePortListener.ChargePort;
 import com.smartfoo.android.core.platform.FooChargePortListener.FooChargePortListenerCallbacks;
@@ -330,7 +329,7 @@ public class AlfredManager
                     mTextToSpeechManager.speak("user unlocked");
                 }
             });
-            mBootListener.attach(new FooBootListenerCallbacks()
+            mBootListener.attach(new FooBootListener.FooBootListenerCallbacks()
             {
                 @Override
                 public void onBootCompleted()
