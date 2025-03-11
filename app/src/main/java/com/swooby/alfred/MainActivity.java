@@ -10,7 +10,6 @@ import android.speech.tts.Voice;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -24,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.DialogFragment;
@@ -45,13 +43,12 @@ import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 import com.swooby.alfred.AlfredManager.AlfredManagerCallbacks;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
+import com.swooby.alfred.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import com.swooby.alfred.databinding.ActivityMainBinding;
 
 /** @noinspection CommentedOutCode*/
 public class MainActivity
@@ -163,20 +160,17 @@ public class MainActivity
 
         String intentAction = intent.getAction();
         FooLog.v(TAG, "onCreate: intentAction=" + FooString.quote(intentAction));
-
-
+ 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
-        /*
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null)
         {
             actionbar.setHomeButtonEnabled(true);
             actionbar.setDisplayHomeAsUpEnabled(true);
         }
-        */
 
         mDrawerLayout = binding.drawerLayout;
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
@@ -214,9 +208,9 @@ public class MainActivity
         NavigationUI.setupWithNavController(navigationView, navController);
         */
 
-        mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
+        mSpinnerTextToSpeechVoices = binding.appBarMain.activityMainContent.spinnerTextToSpeechVoices;
 
-        mSeekbarTextToSpeechVoiceSpeed = (SeekBar) findViewById(R.id.seekbarTextToSpeechVoiceSpeed);
+        mSeekbarTextToSpeechVoiceSpeed = binding.appBarMain.activityMainContent.seekbarTextToSpeechVoiceSpeed;
         mSeekbarTextToSpeechVoiceSpeed.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
         {
             @Override
@@ -241,7 +235,7 @@ public class MainActivity
             }
         });
 
-        mSeekbarTextToSpeechVoicePitch = (SeekBar) findViewById(R.id.seekbarTextToSpeechVoicePitch);
+        mSeekbarTextToSpeechVoicePitch = binding.appBarMain.activityMainContent.seekbarTextToSpeechVoicePitch;
         mSeekbarTextToSpeechVoicePitch.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
         {
             @Override
@@ -266,7 +260,7 @@ public class MainActivity
             }
         });
 
-        mSpinnerTextToSpeechAudioStreamType = (Spinner) findViewById(R.id.spinnerTextToSpeechAudioStreamType);
+        mSpinnerTextToSpeechAudioStreamType = binding.appBarMain.activityMainContent.spinnerTextToSpeechAudioStreamType;
         ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
         ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
@@ -287,20 +281,12 @@ public class MainActivity
             }
         });
 
-        ImageButton buttonTextToSpeechAudioStreamTypeTest = (ImageButton) findViewById(R.id.buttonTextToSpeechAudioStreamTypeTest);
-        if (buttonTextToSpeechAudioStreamTypeTest != null)
-        {
-            buttonTextToSpeechAudioStreamTypeTest.setOnClickListener(new OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    mTextToSpeechManager.speak("Testing testing 1 2 3");
-                }
-            });
-        }
+        ImageButton buttonTextToSpeechAudioStreamTypeTest = binding.appBarMain.activityMainContent.buttonTextToSpeechAudioStreamTypeTest;
+        buttonTextToSpeechAudioStreamTypeTest.setOnClickListener(v ->
+                mTextToSpeechManager.speak("Testing testing 1 2 3")
+        );
 
-        mSeekbarTextToSpeechAudioStreamVolume = (SeekBar) findViewById(R.id.seekbarTextToSpeechAudioStreamVolume);
+        mSeekbarTextToSpeechAudioStreamVolume = binding.appBarMain.activityMainContent.seekbarTextToSpeechAudioStreamVolume;
         mSeekbarTextToSpeechAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
         {
             @Override
@@ -320,9 +306,9 @@ public class MainActivity
             }
         });
 
-        mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
+        mSpinnerProfiles = binding.appBarMain.activityMainContent.spinnerProfiles;
         List<Profile> profiles = mProfileManager.getProfiles();
-        ArrayAdapter profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
+        ArrayAdapter<Profile> profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
         {
@@ -339,27 +325,13 @@ public class MainActivity
             }
         });
 
-        mButtonNotificationListenerSettings = (Button) findViewById(R.id.buttonNotificationListenerSettings);
+        mButtonNotificationListenerSettings = binding.appBarMain.activityMainContent.buttonNotificationListenerSettings;
         mButtonNotificationListenerSettings.setVisibility(View.GONE);
-        mButtonNotificationListenerSettings.setOnClickListener(new OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                startActivityNotificationListenerSettings();
-            }
-        });
+        mButtonNotificationListenerSettings.setOnClickListener(v -> startActivityNotificationListenerSettings());
 
-        mButtonProcessNotifications = (Button) findViewById(R.id.buttonProcessNotifications);
+        mButtonProcessNotifications = binding.appBarMain.activityMainContent.buttonProcessNotifications;
         mButtonProcessNotifications.setVisibility(View.GONE);
-        mButtonProcessNotifications.setOnClickListener(new OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                mNotificationParserManager.initializeActiveNotifications();
-            }
-        });
+        mButtonProcessNotifications.setOnClickListener(v -> mNotificationParserManager.initializeActiveNotifications());
 
         /*
         binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
@@ -893,6 +865,7 @@ public class MainActivity
 
     private void verifyRequirements()
     {
+        //...
     }
 
     private void onNotificationListenerConnected()
