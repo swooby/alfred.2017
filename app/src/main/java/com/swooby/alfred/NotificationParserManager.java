@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+/** @noinspection unused, CommentedOutCode */
 public class NotificationParserManager
 {
     private static final String TAG = FooLog.TAG(NotificationParserManager.class);
@@ -220,11 +221,6 @@ public class NotificationParserManager
     public void attach(NotificationParserManagerCallbacks callbacks)
     {
         mListenerManager.attach(callbacks);
-
-        if (mListenerManager.size() == 1 && mNotificationParsers.size() == 0)
-        {
-            start();
-        }
     }
 
     public void detach(NotificationParserManagerCallbacks callbacks)
@@ -318,17 +314,11 @@ public class NotificationParserManager
             result = notificationParser.onNotificationPosted(sbn);
         }
 
+        //noinspection SwitchStatementWithTooFewBranches
         switch (result)
         {
-            case UnparsedIgnored:
-            case DefaultWithTickerText:
-            case DefaultWithoutTickerText:
-                break;
             case Unparsable:
                 FooLog.w(TAG, "onNotificationPosted: Unparsable StatusBarNotification");
-                break;
-            case ParsedHandled:
-            case ParsedIgnored:
                 break;
         }
     }

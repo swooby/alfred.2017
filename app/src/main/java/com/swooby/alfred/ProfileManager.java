@@ -1,13 +1,11 @@
 package com.swooby.alfred;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -79,6 +77,11 @@ public class ProfileManager
 
     private String mProfileTokenEnabled;
 
+    public boolean isEnabled()
+    {
+        return Tokens.isNotDisabled(mProfileTokenEnabled);
+    }
+
     public ProfileManager(@NonNull Context context,
                           @NonNull ProfileManagerConfiguration configuration)
     {
@@ -119,14 +122,12 @@ public class ProfileManager
 
         mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
         {
-            @SuppressLint("MissingPermission")
             @Override
             public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
             {
                 ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
             }
 
-            @SuppressLint("MissingPermission")
             @Override
             public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
             {
@@ -135,12 +136,6 @@ public class ProfileManager
         });
 
         FooLog.v(TAG, "-start()");
-    }
-
-    private Profile getProfile(int index, int resIdName, String token)
-    {
-        String name = mContext.getString(resIdName);
-        return new Profile(index, name, token);
     }
 
     @NonNull
@@ -156,18 +151,21 @@ public class ProfileManager
         return profiles;
     }
 
-    public boolean isEnabled()
+    @NonNull
+    private Profile getProfile(int index, int resIdName, String token)
     {
-        return Tokens.isNotDisabled(mProfileTokenEnabled);
+        String name = mContext.getString(resIdName);
+        return new Profile(index, name, token);
     }
 
+    @NonNull
     public String getProfileToken()
     {
         return mConfiguration.getProfileToken();
     }
 
     /** @noinspection UnusedReturnValue*/
-    public boolean setProfileToken(String value)
+    public boolean setProfileToken(@Nullable String value)
     {
         if (FooString.isNullOrEmpty(value))
         {
@@ -242,18 +240,18 @@ public class ProfileManager
         mListenerManager.detach(callbacks);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.v(TAG, "onBluetoothAudioConnected(bluetoothDevice=" + bluetoothDevice + ')');
+        @SuppressLint("MissingPermission")
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, true);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.v(TAG, "onBluetoothAudioDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
+        @SuppressLint("MissingPermission")
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, false);
     }
