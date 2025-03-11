@@ -204,11 +204,6 @@ public class ProfileManager
 
     //region Headset
 
-    public boolean isHeadsetConnected()
-    {
-        return isWiredHeadsetConnected() || isBluetoothHeadsetConnected();
-    }
-
     public boolean isWiredHeadsetConnected()
     {
         return mWiredHeadsetConnectionListener.isWiredHeadsetConnected();
@@ -223,6 +218,11 @@ public class ProfileManager
     public Map<String, BluetoothDevice> getConnectedBluetoothHeadsets()
     {
         return mBluetoothAudioConnectionListener.getConnectedBluetoothAudioDevices();
+    }
+
+    public boolean isHeadsetConnected()
+    {
+        return isWiredHeadsetConnected() || isBluetoothHeadsetConnected();
     }
 
     //endregion Headset
