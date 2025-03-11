@@ -261,7 +261,7 @@ public class MainActivity
         });
 
         mSpinnerTextToSpeechAudioStreamType = binding.appBarMain.activityMainContent.spinnerTextToSpeechAudioStreamType;
-        ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
+        List<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
         ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
         mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()

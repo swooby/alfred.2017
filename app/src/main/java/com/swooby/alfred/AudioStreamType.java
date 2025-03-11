@@ -9,12 +9,13 @@ import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.R;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class AudioStreamType
 {
     private static ArrayList<AudioStreamType> sTypes;
 
-    public static ArrayList<AudioStreamType> getTypes(@NonNull Context context)
+    public static List<AudioStreamType> getTypes(@NonNull Context context)
     {
         if (sTypes == null)
         {
