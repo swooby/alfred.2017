@@ -1,5 +1,16 @@
 # Alfred: Personal Assistant [for Android]
 
+### 2025/03/11 AM:
+
+I have 2025 modernized M1:  
+https://github.com/swooby/alfred.2017/tree/m1-2025-modernize
+
+The coversion was pretty easy, espcially focusing on the diffs between `last-pre-2025-modernize` and [modernized] `M2`:  
+https://github.com/swooby/alfred.2017/compare/last-pre-2025-modernize...m2?w=1
+
+I merged that into M2 and can now compare them:  
+https://github.com/swooby/alfred.2017/compare/m1-2025-modernize...m2?w=1
+
 ### 2025/03/10:
 
 **8 YEARS?!?!?!***
@@ -52,9 +63,9 @@ Technical note to self (because I have forgotten some of the state of this proje
 * Of course, this means that I would need to go back and 2025 modernize that code too, but that
   should be easier to do based on the work in M2 2025 modernized branch.
 * I should also just go ahead and audit the changes between master (M1) and
-  [**THE LAST PRE-2025 MODERNIZATION COMMIT**](https://github.com/swooby/alfred.2017/tree/last-pre-2025-modernization)
+  [**THE LAST PRE-2025 MODERNIZATION COMMIT**](https://github.com/swooby/alfred.2017/tree/last-pre-2025-modernize)
   on M2:  
-  https://github.com/swooby/alfred.2017/compare/master...last-pre-2025-modernization?w=1
+  https://github.com/swooby/alfred.2017/compare/master...last-pre-2025-modernize?w=1
 
 
 ### 2017/04/20:
