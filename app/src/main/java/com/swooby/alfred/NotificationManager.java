@@ -258,7 +258,6 @@ public class NotificationManager
         }
 
         builder.setSmallIcon(status.getSmallIcon())
-                .setSmallIcon(status.getSmallIcon())
                 .setSubText(status.getText())
                 .setContentTitle(contentTitle)
                 .setContentIntent(status.getPendingIntent())

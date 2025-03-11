@@ -19,6 +19,7 @@ import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener.OnWired
 import com.swooby.alfred.Profile.Tokens;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ProfileManager
@@ -123,7 +124,7 @@ public class ProfileManager
     }
 
     @NonNull
-    public ArrayList<Profile> getProfiles()
+    public List<Profile> getProfiles()
     {
         ArrayList<Profile> profiles = new ArrayList<>();
 

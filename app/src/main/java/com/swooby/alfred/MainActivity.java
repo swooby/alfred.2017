@@ -47,6 +47,7 @@ import com.swooby.alfred.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity
@@ -195,7 +196,7 @@ public class MainActivity
         mSpinnerTextToSpeechVoices = binding.appBarMain.activityMainContent.spinnerTextToSpeechVoices;
 
         mSpinnerTextToSpeechAudioStreamType = binding.appBarMain.activityMainContent.spinnerTextToSpeechAudioStreamType;
-        ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
+        List<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
         ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
         mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
@@ -241,7 +242,7 @@ public class MainActivity
         });
 
         mSpinnerProfiles = binding.appBarMain.activityMainContent.spinnerProfiles;
-        ArrayList<Profile> profiles = mProfileManager.getProfiles();
+        List<Profile> profiles = mProfileManager.getProfiles();
         ArrayAdapter<Profile> profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
