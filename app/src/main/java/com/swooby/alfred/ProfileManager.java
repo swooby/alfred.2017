@@ -138,6 +138,8 @@ public class ProfileManager
         FooLog.v(TAG, "-start()");
     }
 
+    //region Profile
+
     @NonNull
     public List<Profile> getProfiles()
     {
@@ -198,6 +200,10 @@ public class ProfileManager
         return true;
     }
 
+    //endregion Profile
+
+    //region Headset
+
     public boolean isHeadsetConnected()
     {
         return isWiredHeadsetConnected() || isBluetoothHeadsetConnected();
@@ -218,6 +224,10 @@ public class ProfileManager
     {
         return mBluetoothAudioConnectionListener.getConnectedBluetoothAudioDevices();
     }
+
+    //endregion Headset
+
+    //region Callbacks
 
     public void attach(@NonNull ProfileManagerCallbacks callbacks)
     {
@@ -284,6 +294,8 @@ public class ProfileManager
         }
         mListenerManager.endTraversing();
     }
+
+    //endregion Callbacks
 
     private void updateProfileTokenEnabled()
     {
