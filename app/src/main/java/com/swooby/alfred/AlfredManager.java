@@ -396,14 +396,17 @@ public class AlfredManager
         catch (Exception e)
         {
             FooLog.e(TAG, "start()", e);
+            throw e;
         }
         finally
         {
-            FooLog.v(TAG, "-start()");
+            FooLog.i(TAG, "-start()");
         }
     }
 
     /*
+    // PocketSphinx stuff...
+
     private SpeechRecognizer mSpeechRecognizer;
 
     public boolean isSpeechRecognitionAvailable()

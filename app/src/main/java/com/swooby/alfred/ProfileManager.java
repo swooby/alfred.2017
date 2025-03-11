@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 
@@ -115,14 +114,12 @@ public class ProfileManager
 
         mWiredHeadsetConnectionListener.attach(new OnWiredHeadsetConnectionCallbacks()
         {
-            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onWiredHeadsetConnected(String name, boolean hasMicrophone)
             {
                 ProfileManager.this.onWiredHeadsetConnected(name, hasMicrophone);
             }
 
-            @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
             @Override
             public void onWiredHeadsetDisconnected(String name, boolean hasMicrophone)
             {
@@ -152,14 +149,10 @@ public class ProfileManager
 
     Map<String, Profile> mProfiles = new LinkedHashMap<>();
 
-    private void addProfile(@StringRes int resIdName, String token)
+    @NonNull
+    public List<Profile> getProfiles()
     {
-        addProfile(mContext.getString(resIdName), token);
-    }
-
-    private void addProfile(String name, String token)
-    {
-        mProfiles.put(token, new Profile(mProfiles.size(), name, token));
+        return new ArrayList<>(mProfiles.values());
     }
 
     private Profile getProfile(String profileToken)
@@ -173,16 +166,15 @@ public class ProfileManager
     }
 
     @NonNull
-    public List<Profile> getProfiles()
+    private String getProfileToken()
     {
-        return new ArrayList<>(mProfiles.values());
+        return mConfiguration.getProfileToken();
     }
 
     @NonNull
     public Profile getProfile()
     {
-        String profileToken = mConfiguration.getProfileToken();
-        return getProfile(profileToken);
+        return getProfile(getProfileToken());
     }
 
     /** @noinspection UnusedReturnValue*/
@@ -219,6 +211,16 @@ public class ProfileManager
         updateProfileTokenEnabled();
 
         return true;
+    }
+
+    private void addProfile(@StringRes int resIdName, String token)
+    {
+        addProfile(mContext.getString(resIdName), token);
+    }
+
+    private void addProfile(String name, String token)
+    {
+        mProfiles.put(token, new Profile(mProfiles.size(), name, token));
     }
 
     // TODO: Move this to FooBluetoothUtils
