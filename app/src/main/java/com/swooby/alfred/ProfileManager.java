@@ -86,6 +86,11 @@ public class ProfileManager
 
     private String mProfileTokenEnabled;
 
+    public boolean isEnabled()
+    {
+        return Tokens.isNotDisabled(mProfileTokenEnabled);
+    }
+
     public ProfileManager(@NonNull Context context,
                           @NonNull ProfileManagerConfiguration configuration)
     {
@@ -127,14 +132,12 @@ public class ProfileManager
 
         mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
         {
-            @SuppressLint("MissingPermission")
             @Override
             public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
             {
                 ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
             }
 
-            @SuppressLint("MissingPermission")
             @Override
             public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
             {
@@ -148,43 +151,6 @@ public class ProfileManager
     }
 
     Map<String, Profile> mProfiles = new LinkedHashMap<>();
-
-    private void updateProfiles()
-    {
-        mProfiles.clear();
-
-        addProfile(R.string.profile_disabled, Tokens.DISABLED);
-        addProfile(R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
-        //profiles.add(profileCreate(profiles.size(), R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
-
-        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED)
-        {
-            addProfile(R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
-
-            Set<BluetoothDevice> bluetoothDevices = mBluetoothManager.getBondedDevices();
-            for (BluetoothDevice bluetoothDevice : bluetoothDevices)
-            {
-                //FooLog.v(TAG, "getProfiles: bluetoothDevice == " + bluetoothDevice);
-                String deviceAddress = bluetoothDevice.getAddress();
-                //FooLog.v(TAG, "getProfiles: deviceAddress == " + FooString.quote(deviceAddress));
-                String deviceName = bluetoothDevice.getName();
-                //FooLog.v(TAG, "getProfiles: deviceName == " + FooString.quote(deviceName));
-                boolean isAudioOutput = FooBluetoothUtils.isAudioOutput(bluetoothDevice);
-                //FooLog.v(TAG, "getProfiles: isAudioOutput == " + isAudioOutput);
-                if (isAudioOutput)
-                {
-                    //deviceName = deviceName + " (" + deviceAddress + ')';
-                    String name = mContext.getString(R.string.profile_headphones_bluetooth_X, deviceName);
-                    addProfile(name, deviceAddress);
-                }
-            }
-        }
-
-        addProfile(R.string.profile_headphones_any, Tokens.HEADPHONES_ANY);
-        addProfile(R.string.profile_always_on, Tokens.ALWAYS_ON);
-
-        updateProfileTokenEnabled();
-    }
 
     private void addProfile(@StringRes int resIdName, String token)
     {
@@ -210,11 +176,6 @@ public class ProfileManager
     public List<Profile> getProfiles()
     {
         return new ArrayList<>(mProfiles.values());
-    }
-
-    public boolean isEnabled()
-    {
-        return Tokens.isNotDisabled(mProfileTokenEnabled);
     }
 
     @NonNull
@@ -258,6 +219,50 @@ public class ProfileManager
         updateProfileTokenEnabled();
 
         return true;
+    }
+
+    // TODO: Move this to FooBluetoothUtils
+    private boolean isBluetoothPermissionEnabled()
+    {
+        return ContextCompat.checkSelfPermission(mContext, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @SuppressLint("MissingPermission")
+    private void updateProfiles()
+    {
+        mProfiles.clear();
+
+        addProfile(R.string.profile_disabled, Tokens.DISABLED);
+        addProfile(R.string.profile_headphones_wired, Tokens.HEADPHONES_WIRED);
+        //profiles.add(profileCreate(profiles.size(), R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
+
+        if (isBluetoothPermissionEnabled())
+        {
+            addProfile(R.string.profile_headphones_bluetooth_any, Tokens.HEADPHONES_BLUETOOTH_ANY);
+
+            Set<BluetoothDevice> bluetoothDevices = mBluetoothManager.getBondedDevices();
+            for (BluetoothDevice bluetoothDevice : bluetoothDevices)
+            {
+                //FooLog.v(TAG, "getProfiles: bluetoothDevice == " + bluetoothDevice);
+                String deviceAddress = bluetoothDevice.getAddress();
+                //FooLog.v(TAG, "getProfiles: deviceAddress == " + FooString.quote(deviceAddress));
+                String deviceName = bluetoothDevice.getName();
+                //FooLog.v(TAG, "getProfiles: deviceName == " + FooString.quote(deviceName));
+                boolean isAudioOutput = FooBluetoothUtils.isAudioOutput(bluetoothDevice);
+                //FooLog.v(TAG, "getProfiles: isAudioOutput == " + isAudioOutput);
+                if (isAudioOutput)
+                {
+                    //deviceName = deviceName + " (" + deviceAddress + ')';
+                    String name = mContext.getString(R.string.profile_headphones_bluetooth_X, deviceName);
+                    addProfile(name, deviceAddress);
+                }
+            }
+        }
+
+        addProfile(R.string.profile_headphones_any, Tokens.HEADPHONES_ANY);
+        addProfile(R.string.profile_always_on, Tokens.ALWAYS_ON);
+
+        updateProfileTokenEnabled();
     }
 
     public boolean isWiredHeadsetConnected()
@@ -309,23 +314,22 @@ public class ProfileManager
         mListenerManager.detach(callbacks);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.v(TAG, "onBluetoothAudioConnected(bluetoothDevice=" + bluetoothDevice + ')');
+        @SuppressLint("MissingPermission")
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, true);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
     {
         FooLog.v(TAG, "onBluetoothAudioDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
+        @SuppressLint("MissingPermission")
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, false);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onWiredHeadsetConnected(String headsetName, boolean hasMicrophone)
     {
         FooLog.v(TAG, "onWiredHeadsetConnected(headsetName=" + FooString.quote(headsetName) +
@@ -333,7 +337,6 @@ public class ProfileManager
         onHeadsetConnectionChanged(HeadsetType.Wired, headsetName, true);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onWiredHeadsetDisconnected(String headsetName, boolean hasMicrophone)
     {
         FooLog.v(TAG, "onWiredHeadsetDisconnected(headsetName=" + FooString.quote(headsetName) +
@@ -341,7 +344,6 @@ public class ProfileManager
         onHeadsetConnectionChanged(HeadsetType.Wired, headsetName, false);
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
     {
         FooLog.v(TAG, "onHeadsetConnectionChanged(headsetType=" + headsetType +

@@ -587,7 +587,6 @@ public class MainActivity
         mAlfredManager.detach(mMainApplicationCallbacks);
         mTextToSpeechManager.detach(mTextToSpeechManagerCallbacks);
 
-
         FooLog.v(TAG, "-onPause()");
     }
 

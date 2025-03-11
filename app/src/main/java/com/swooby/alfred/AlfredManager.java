@@ -20,7 +20,6 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.collections.FooLongSparseArray;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
-import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedCallbacks;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.network.FooCellularStateListener;
 import com.smartfoo.android.core.network.FooCellularStateListener.FooCellularHookStateCallbacks;
@@ -57,6 +56,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/** @noinspection unused, CommentedOutCode */
 public class AlfredManager
 {
     private static final String TAG = FooLog.TAG(AlfredManager.class);
@@ -393,9 +393,13 @@ public class AlfredManager
             mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
             */
         }
+        catch (Exception e)
+        {
+            FooLog.e(TAG, "start()", e);
+        }
         finally
         {
-            FooLog.i(TAG, "-start()");
+            FooLog.v(TAG, "-start()");
         }
     }
 
@@ -657,8 +661,8 @@ public class AlfredManager
         {
             notificationStatus = new NotificationStatusNotificationAccessNotEnabled(mApplicationContext,
                     getString(R.string.alfred_running),
-                    getString(R.string.alfred_waiting_for_notification_access)
-                    , null);
+                    getString(R.string.alfred_waiting_for_notification_access),
+                    null);
         }
         else
         {
@@ -952,14 +956,7 @@ public class AlfredManager
 
     private void volumeObserverStart(int audioStreamType)
     {
-        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedCallbacks()
-        {
-            @Override
-            public void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
-            {
-                AlfredManager.this.onAudioStreamVolumeChanged(audioStreamType, volume, volumeMax, volumePercent);
-            }
-        });
+        mAudioStreamVolumeObserver.attach(audioStreamType, AlfredManager.this::onAudioStreamVolumeChanged);
     }
 
     private void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)

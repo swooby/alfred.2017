@@ -1,10 +1,9 @@
 package com.swooby.alfred;
 
-import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresPermission;
 
 import com.smartfoo.android.core.annotations.NonNullNonEmpty;
 
@@ -31,22 +30,17 @@ public class Profile
         }
     }
 
-    public static Comparator<Profile> COMPARATOR = new Comparator<Profile>()
-    {
-        @Override
-        public int compare(Profile lhs, Profile rhs)
+    public static Comparator<Profile> COMPARATOR = (lhs, rhs) -> {
+        if (lhs.mForcedOrder != Integer.MAX_VALUE)
         {
-            if (lhs.mForcedOrder != Integer.MAX_VALUE)
+            int compare = Integer.compare(lhs.mForcedOrder, rhs.mForcedOrder);
+            if (compare != 0)
             {
-                int compare = Integer.compare(lhs.mForcedOrder, rhs.mForcedOrder);
-                if (compare != 0)
-                {
-                    return compare;
-                }
+                return compare;
             }
-
-            return lhs.mName.compareTo(rhs.mName);
         }
+
+        return lhs.mName.compareTo(rhs.mName);
     };
 
     private final int    mForcedOrder;
@@ -55,7 +49,7 @@ public class Profile
     @NonNullNonEmpty
     private final String mToken;
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    @SuppressLint("MissingPermission")
     public Profile(@NonNull BluetoothDevice bluetoothDevice)
     {
         this(Integer.MAX_VALUE, bluetoothDevice.getName(), bluetoothDevice.getAddress());
