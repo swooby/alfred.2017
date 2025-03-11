@@ -1,12 +1,16 @@
 package com.swooby.alfred;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.os.Bundle;
+import android.content.pm.PackageManager;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -14,7 +18,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.collections.FooLongSparseArray;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
-import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedListener;
+import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedCallbacks;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.network.FooCellularStateListener;
 import com.smartfoo.android.core.network.FooCellularStateListener.FooCellularHookStateCallbacks;
@@ -101,7 +105,7 @@ public class AlfredManager
         //
         // Create Managers/etc
         //
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerManager<>(this);
         mNotificationManager = new NotificationManager(mApplicationContext);
         mTextToSpeechManager = new TextToSpeechManager(mApplicationContext, new TextToSpeechManagerConfiguration()
         {
@@ -241,6 +245,12 @@ public class AlfredManager
 
         mIsStarted = true;
 
+        if (ContextCompat.checkSelfPermission(mApplicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            FooLog.e(TAG, "checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED");
+            //...
+            return;
+        }
+
         mNotificationManager.notifyInitializing("Text To Speech", "TBD text", "TBD subtext");
         final long timeStartMillis = System.currentTimeMillis();
         mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
@@ -262,9 +272,9 @@ public class AlfredManager
             }
 
             @Override
-            public void onNotificationListenerNotConnected(NotConnectedReason reason)
+            public void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
             {
-                AlfredManager.this.onNotificationListenerNotConnected(reason, 200);
+                AlfredManager.this.onNotificationListenerNotConnected(reason, elapsedMillis, 0);
             }
 
             @Override
@@ -285,6 +295,12 @@ public class AlfredManager
             public void onScreenOn()
             {
                 AlfredManager.this.onScreenOn();
+            }
+
+            @Override
+            public void onUserUnlocked() {
+                FooLog.e(TAG, "onUserUnlocked()");
+                mTextToSpeechManager.speak("user unlocked");
             }
         });
         mChargePortListener.attach(new FooChargePortListenerCallbacks()
@@ -328,6 +344,7 @@ public class AlfredManager
             {
                 AlfredManager.this.onProfileDisabled(profileToken);
             }
+
             /*
             @Override
             public void onProfileStateChanged(String profileName, boolean enabled)
@@ -399,6 +416,7 @@ public class AlfredManager
         return true;
     }
 
+    @SuppressLint("MissingPermission")
     private void notification(@NonNull NotificationStatus notificationStatus,
                               String text,
                               String subtext)
@@ -486,17 +504,19 @@ public class AlfredManager
         private final String TAG = FooLog.TAG(DelayedRunnableNotificationListenerNotConnected.class);
 
         private final NotConnectedReason mReason;
+        private final long               mElapsedMillis;
 
-        public DelayedRunnableNotificationListenerNotConnected(NotConnectedReason reason)
+        public DelayedRunnableNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
         {
             mReason = reason;
+            mElapsedMillis = elapsedMillis;
         }
 
         @Override
         public void run()
         {
             FooLog.v(TAG, "+run()");
-            onNotificationListenerNotConnected(mReason, 0);
+            onNotificationListenerNotConnected(mReason, mElapsedMillis, 0);
             FooLog.v(TAG, "-run()");
         }
     }
@@ -536,12 +556,14 @@ public class AlfredManager
 
     /**
      * @param reason                reason
-     * @param ifHeadlessDelayMillis > 0 to delay the given milliseconds if no UI is attached
+     * @param elapsedMillis         elapsedMillis
+     * @param ifHeadlessDelayMillis &gt; 0 to delay the given milliseconds if no UI is attached
      */
-    private void onNotificationListenerNotConnected(NotConnectedReason reason, int ifHeadlessDelayMillis)
+    private void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis, int ifHeadlessDelayMillis)
     {
         FooLog.w(TAG, "onNotificationListenerNotConnected(reason=" + reason +
-                      ", ifHeadlessDelayMillis=" + ifHeadlessDelayMillis + ')');
+                ", elapsedMillis=" + elapsedMillis +
+                ", ifHeadlessDelayMillis=" + ifHeadlessDelayMillis + ')');
 
         boolean headless = true;
         boolean handled = false;
@@ -554,7 +576,7 @@ public class AlfredManager
 
         if (headless && ifHeadlessDelayMillis > 0)
         {
-            mDelayedRunnableNotificationAccessSettingDisabled = new DelayedRunnableNotificationListenerNotConnected(reason);
+            mDelayedRunnableNotificationAccessSettingDisabled = new DelayedRunnableNotificationListenerNotConnected(reason, elapsedMillis);
             mHandler.postDelayed(mDelayedRunnableNotificationAccessSettingDisabled, ifHeadlessDelayMillis);
             return;
         }
@@ -655,20 +677,17 @@ public class AlfredManager
             headsetName = "";
         }
 
-        int resId;
-        switch (headsetType)
-        {
-            case Bluetooth:
-                resId = isConnected ? R.string.alfred_bluetooth_headphone_X_connected : R.string.alfred_bluetooth_headphone_X_disconnected;
-                break;
-            case Wired:
-                resId = isConnected ? R.string.alfred_wired_headphone_X_connected : R.string.alfred_wired_headphone_X_disconnected;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled headsetType == " + headsetType);
-        }
+        int resIdConnection = isConnected ? R.string.alfred_X_connected : R.string.alfred_X_disconnected;
 
-        String speech = getString(resId, headsetName);
+        int resIdHeadphone = switch (headsetType) {
+            case Bluetooth -> R.string.alfred_headphone_bluetooth_X;
+            case Wired -> R.string.alfred_headphone_wired;
+            //noinspection UnnecessaryDefault
+            default -> throw new IllegalArgumentException("Unhandled headsetType == " + headsetType);
+        };
+
+        String textHeadphone = getString(resIdHeadphone, headsetName);
+        String speech = getString(resIdConnection, textHeadphone);
         mTextToSpeechManager.speak(speech);
     }
 
@@ -888,7 +907,7 @@ public class AlfredManager
 
     private void volumeObserverStart(int audioStreamType)
     {
-        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedListener()
+        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedCallbacks()
         {
             @Override
             public void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)

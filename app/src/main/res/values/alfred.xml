@@ -12,12 +12,10 @@
 
     <string name="alfred_manually_disabled">Manually Disabled</string>
     <string name="alfred_waiting_for_X">Waiting for %1$s</string>
-    <string name="alfred_wired_headphone">Wired Headphone</string>
-
-    <string name="alfred_bluetooth_headphone_X_connected">Bluetooth Headphone %1$s connected</string>
-    <string name="alfred_bluetooth_headphone_X_disconnected">Bluetooth Headphone %1$s connected</string>
-    <string name="alfred_wired_headphone_X_connected">Wired Headphone %1$s connected</string>
-    <string name="alfred_wired_headphone_X_disconnected">Wired Headphone %1$s disconnected</string>
+    <string name="alfred_headphone_wired">Wired Headphone</string>
+    <string name="alfred_headphone_bluetooth_any">Any Bluetooth Headphone</string>
+    <string name="alfred_headphone_bluetooth_X">Bluetooth Headphone %1$s</string>
+    <string name="alfred_headphone_any">Any Headphone</string>
 
     <string name="alfred_screen_on">Screen On</string>
     <string name="alfred_screen_on_after_being_off_for_X">Screen On After Being Off For %1$s</string>
@@ -29,12 +27,15 @@
     <string name="alfred_X_disconnected">%1$s Disconnected</string>
     <string name="alfred_X_disconnected_after_being_connected_for_Y">%1$s Disconnected After Being Connected For %2$s</string>
 
+    <string name="alfred_X_volume_Y_percent">%1$s Volume %2$d percent</string>
+    <string name="alfred_X_volume_Y_of_Z">%1$s Volume %2$s of %3$s</string>
+
     <string name="alfred_waiting_for_notification_access">Waiting For Notification Access</string>
     <string name="alfred_notification_listener_connected">Notification Listener Connected</string>
     <string name="alfred_notification_access_not_enabled">Notification Access Not Enabled</string>
     <string name="alfred_notification_listener_bind_timeout">Notification Listener Bind Timeout</string>
     <string name="alfred_please_enable_notification_access_for_the_X_application">Please enable Notification Access for the \"%1$s\" application.</string>
-    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, reboot your device.</string>
+    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, restart your device.</string>
     <string name="alfred_visual_only_tap_to_configure">Tap to configure.</string>
 
     <!-- TODO:(pv) Better sentence concatenation strategy... -->
@@ -43,6 +44,8 @@
 
     <!-- Notification Parsers... -->
     <string name="alfred_unknown">Unknown</string>
+
+    <string name="alfred_attenuating_X_commercial">attenuating %1$s commercial</string>
 
     <string name="alfred_pandora_package_app_name">Pandora</string>
 
@@ -55,7 +58,9 @@
     </plurals>
     <string name="alfred_X_says">%1$s says</string>
 
-    <string name="alfred_X_volume_Y_of_Z">%1$s Volume %2$s of %3$s</string>
-    <string name="alfred_X_volume_Y_percent">%1$s Volume %2$d percent</string>
+    <string name="alfred_media_playing">playing</string>
+    <string name="alfred_media_paused">paused</string>
+    <string name="alfred_media_artist">artist %1$s</string>
+    <string name="alfred_media_title">title %1$s</string>
 
 </resources>

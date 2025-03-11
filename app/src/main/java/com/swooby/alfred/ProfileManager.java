@@ -1,14 +1,18 @@
 package com.swooby.alfred;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
-import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener;
-import com.smartfoo.android.core.bluetooth.FooBluetoothHeadsetConnectionListener.OnBluetoothHeadsetConnectionCallbacks;
+import com.smartfoo.android.core.bluetooth.FooBluetoothAudioConnectionListener;
+import com.smartfoo.android.core.bluetooth.FooBluetoothAudioConnectionListener.OnBluetoothAudioConnectionCallbacks;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener;
 import com.smartfoo.android.core.media.FooWiredHeadsetConnectionListener.OnWiredHeadsetConnectionCallbacks;
@@ -63,7 +67,7 @@ public class ProfileManager
     private final ProfileManagerConfiguration                 mConfiguration;
     private final FooListenerManager<ProfileManagerCallbacks> mListenerManager;
     private final FooWiredHeadsetConnectionListener           mWiredHeadsetConnectionListener;
-    private final FooBluetoothHeadsetConnectionListener       mBluetoothHeadsetConnectionListener;
+    private final FooBluetoothAudioConnectionListener         mBluetoothAudioConnectionListener;
 
     private String mProfileTokenEnabled;
 
@@ -77,9 +81,9 @@ public class ProfileManager
 
         mContext = context;
         mConfiguration = configuration;
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerManager<>(this);
         mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(context);
-        mBluetoothHeadsetConnectionListener = new FooBluetoothHeadsetConnectionListener(context);
+        mBluetoothAudioConnectionListener = new FooBluetoothAudioConnectionListener(context);
 
         updateProfileTokenEnabled();
 
@@ -98,18 +102,20 @@ public class ProfileManager
             }
         });
 
-        mBluetoothHeadsetConnectionListener.attach(new OnBluetoothHeadsetConnectionCallbacks()
+        mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
         {
+            @SuppressLint("MissingPermission")
             @Override
-            public void onBluetoothHeadsetConnected(BluetoothDevice bluetoothDevice)
+            public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
             {
-                ProfileManager.this.onBluetoothHeadsetConnected(bluetoothDevice);
+                ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
             }
 
+            @SuppressLint("MissingPermission")
             @Override
-            public void onBluetoothHeadsetDisconnected(BluetoothDevice bluetoothDevice)
+            public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
             {
-                ProfileManager.this.onBluetoothHeadsetDisconnected(bluetoothDevice);
+                ProfileManager.this.onBluetoothAudioDisconnected(bluetoothDevice);
             }
         });
 
@@ -122,7 +128,7 @@ public class ProfileManager
         ArrayList<Profile> profiles = new ArrayList<>();
 
         profiles.add(getProfile(profiles.size(), R.string.profile_disabled, Tokens.DISABLED));
-        profiles.add(getProfile(profiles.size(), R.string.profile_wired_headphones_only, Tokens.WIRED_HEADPHONES_ONLY));
+        profiles.add(getProfile(profiles.size(), R.string.profile_headphones_wired, Tokens.WIRED_HEADPHONES_ONLY));
         //profiles.add(profileCreate(profiles.size(), R.string.profile_headphones_only, Tokens.HEADPHONES_ONLY));
         profiles.add(getProfile(profiles.size(), R.string.profile_always_on, Tokens.ALWAYS_ON));
 
@@ -190,13 +196,13 @@ public class ProfileManager
 
     public boolean isBluetoothHeadsetConnected()
     {
-        return mBluetoothHeadsetConnectionListener.isBluetoothHeadsetConnected();
+        return mBluetoothAudioConnectionListener.isBluetoothAudioConnected();
     }
 
     @NonNull
     public Map<String, BluetoothDevice> getConnectedBluetoothHeadsets()
     {
-        return mBluetoothHeadsetConnectionListener.getConnectedBluetoothHeadsets();
+        return mBluetoothAudioConnectionListener.getConnectedBluetoothAudioDevices();
     }
 
     public void attach(@NonNull ProfileManagerCallbacks callbacks)
@@ -220,16 +226,18 @@ public class ProfileManager
         mListenerManager.detach(callbacks);
     }
 
-    private void onBluetoothHeadsetConnected(BluetoothDevice bluetoothDevice)
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
     {
-        FooLog.v(TAG, "onBluetoothHeadsetConnected(bluetoothDevice=" + bluetoothDevice + ')');
+        FooLog.v(TAG, "onBluetoothAudioConnected(bluetoothDevice=" + bluetoothDevice + ')');
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, true);
     }
 
-    private void onBluetoothHeadsetDisconnected(BluetoothDevice bluetoothDevice)
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
     {
-        FooLog.v(TAG, "onBluetoothHeadsetDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
+        FooLog.v(TAG, "onBluetoothAudioDisconnected(bluetoothDevice=" + bluetoothDevice + ')');
         String headsetName = bluetoothDevice.getName();
         onHeadsetConnectionChanged(HeadsetType.Bluetooth, headsetName, false);
     }

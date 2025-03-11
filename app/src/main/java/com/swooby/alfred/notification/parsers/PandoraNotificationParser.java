@@ -6,12 +6,13 @@ import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RemoteViews;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.BuildConfig;
 import com.smartfoo.android.core.FooString;

@@ -1,5 +1,6 @@
 package com.swooby.alfred.notification.parsers;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Notification.Action;
 import android.app.PendingIntent;
@@ -13,7 +14,6 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
@@ -261,6 +263,7 @@ public class NotificationParserUtils
         //noinspection TryWithIdenticalCatches
         try
         {
+            @SuppressLint("SoonBlockedPrivateApi")
             Field field = imageView.getClass().getDeclaredField("mRecycleableBitmapDrawable");
             field.setAccessible(true);
             return (BitmapDrawable) field.get(imageView);

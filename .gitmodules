@@ -1,0 +1,3 @@
+[submodule "smartfoo"]
+	path = smartfoo
+	url = https://github.com/SmartFoo/smartfoo.git

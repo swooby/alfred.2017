@@ -7,17 +7,6 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.design.widget.NavigationView.OnNavigationItemSelectedListener;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +20,17 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+
+import com.google.android.material.navigation.NavigationView;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.app.FooDebugActivity;
 import com.smartfoo.android.core.app.FooDebugConfiguration;
@@ -52,7 +52,7 @@ import java.util.Set;
 
 public class MainActivity
         extends AppCompatActivity
-        implements OnNavigationItemSelectedListener,
+        implements NavigationView.OnNavigationItemSelectedListener,
         GenericPromptPositiveNegativeDialogFragmentCallbacks
 {
     private static final String TAG = FooLog.TAG(MainActivity.class);
@@ -198,7 +198,7 @@ public class MainActivity
 
         mSpinnerTextToSpeechAudioStreamType = (Spinner) findViewById(R.id.spinnerTextToSpeechAudioStreamType);
         ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
-        ArrayAdapter textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
+        ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
         mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
         {
@@ -395,44 +395,38 @@ public class MainActivity
 
         boolean isDebugEnabled = isDebugEnabled();
 
-        switch (item.getItemId())
-        {
-            case android.R.id.home:
-                if (mDrawerLayout != null)
-                {
-                    mDrawerLayout.openDrawer(GravityCompat.START);
-                    return true;
-                }
-                break;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            if (mDrawerLayout != null) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                return true;
+            }
             //case R.id.action_settings:
             //    // TODO:(pv) …
             //    return true;
             //case R.id.menu_refresh:
             //    refreshItemsFromTable();
             //    return true;
-            case R.id.action_application_info:
-                FooPlatformUtils.showAppSettings(this);
-                return true;
-            case R.id.action_notification_access:
-                startActivityNotificationListenerSettings();
-                return true;
-            case R.id.action_text_to_speech:
-                startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
-                return true;
-            case R.id.action_debug_show_debug_log:
-            {
-                String username = null;
+        } else if (itemId == R.id.action_application_info) {
+            FooPlatformUtils.showAppSettings(this);
+            return true;
+        } else if (itemId == R.id.action_notification_access) {
+            startActivityNotificationListenerSettings();
+            return true;
+        } else if (itemId == R.id.action_text_to_speech) {
+            startActivity(FooTextToSpeechHelper.getIntentTextToSpeechSettings());
+            return true;
+        } else if (itemId == R.id.action_debug_show_debug_log) {
+            String username = null;
 
-                Intent intent = new Intent(this, FooDebugActivity.class);
-                intent.putExtras(FooDebugActivity.makeExtras(null, username));
+            Intent intent = new Intent(this, FooDebugActivity.class);
+            intent.putExtras(FooDebugActivity.makeExtras(null, username));
 
-                startActivity(intent);
+            startActivity(intent);
 
-                return true;
-            }
-            case R.id.action_debug_clear_debug_log:
-                FooLog.clear();
-                break;
+            return true;
+        } else if (itemId == R.id.action_debug_clear_debug_log) {
+            FooLog.clear();
         }
 
         if (mDrawerToggle != null)

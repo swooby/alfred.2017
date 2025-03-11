@@ -6,9 +6,10 @@ import android.app.Notification.InboxStyle;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
 import android.text.Spannable;
 import android.text.style.TextAppearanceSpan;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;

@@ -2,9 +2,11 @@ package com.swooby.alfred;
 
 import android.content.Context;
 import android.media.AudioManager;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
+import com.smartfoo.android.core.R;
 
 import java.util.ArrayList;
 

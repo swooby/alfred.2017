@@ -7,7 +7,8 @@ import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.logging.FooLog;

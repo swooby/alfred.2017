@@ -2,11 +2,12 @@ package com.swooby.alfred;
 
 import android.app.Notification;
 import android.content.Context;
-import android.os.UserHandle;
 import android.service.notification.StatusBarNotification;
-import android.support.annotation.NonNull;
 
-import com.smartfoo.android.core.FooListenerManager;
+import androidx.annotation.NonNull;
+
+import com.smartfoo.android.core.FooListenerAutoStartManager;
+import com.smartfoo.android.core.FooListenerAutoStartManager.FooListenerAutoStartManagerCallbacks;
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
@@ -50,14 +51,14 @@ public class NotificationParserManager
     {
         boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications);
 
-        void onNotificationListenerNotConnected(NotConnectedReason reason);
+        void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis);
 
         void onNotificationParsed(@NonNull AbstractNotificationParser parser);
     }
 
     private final Context                                                mContext;
     private final NotificationParserManagerConfiguration                 mConfiguration;
-    private final FooListenerManager<NotificationParserManagerCallbacks> mListenerManager;
+    private final FooListenerAutoStartManager<NotificationParserManagerCallbacks> mListenerManager;
     private final FooNotificationListenerManager                         mFooNotificationListenerManager;
     private final FooNotificationListenerManagerCallbacks                mFooNotificationListenerManagerCallbacks;
     private final NotificationParserCallbacks                            mNotificationParserCallbacks;
@@ -75,7 +76,24 @@ public class NotificationParserManager
         mContext = context;
         mConfiguration = configuration;
 
-        mListenerManager = new FooListenerManager<>();
+        mListenerManager = new FooListenerAutoStartManager<>(this);
+        mListenerManager.attach(new FooListenerAutoStartManagerCallbacks()
+        {
+            @Override
+            public void onFirstAttach()
+            {
+                if (mNotificationParsers.isEmpty())
+                {
+                    start();
+                }
+            }
+
+            @Override
+            public boolean onLastDetach()
+            {
+                return false;
+            }
+        });
 
         mFooNotificationListenerManager = FooNotificationListenerManager.getInstance();
 
@@ -88,9 +106,9 @@ public class NotificationParserManager
             }
 
             @Override
-            public void onNotificationListenerNotConnected(@NonNull NotConnectedReason reason)
+            public void onNotificationListenerNotConnected(@NonNull NotConnectedReason reason, long elapsedMillis)
             {
-                NotificationParserManager.this.onNotificationListenerNotConnected(reason);
+                NotificationParserManager.this.onNotificationListenerNotConnected(reason, elapsedMillis);
             }
 
             @Override
@@ -267,13 +285,13 @@ public class NotificationParserManager
         return true;
     }
 
-    private void onNotificationListenerNotConnected(NotConnectedReason reason)
+    private void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
     {
-        FooLog.i(TAG, "onNotificationListenerNotConnected(reason=" + reason + ')');
+        FooLog.i(TAG, "onNotificationListenerNotConnected(reason=" + reason + ", elapsedMillis=" + elapsedMillis + ')');
         mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationListenerNotConnected(reason);
+            callbacks.onNotificationListenerNotConnected(reason, elapsedMillis);
         }
         mListenerManager.endTraversing();
     }

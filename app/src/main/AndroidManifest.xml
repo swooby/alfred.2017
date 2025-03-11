@@ -1,43 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="com.swooby.alfred"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    >
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
-    <permission
-        android:name="com.swooby.alfred.permission.C2D_MESSAGE"
-        android:protectionLevel="signature"/>
-
-    <uses-permission android:name="com.swooby.alfred.permission.C2D_MESSAGE"/>
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-
-    <!--
-    <meta-data
-        android:name="com.google.android.gms.version"
-        android:value="@integer/google_play_services_version"/>
-        -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Must match `com.swooby.alfredai.MobileForegroundService.FOREGROUND_SERVICE_PERMISSION`-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name=".MainApplication"
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/Theme.Alfred"
         >
 
         <activity
             android:name=".MainActivity"
+            android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/Theme.Alfred.NoActionBar"
             >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -45,7 +44,7 @@
             android:name="com.smartfoo.android.core.app.FooDebugActivity"
             android:label="@string/activity_debug_title"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:theme="@style/Theme.Alfred.NoActionBar"
             >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -61,8 +60,8 @@
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             >
             <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService"/>
-                <action android:name="com.smartfoo.android.core.notification.FooNotificationListener.ACTION_BIND_REMOTE_CONTROLLER"/>
+                <action android:name="android.service.notification.NotificationListenerService" />
+                <action android:name="com.smartfoo.android.core.notification.FooNotificationListener.ACTION_BIND_REMOTE_CONTROLLER" />
             </intent-filter>
         </service>
 
@@ -70,7 +69,13 @@
             android:name="com.smartfoo.android.core.notification.FooNotificationService"
             android:enabled="true"
             android:exported="false"
-            />
+            android:foregroundServiceType="specialUse"
+            >
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Notification Parsing Voice Assistant Session"
+                />
+        </service>
 
     </application>
 
