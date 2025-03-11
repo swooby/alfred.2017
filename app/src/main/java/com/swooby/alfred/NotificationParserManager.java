@@ -81,15 +81,13 @@ public class NotificationParserManager
             @Override
             public void onFirstAttach()
             {
-                if (mNotificationParsers.isEmpty())
-                {
-                    start();
-                }
+                NotificationParserManager.this.onFirstAttach();
             }
 
             @Override
             public boolean onLastDetach()
             {
+                NotificationParserManager.this.onLastDetach();
                 return false;
             }
         });
@@ -229,38 +227,53 @@ public class NotificationParserManager
         mListenerManager.detach(callbacks);
     }
 
-    private void addNotificationParser(@NonNull AbstractNotificationParser notificationParser)
+    private void onFirstAttach()
+    {
+        notificationParsersAdd();
+        mFooNotificationListenerManager.attach(mContext, mFooNotificationListenerManagerCallbacks);
+    }
+
+    private void onLastDetach()
+    {
+        mFooNotificationListenerManager.detach(mFooNotificationListenerManagerCallbacks);
+        notificationParserClear();
+    }
+
+    private void notificationParsersAdd(@NonNull AbstractNotificationParser notificationParser)
     {
         mNotificationParsers.put(notificationParser.getPackageName(), notificationParser);
     }
 
-    private void start()
+    private void notificationParsersAdd()
     {
         // TODO:(pv) In DEBUG, show any parsers that do not have app installed w/ link to install app from Google Play
         // TODO:(pv) Listen for installation/removal of apps (especially ones w/ parsers)
         // TODO:(pv) Future ecosystem to allow installing 3rd-party developed parsers
         // TODO:(pv) Use package reflection to enumerate and load all non-Abstract parsers in parsers package
         // TODO:(pv) Not all of these parsers may be required, and could rely on a decent default implementation that walks and talks all visible text elements
-        addNotificationParser(new AlfredNotificationParser(mNotificationParserCallbacks));
-        //addNotificationParser(new AndroidSystemNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new ChromeNotificationParser(mNotificationParserCallbacks));
-        //addNotificationParser(new FacebookNotificationParser(mNotificationParserCallbacks));
-        //addNotificationParser(new GmailNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new DownloadManagerNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GoogleCameraNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GoogleDialerNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GoogleHangoutsNotificationParser(mNotificationParserCallbacks));
-        //addNotificationParser(new GoogleMapsNotificationParser(mNotificationParserCallbacks));
-        //addNotificationParser(new GoogleMessengerNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GoogleMyGlassNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GoogleNowNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GooglePhotosNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new GooglePlayStoreNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new PandoraNotificationParser(mNotificationParserCallbacks));
-        //addNotificationParser(new RedboxNotificationParser(mNotificationParserCallbacks));
-        addNotificationParser(new SpotifyNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new AlfredNotificationParser(mNotificationParserCallbacks));
+        //notificationParsersAdd(new AndroidSystemNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new ChromeNotificationParser(mNotificationParserCallbacks));
+        //notificationParsersAdd(new FacebookNotificationParser(mNotificationParserCallbacks));
+        //notificationParsersAdd(new GmailNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new DownloadManagerNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GoogleCameraNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GoogleDialerNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GoogleHangoutsNotificationParser(mNotificationParserCallbacks));
+        //notificationParsersAdd(new GoogleMapsNotificationParser(mNotificationParserCallbacks));
+        //notificationParsersAdd(new GoogleMessengerNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GoogleMyGlassNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GoogleNowNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GooglePhotosNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new GooglePlayStoreNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new PandoraNotificationParser(mNotificationParserCallbacks));
+        //notificationParsersAdd(new RedboxNotificationParser(mNotificationParserCallbacks));
+        notificationParsersAdd(new SpotifyNotificationParser(mNotificationParserCallbacks));
+    }
 
-        mFooNotificationListenerManager.attach(mContext, mFooNotificationListenerManagerCallbacks);
+    private void notificationParserClear()
+    {
+        mNotificationParsers.clear();
     }
 
     private boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications)
