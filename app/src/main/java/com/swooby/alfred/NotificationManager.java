@@ -240,12 +240,13 @@ public class NotificationManager
         return notification;
     }
 
+    /** @noinspection SameParameterValue*/
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private FooNotification notificationShow(int requestCode,
                                              int foregroundServiceType,
                                              @NonNull NotificationStatus status,
                                              @NonNull String contentTitle,
-                                             String contentText)
+                                             @Nullable String contentText)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(status, "status");
         FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentTitle, "contentTitle");
@@ -272,31 +273,8 @@ public class NotificationManager
         return notificationShow(requestCode, foregroundServiceType, builder);
     }
 
-    //
-    //
-    //
-
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    void notifyInitializing(@NonNull String statusSubText, @NonNull String contentTitle, String contentText)
-    {
-        NotificationStatus notificationStatus = new NotificationStatusStarting(mContext, getString(R.string.alfred_initializing), statusSubText, null);
-        notificationOngoingShow(notificationStatus, contentTitle, contentText);
-    }
-
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    void notifyRunning(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
-    {
-        notificationOngoingShow(notificationStatus, contentTitle, contentText);
-    }
-
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    void notifyPaused(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
-    {
-        notificationOngoingShow(notificationStatus, contentTitle, contentText);
-    }
-
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    private void notificationOngoingShow(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, String contentText)
+    private void notificationOngoingShow(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, @Nullable String contentText)
     {
         mNotificationOngoing = notificationShow(NotificationIds.ONGOING, FOREGROUND_SERVICE_TYPE, notificationStatus, contentTitle, contentText);
     }
@@ -308,5 +286,29 @@ public class NotificationManager
             mNotificationOngoing.cancel(mContext);
             mNotificationOngoing = null;
         }
+    }
+
+    //
+    //
+    //
+
+    /** @noinspection SameParameterValue*/
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    void notifyOngoingInitializing(@NonNull String statusSubText, @NonNull String contentTitle, @Nullable String contentText)
+    {
+        NotificationStatus notificationStatus = new NotificationStatusStarting(mContext, getString(R.string.alfred_initializing), statusSubText, null);
+        notificationOngoingShow(notificationStatus, contentTitle, contentText);
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    void notifyOngoingRunning(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, @Nullable String contentText)
+    {
+        notificationOngoingShow(notificationStatus, contentTitle, contentText);
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    void notifyOngoingPaused(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, @Nullable String contentText)
+    {
+        notificationOngoingShow(notificationStatus, contentTitle, contentText);
     }
 }
