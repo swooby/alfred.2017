@@ -19,7 +19,6 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.collections.FooLongSparseArray;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver;
-import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver.OnAudioStreamVolumeChangedCallbacks;
 import com.smartfoo.android.core.media.FooAudioUtils;
 import com.smartfoo.android.core.network.FooCellularStateListener;
 import com.smartfoo.android.core.network.FooCellularStateListener.FooCellularHookStateCallbacks;
@@ -54,6 +53,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/** @noinspection unused, CommentedOutCode */
 public class AlfredManager
 {
     private static final String TAG = FooLog.TAG(AlfredManager.class);
@@ -278,7 +278,7 @@ public class AlfredManager
                 @Override
                 public void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
                 {
-                    AlfredManager.this.onNotificationListenerNotConnected(reason, elapsedMillis, 0);
+                    AlfredManager.this.onNotificationListenerNotConnected(reason, elapsedMillis, 200);
                 }
 
                 @Override
@@ -376,6 +376,10 @@ public class AlfredManager
         catch (Exception e)
         {
             FooLog.e(TAG, "start()", e);
+        }
+        finally
+        {
+            FooLog.v(TAG, "-start()");
         }
     }
 
@@ -613,8 +617,8 @@ public class AlfredManager
         {
             notificationStatus = new NotificationStatusNotificationAccessNotEnabled(mApplicationContext,
                     getString(R.string.alfred_running),
-                    getString(R.string.alfred_waiting_for_notification_access)
-                    , null);
+                    getString(R.string.alfred_waiting_for_notification_access),
+                    null);
         }
         else
         {
@@ -627,36 +631,24 @@ public class AlfredManager
     public String getNotificationListenerNotConnectedTitle(@NonNull NotConnectedReason reason)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason");
-        int resId;
-        switch (reason)
-        {
-            case ConfirmedNotEnabled:
-                resId = R.string.alfred_notification_access_not_enabled;
-                break;
-            case ConnectedTimeout:
-                resId = R.string.alfred_notification_listener_bind_timeout;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled reason == " + reason);
-        }
+        int resId = switch (reason) {
+            case ConfirmedNotEnabled -> R.string.alfred_notification_access_not_enabled;
+            case ConnectedTimeout -> R.string.alfred_notification_listener_bind_timeout;
+            default -> throw new IllegalArgumentException("Unhandled reason == " + reason);
+        };
         return getString(resId);
     }
 
     public String getNotificationListenerNotConnectedMessage(@NonNull NotConnectedReason reason)
     {
         FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason");
-        int resId;
-        switch (reason)
-        {
-            case ConfirmedNotEnabled:
-                resId = R.string.alfred_please_enable_notification_access_for_the_X_application;
-                break;
-            case ConnectedTimeout:
-                resId = R.string.alfred_please_reenable_notification_access_for_the_X_application;
-                break;
-            default:
-                throw new IllegalArgumentException("Unhandled reason == " + reason);
-        }
+        int resId = switch (reason) {
+            case ConfirmedNotEnabled ->
+                    R.string.alfred_please_enable_notification_access_for_the_X_application;
+            case ConnectedTimeout ->
+                    R.string.alfred_please_reenable_notification_access_for_the_X_application;
+            default -> throw new IllegalArgumentException("Unhandled reason == " + reason);
+        };
 
         String appName = getString(R.string.alfred_app_name);
 
@@ -920,14 +912,7 @@ public class AlfredManager
 
     private void volumeObserverStart(int audioStreamType)
     {
-        mAudioStreamVolumeObserver.attach(audioStreamType, new OnAudioStreamVolumeChangedCallbacks()
-        {
-            @Override
-            public void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
-            {
-                AlfredManager.this.onAudioStreamVolumeChanged(audioStreamType, volume, volumeMax, volumePercent);
-            }
-        });
+        mAudioStreamVolumeObserver.attach(audioStreamType, AlfredManager.this::onAudioStreamVolumeChanged);
     }
 
     private void onAudioStreamVolumeChanged(int audioStreamType, int volume, int volumeMax, int volumePercent)
