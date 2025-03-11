@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** @noinspection unused, CommentedOutCode */
 public class ProfileManager
 {
     private static final String TAG = FooLog.TAG(ProfileManager.class);
@@ -43,9 +45,13 @@ public class ProfileManager
 
     public interface ProfileManagerConfiguration
     {
+        @NonNull
         String getProfileToken();
 
-        void setProfileToken(String profileToken);
+        /**
+         * @param profileToken if null then {@link #DEFAULT_PROFILE_TOKEN}
+         */
+        void setProfileToken(@Nullable String profileToken);
     }
 
     public static class ProfileManagerCallbacks

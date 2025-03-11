@@ -68,6 +68,7 @@ public class Profile
         mToken = token;
     }
 
+    @NonNull
     @Override
     public String toString()
     {
@@ -89,6 +90,6 @@ public class Profile
     @Override
     public boolean equals(Object obj)
     {
-        return obj instanceof Profile && mName.equals(((Profile) obj).mName);
+        return obj instanceof Profile && mToken.equals(((Profile) obj).mToken);
     }
 }

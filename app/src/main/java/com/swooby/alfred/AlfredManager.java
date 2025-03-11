@@ -10,6 +10,7 @@ import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 
@@ -193,6 +194,7 @@ public class AlfredManager
 
         mProfileManager = new ProfileManager(mApplicationContext, new ProfileManagerConfiguration()
         {
+            @NonNull
             @Override
             public String getProfileToken()
             {
@@ -200,7 +202,7 @@ public class AlfredManager
             }
 
             @Override
-            public void setProfileToken(String profileToken)
+            public void setProfileToken(@Nullable String profileToken)
             {
                 mAppPreferences.setProfileToken(profileToken);
             }
