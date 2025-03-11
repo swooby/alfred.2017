@@ -10,7 +10,6 @@ import android.speech.tts.Voice;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -24,7 +23,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.DialogFragment;
@@ -45,6 +43,7 @@ import com.smartfoo.android.core.platform.FooPlatformUtils;
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper;
 import com.swooby.alfred.AlfredManager.AlfredManagerCallbacks;
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks;
+import com.swooby.alfred.databinding.ActivityMainBinding;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -122,6 +121,8 @@ public class MainActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private NavigationView        mNavigationView;
 
+    private ActivityMainBinding binding;
+
     private Spinner mSpinnerTextToSpeechVoices;
     private Spinner mSpinnerTextToSpeechAudioStreamType;
     private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
@@ -156,10 +157,10 @@ public class MainActivity
         String intentAction = intent.getAction();
         FooLog.v(TAG, "onCreate: intentAction=" + FooString.quote(intentAction));
 
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.appBarMain.toolbar);
         ActionBar actionbar = getSupportActionBar();
         if (actionbar != null)
         {
@@ -167,7 +168,7 @@ public class MainActivity
             actionbar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = binding.drawerLayout;
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         {
             @Override
@@ -188,15 +189,12 @@ public class MainActivity
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
 
-        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
-        if (mNavigationView != null)
-        {
-            mNavigationView.setNavigationItemSelectedListener(this);
-        }
+        mNavigationView = binding.navView;
+        mNavigationView.setNavigationItemSelectedListener(this);
 
-        mSpinnerTextToSpeechVoices = (Spinner) findViewById(R.id.spinnerTextToSpeechVoices);
+        mSpinnerTextToSpeechVoices = binding.appBarMain.activityMainContent.spinnerTextToSpeechVoices;
 
-        mSpinnerTextToSpeechAudioStreamType = (Spinner) findViewById(R.id.spinnerTextToSpeechAudioStreamType);
+        mSpinnerTextToSpeechAudioStreamType = binding.appBarMain.activityMainContent.spinnerTextToSpeechAudioStreamType;
         ArrayList<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
         ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
@@ -217,20 +215,12 @@ public class MainActivity
             }
         });
 
-        ImageButton buttonTextToSpeechAudioStreamTypeTest = (ImageButton) findViewById(R.id.buttonTextToSpeechAudioStreamTypeTest);
-        if (buttonTextToSpeechAudioStreamTypeTest != null)
-        {
-            buttonTextToSpeechAudioStreamTypeTest.setOnClickListener(new OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    mTextToSpeechManager.speak("Testing testing 1 2 3");
-                }
-            });
-        }
+        ImageButton buttonTextToSpeechAudioStreamTypeTest = binding.appBarMain.activityMainContent.buttonTextToSpeechAudioStreamTypeTest;
+        buttonTextToSpeechAudioStreamTypeTest.setOnClickListener(v ->
+                mTextToSpeechManager.speak("Testing testing 1 2 3")
+        );
 
-        mSeekbarTextToSpeechAudioStreamVolume = (SeekBar) findViewById(R.id.seekbarTextToSpeechAudioStreamVolume);
+        mSeekbarTextToSpeechAudioStreamVolume = binding.appBarMain.activityMainContent.seekbarTextToSpeechAudioStreamVolume;
         mSeekbarTextToSpeechAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
         {
             @Override
@@ -250,9 +240,9 @@ public class MainActivity
             }
         });
 
-        mSpinnerProfiles = (Spinner) findViewById(R.id.spinnerProfiles);
+        mSpinnerProfiles = binding.appBarMain.activityMainContent.spinnerProfiles;
         ArrayList<Profile> profiles = mProfileManager.getProfiles();
-        ArrayAdapter profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
+        ArrayAdapter<Profile> profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
         mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
         {
@@ -269,27 +259,13 @@ public class MainActivity
             }
         });
 
-        mButtonNotificationListenerSettings = (Button) findViewById(R.id.buttonNotificationListenerSettings);
+        mButtonNotificationListenerSettings = binding.appBarMain.activityMainContent.buttonNotificationListenerSettings;
         mButtonNotificationListenerSettings.setVisibility(View.GONE);
-        mButtonNotificationListenerSettings.setOnClickListener(new OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                startActivityNotificationListenerSettings();
-            }
-        });
+        mButtonNotificationListenerSettings.setOnClickListener(v -> startActivityNotificationListenerSettings());
 
-        mButtonProcessNotifications = (Button) findViewById(R.id.buttonProcessNotifications);
+        mButtonProcessNotifications = binding.appBarMain.activityMainContent.buttonProcessNotifications;
         mButtonProcessNotifications.setVisibility(View.GONE);
-        mButtonProcessNotifications.setOnClickListener(new OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                mNotificationParserManager.initializeActiveNotifications();
-            }
-        });
+        mButtonProcessNotifications.setOnClickListener(v -> mNotificationParserManager.initializeActiveNotifications());
 
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -323,7 +299,7 @@ public class MainActivity
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig)
+    public void onConfigurationChanged(@NonNull Configuration newConfig)
     {
         super.onConfigurationChanged(newConfig);
         if (mDrawerToggle != null)
@@ -335,17 +311,13 @@ public class MainActivity
     @Override
     public void onBackPressed()
     {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer != null)
+        if (mDrawerLayout.isDrawerOpen(GravityCompat.START))
         {
-            if (drawer.isDrawerOpen(GravityCompat.START))
-            {
-                drawer.closeDrawer(GravityCompat.START);
-            }
-            else
-            {
-                super.onBackPressed();
-            }
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+        }
+        else
+        {
+            super.onBackPressed();
         }
     }
 
@@ -440,7 +412,6 @@ public class MainActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item)
     {
@@ -474,11 +445,8 @@ public class MainActivity
         }
         */
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer != null)
-        {
-            drawer.closeDrawer(GravityCompat.START);
-        }
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+
         return true;
     }
 
@@ -541,6 +509,7 @@ public class MainActivity
         mNotificationParserManager.startActivityNotificationListenerSettings();
     }
 
+    /** @noinspection UnusedReturnValue*/
     private int textToSpeechAudioStreamTypeUpdate()
     {
         //noinspection unchecked
@@ -584,6 +553,7 @@ public class MainActivity
 
     }
 
+    /** @noinspection SameParameterValue*/
     private void onTextToSpeechAudioStreamVolumeChanged(int volume, boolean updateSeekbar, boolean updateStreamVolume)
     {
         int audioStreamType = mTextToSpeechManager.getAudioStreamType();
@@ -638,10 +608,12 @@ public class MainActivity
         FooLog.v(TAG, "onActivityResult(...)");
         super.onActivityResult(requestCode, resultCode, data);
 
+        //noinspection SwitchStatementWithTooFewBranches
         switch (requestCode)
         {
             case REQUEST_ACTION_CHECK_TTS_DATA:
             {
+                //noinspection SwitchStatementWithTooFewBranches
                 switch (resultCode)
                 {
                     case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
@@ -672,6 +644,7 @@ public class MainActivity
             return mVoice;
         }
 
+        @NonNull
         @Override
         public String toString()
         {
@@ -791,6 +764,7 @@ public class MainActivity
 
     private void verifyRequirements()
     {
+        //...
     }
 
     private void onNotificationListenerConnected()
@@ -850,6 +824,7 @@ public class MainActivity
     @Override
     public boolean onGenericPromptPositiveNegativeDialogFragmentResult(@NonNull GenericPromptPositiveNegativeDialogFragment dialogFragment)
     {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (dialogFragment.getResult())
         {
             case Positive:
