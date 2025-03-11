@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 
 import com.smartfoo.android.core.FooListenerManager;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** @noinspection unused, CommentedOutCode */
 public class ProfileManager
 {
     private static final String TAG = FooLog.TAG(ProfileManager.class);
@@ -36,9 +38,13 @@ public class ProfileManager
 
     public interface ProfileManagerConfiguration
     {
+        @NonNull
         String getProfileToken();
 
-        void setProfileToken(String profileToken);
+        /**
+         * @param profileToken if null then {@link #DEFAULT_PROFILE_TOKEN}
+         */
+        void setProfileToken(@Nullable String profileToken);
     }
 
     public static class ProfileManagerCallbacks
@@ -58,6 +64,7 @@ public class ProfileManager
             // ignore
         }
 
+        /** @noinspection unused*/
         void onProfileTokenSet(String profileToken)
         {
             // ignore
@@ -85,6 +92,13 @@ public class ProfileManager
         mListenerManager = new FooListenerManager<>(this);
         mWiredHeadsetConnectionListener = new FooWiredHeadsetConnectionListener(context);
         mBluetoothAudioConnectionListener = new FooBluetoothAudioConnectionListener(context);
+
+        FooLog.v(TAG, "-ProfileManager(...)");
+    }
+
+    void start()
+    {
+        FooLog.v(TAG, "+start()");
 
         updateProfileTokenEnabled();
 
@@ -120,7 +134,13 @@ public class ProfileManager
             }
         });
 
-        FooLog.v(TAG, "-ProfileManager(...)");
+        FooLog.v(TAG, "-start()");
+    }
+
+    private Profile getProfile(int index, int resIdName, String token)
+    {
+        String name = mContext.getString(resIdName);
+        return new Profile(index, name, token);
     }
 
     @NonNull
@@ -136,12 +156,6 @@ public class ProfileManager
         return profiles;
     }
 
-    private Profile getProfile(int index, int resIdName, String token)
-    {
-        String name = mContext.getString(resIdName);
-        return new Profile(index, name, token);
-    }
-
     public boolean isEnabled()
     {
         return Tokens.isNotDisabled(mProfileTokenEnabled);
@@ -152,6 +166,7 @@ public class ProfileManager
         return mConfiguration.getProfileToken();
     }
 
+    /** @noinspection UnusedReturnValue*/
     public boolean setProfileToken(String value)
     {
         if (FooString.isNullOrEmpty(value))

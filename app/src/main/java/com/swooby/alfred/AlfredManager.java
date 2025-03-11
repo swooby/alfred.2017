@@ -9,6 +9,7 @@ import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 
@@ -185,6 +186,7 @@ public class AlfredManager
 
         mProfileManager = new ProfileManager(mApplicationContext, new ProfileManagerConfiguration()
         {
+            @NonNull
             @Override
             public String getProfileToken()
             {
@@ -192,7 +194,7 @@ public class AlfredManager
             }
 
             @Override
-            public void setProfileToken(String profileToken)
+            public void setProfileToken(@Nullable String profileToken)
             {
                 mAppPreferences.setProfileToken(profileToken);
             }
@@ -238,134 +240,143 @@ public class AlfredManager
 
     public void start()
     {
-        if (isStarted())
+        try
         {
-            return;
-        }
-
-        mIsStarted = true;
-
-        if (ContextCompat.checkSelfPermission(mApplicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            FooLog.e(TAG, "checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED");
-            //...
-            return;
-        }
-
-        mNotificationManager.notifyInitializing("Text To Speech", "TBD text", "TBD subtext");
-        final long timeStartMillis = System.currentTimeMillis();
-        mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
-        {
-            @Override
-            public void onTextToSpeechInitialized(int status)
+            if (isStarted())
             {
-                long timeElapsedMillis = System.currentTimeMillis() - timeStartMillis;
-                super.onTextToSpeechInitialized(status);
-                AlfredManager.this.onTextToSpeechInitialized(status, timeElapsedMillis);
-            }
-        });
-        mNotificationParserManager.attach(new NotificationParserManagerCallbacks()
-        {
-            @Override
-            public boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications)
-            {
-                return AlfredManager.this.onNotificationListenerConnected();
+                return;
             }
 
-            @Override
-            public void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
-            {
-                AlfredManager.this.onNotificationListenerNotConnected(reason, elapsedMillis, 0);
+            mIsStarted = true;
+
+            if (ContextCompat.checkSelfPermission(mApplicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                FooLog.e(TAG, "checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED");
+                //...
+                return;
             }
 
-            @Override
-            public void onNotificationParsed(@NonNull AbstractNotificationParser parser)
+            mNotificationManager.notifyInitializing("Text To Speech", "TBD text", "TBD subtext");
+            final long timeStartMillis = System.currentTimeMillis();
+            mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
             {
-                AlfredManager.this.onNotificationParsed(parser);
-            }
-        });
-        mScreenListener.attach(new FooScreenListenerCallbacks()
-        {
-            @Override
-            public void onScreenOff()
+                @Override
+                public void onTextToSpeechInitialized(int status)
+                {
+                    long timeElapsedMillis = System.currentTimeMillis() - timeStartMillis;
+                    super.onTextToSpeechInitialized(status);
+                    AlfredManager.this.onTextToSpeechInitialized(status, timeElapsedMillis);
+                }
+            });
+            mNotificationParserManager.attach(new NotificationParserManagerCallbacks()
             {
-                AlfredManager.this.onScreenOff();
-            }
+                @Override
+                public boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications)
+                {
+                    return AlfredManager.this.onNotificationListenerConnected();
+                }
 
-            @Override
-            public void onScreenOn()
-            {
-                AlfredManager.this.onScreenOn();
-            }
+                @Override
+                public void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis)
+                {
+                    AlfredManager.this.onNotificationListenerNotConnected(reason, elapsedMillis, 0);
+                }
 
-            @Override
-            public void onUserUnlocked() {
-                FooLog.e(TAG, "onUserUnlocked()");
-                mTextToSpeechManager.speak("user unlocked");
-            }
-        });
-        mChargePortListener.attach(new FooChargePortListenerCallbacks()
-        {
-            @Override
-            public void onChargePortConnected(ChargePort chargePort)
+                @Override
+                public void onNotificationParsed(@NonNull AbstractNotificationParser parser)
+                {
+                    AlfredManager.this.onNotificationParsed(parser);
+                }
+            });
+            mScreenListener.attach(new FooScreenListenerCallbacks()
             {
-                AlfredManager.this.onChargePortConnected(chargePort);
-            }
+                @Override
+                public void onScreenOff()
+                {
+                    AlfredManager.this.onScreenOff();
+                }
 
-            @Override
-            public void onChargePortDisconnected(ChargePort chargePort)
-            {
-                AlfredManager.this.onChargePortDisconnected(chargePort);
-            }
-        });
-        mCellularStateListener.start(mCellularHookStateCallbacks, null);
-        mDataConnectionListener.start(mDataConnectionListenerCallbacks);
-        for (int audioStreamType : FooAudioUtils.getAudioStreamTypes())
-        {
-            volumeObserverStart(audioStreamType);
-        }
-        // TODO:(pv) Phone doze listener
-        // TODO:(pv) etc…
-        mProfileManager.attach(new ProfileManagerCallbacks()
-        {
-            @Override
-            public void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
-            {
-                AlfredManager.this.onHeadsetConnectionChanged(headsetType, headsetName, isConnected);
-            }
+                @Override
+                public void onScreenOn()
+                {
+                    AlfredManager.this.onScreenOn();
+                }
 
-            @Override
-            void onProfileEnabled(String profileToken)
+                @Override
+                public void onUserUnlocked()
+                {
+                    FooLog.e(TAG, "onUserUnlocked()");
+                    mTextToSpeechManager.speak("user unlocked");
+                }
+            });
+            mChargePortListener.attach(new FooChargePortListenerCallbacks()
             {
-                AlfredManager.this.onProfileEnabled(profileToken);
-            }
+                @Override
+                public void onChargePortConnected(ChargePort chargePort)
+                {
+                    AlfredManager.this.onChargePortConnected(chargePort);
+                }
 
-            @Override
-            void onProfileDisabled(String profileToken)
+                @Override
+                public void onChargePortDisconnected(ChargePort chargePort)
+                {
+                    AlfredManager.this.onChargePortDisconnected(chargePort);
+                }
+            });
+            mCellularStateListener.start(mCellularHookStateCallbacks, null);
+            mDataConnectionListener.start(mDataConnectionListenerCallbacks);
+            for (int audioStreamType : FooAudioUtils.getAudioStreamTypes())
             {
-                AlfredManager.this.onProfileDisabled(profileToken);
+                volumeObserverStart(audioStreamType);
             }
+            // TODO:(pv) Phone doze listener
+            // TODO:(pv) etc…
+            mProfileManager.start();
+            mProfileManager.attach(new ProfileManagerCallbacks()
+            {
+                @Override
+                public void onHeadsetConnectionChanged(HeadsetType headsetType, String headsetName, boolean isConnected)
+                {
+                    AlfredManager.this.onHeadsetConnectionChanged(headsetType, headsetName, isConnected);
+                }
+
+                @Override
+                void onProfileEnabled(String profileToken)
+                {
+                    AlfredManager.this.onProfileEnabled(profileToken);
+                }
+
+                @Override
+                void onProfileDisabled(String profileToken)
+                {
+                    AlfredManager.this.onProfileDisabled(profileToken);
+                }
+
+                /*
+                @Override
+                public void onProfileStateChanged(String profileName, boolean enabled)
+                {
+                }
+                */
+            });
+
+            //updateEnabledState("onCreate");
 
             /*
-            @Override
-            public void onProfileStateChanged(String profileName, boolean enabled)
+            if (!isRecognitionAvailable())
             {
+                // TODO:(pv) Better place for initialization and indication of failure…
+                //speak(true, true, "Speech recognition is not available for this device.");
+                //speak(true, true, "Goodbye.");
+                return;
             }
+
+            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
             */
-        });
-
-        //updateEnabledState("onCreate");
-
-        /*
-        if (!isRecognitionAvailable())
-        {
-            // TODO:(pv) Better place for initialization and indication of failure…
-            //speak(true, true, "Speech recognition is not available for this device.");
-            //speak(true, true, "Goodbye.");
-            return;
         }
-
-        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        */
+        catch (Exception e)
+        {
+            FooLog.e(TAG, "start()", e);
+        }
     }
 
     /*
@@ -663,6 +674,7 @@ public class AlfredManager
     private void onAlfredNotificationParsed(AlfredNotificationParser parser)
     {
     }
+
     //
     //
     //
@@ -712,8 +724,9 @@ public class AlfredManager
 
     private void updateScreenInfo()
     {
+        boolean isScreenOn = mScreenListener.isScreenOn();
         String speech;
-        if (mScreenListener.isScreenOn())
+        if (isScreenOn)
         {
             mTimeScreenOnMs = System.currentTimeMillis();
 

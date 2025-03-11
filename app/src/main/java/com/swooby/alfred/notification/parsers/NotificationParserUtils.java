@@ -258,6 +258,51 @@ public class NotificationParserUtils
         return 0;
     }
 
+    /**
+     * Gets the [android.view.RemotableViewMethod] Notification's BitmapDrawable.
+     *
+     * Used in PandoraNotificationParser as a boolean concept to know if the bitmap exists and is visible or not.
+     *
+     * Since Android12 (https://developer.android.com/about/versions/12/non-sdk-12), gives compiler error:
+     * ```
+     * Reflective access to `mRecycleableBitmapDrawable` will throw an exception when targeting API 35 and above.
+     * ```
+     *
+     * Per:
+     * https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/widget/ImageView.java
+     * ```
+     *      @UnsupportedAppUsage
+     *      private Drawable mDrawable = null;
+     *      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
+     *      private BitmapDrawable mRecycleableBitmapDrawable = null;
+     * ```
+     * (`trackingBug = 170729553` == https://android.googlesource.com/platform/system/security/+/271f57b52c39aeada2d606cd53bda93236cc3dc8)
+     *
+     * ImageView.java code still shows:
+     * ```
+     *      /**
+     *       * Sets a Bitmap as the content of this ImageView.
+     *       *
+     *       * @param bm The bitmap to set
+     *       *\/
+     *      @android.view.RemotableViewMethod
+     *      public void setImageBitmap(Bitmap bm) {
+     *          // Hacky fix to force setImageDrawable to do a full setImageDrawable
+     *          // instead of doing an object reference comparison
+     *          mDrawable = null;
+     *          if (mRecycleableBitmapDrawable == null) {
+     *              mRecycleableBitmapDrawable = new BitmapDrawable(mContext.getResources(), bm);
+     *          } else {
+     *              mRecycleableBitmapDrawable.setBitmap(bm);
+     *          }
+     *          setImageDrawable(mRecycleableBitmapDrawable);
+     *      }
+     * ```
+     * This seems like proof that the only way to get the bitmap is to use reflection. :/
+     *
+     * @param imageView ImageView
+     * @return BitmapDrawable
+     */
     public static BitmapDrawable getImageBitmap(@NonNull ImageView imageView)
     {
         //noinspection TryWithIdenticalCatches

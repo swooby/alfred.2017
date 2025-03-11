@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+/** @noinspection CommentedOutCode*/
 public class MainActivity
         extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -193,6 +194,18 @@ public class MainActivity
         mNavigationView = binding.navView;
         mNavigationView.setNavigationItemSelectedListener(this);
 
+        /*
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+        mAppBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                .setOpenableLayout(drawer)
+                .build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main2025);
+        NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
+        NavigationUI.setupWithNavController(navigationView, navController);
+        */
+
         mSpinnerTextToSpeechVoices = binding.appBarMain.activityMainContent.spinnerTextToSpeechVoices;
 
         mSpinnerTextToSpeechAudioStreamType = binding.appBarMain.activityMainContent.spinnerTextToSpeechAudioStreamType;
@@ -269,18 +282,15 @@ public class MainActivity
         mButtonProcessNotifications.setOnClickListener(v -> mNotificationParserManager.initializeActiveNotifications());
 
         /*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        if (fab != null)
-        {
-            fab.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View view)
-                {
-                    MainActivity.this.onFloatingActionButtonClick();
-                }
-            });
-        }
+        binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .setAnchorView(R.id.fab).show();
+                MainActivity.this.onFloatingActionButtonClick();
+            }
+        });
         */
 
         if (savedInstanceState == null)
@@ -321,6 +331,15 @@ public class MainActivity
             super.onBackPressed();
         }
     }
+
+    /*
+    @Override
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main2025);
+        return NavigationUI.navigateUp(navController, mAppBarConfiguration)
+                || super.onSupportNavigateUp();
+    }
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)

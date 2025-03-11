@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothDevice;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 
+import com.smartfoo.android.core.annotations.NonNullNonEmpty;
+
 import java.util.Comparator;
 
 public class Profile
@@ -47,7 +49,9 @@ public class Profile
     };
 
     private final int    mForcedOrder;
+    @NonNullNonEmpty
     private final String mName;
+    @NonNullNonEmpty
     private final String mToken;
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -56,21 +60,35 @@ public class Profile
         this(Integer.MAX_VALUE, bluetoothDevice.getName(), bluetoothDevice.getAddress());
     }
 
-    public Profile(int forcedOrder, @NonNull String name, @NonNull String token)
+    public Profile(int forcedOrder, @NonNullNonEmpty String name, @NonNullNonEmpty String token)
     {
         mForcedOrder = forcedOrder;
         mName = name;
         mToken = token;
     }
 
+    @NonNull
     @Override
     public String toString()
     {
         return mName;
     }
 
+    @NonNullNonEmpty
+    public String getName()
+    {
+        return mName;
+    }
+
+    @NonNullNonEmpty
     public String getToken()
     {
         return mToken;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        return obj instanceof Profile && mToken.equals(((Profile) obj).mToken);
     }
 }

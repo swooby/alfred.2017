@@ -350,7 +350,7 @@ public class PandoraNotificationParser
         mLastArtist = textArtist;
         mLastStationOrAlbum = textStationOrAlbum;
 
-        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getPackageAppSpokenName());
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getContext(), getPackageAppSpokenName());
 
         if (isPausedByUser)
         {

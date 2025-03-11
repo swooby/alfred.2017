@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.view.View;
 import android.widget.RemoteViews;
-import android.widget.TextView;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
@@ -22,13 +21,14 @@ import static com.swooby.alfred.notification.parsers.NotificationParserUtils.wal
 
 import androidx.annotation.NonNull;
 
+/** @noinspection CommentedOutCode*/
 public abstract class AbstractNotificationParser
 {
     private static final String TAG = FooLog.TAG(AbstractNotificationParser.class);
 
     /**
-     * @param context
-     * @param sbn
+     * @param context Context
+     * @param sbn StatusBarNotification
      * @param textToSpeechManager set to null suppress textToSpeech (helps when debugging parsing)
      * @return NotificationParseResult
      */
@@ -41,10 +41,10 @@ public abstract class AbstractNotificationParser
     }
 
     /**
-     * @param context
-     * @param sbn
+     * @param context Context
+     * @param sbn StatusBarNotification
      * @param textToSpeechManager  set to null suppress textToSpeech (helps when debugging parsing)
-     * @param packageAppSpokenName
+     * @param packageAppSpokenName spoken name of the app
      * @return NotificationParseResult
      */
     public static NotificationParseResult defaultOnNotificationPosted(
@@ -88,24 +88,19 @@ public abstract class AbstractNotificationParser
 
         final FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(packageAppSpokenName);
 
-        WalkViewCallbacks walkViewCallbacks = new WalkViewCallbacks()
-        {
-            @Override
-            public void onTextView(TextView textView)
+        WalkViewCallbacks walkViewCallbacks = textView -> {
+            if (textView.getVisibility() != View.VISIBLE)
             {
-                if (textView.getVisibility() != View.VISIBLE)
-                {
-                    return;
-                }
-
-                String text = textView.getText().toString();
-                if (FooString.isNullOrEmpty(text))
-                {
-                    return;
-                }
-
-                builder.appendSpeech(text);
+                return;
             }
+
+            String text = textView.getText().toString();
+            if (FooString.isNullOrEmpty(text))
+            {
+                return;
+            }
+
+            builder.appendSpeech(text);
         };
 
         FooLog.v(TAG, "defaultOnNotificationPosted: ---- bigContentView ----");
@@ -217,7 +212,7 @@ public abstract class AbstractNotificationParser
     private final   String                      mHashtag;
     protected final NotificationParserCallbacks mCallbacks;
 
-    protected AbstractNotificationParser(@NonNull String hashtag, @NonNull NotificationParserCallbacks callbacks)
+    protected AbstractNotificationParser(@NonNullNonEmpty String hashtag, @NonNull NotificationParserCallbacks callbacks)
     {
         mHashtag = FooRun.toNonNullNonEmpty(hashtag, "hashtag").startsWith("#") ? hashtag : ("#" + hashtag);
         mCallbacks = FooRun.toNonNull(callbacks, "callbacks");

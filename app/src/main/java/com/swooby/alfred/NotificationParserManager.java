@@ -70,11 +70,8 @@ public class NotificationParserManager
     {
         FooLog.v(TAG, "+NotificationParserManager(...)");
 
-        FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
-        FooRun.throwIllegalArgumentExceptionIfNull(configuration, "configuration");
-
-        mContext = context;
-        mConfiguration = configuration;
+        mContext = FooRun.toNonNull(context, "context");
+        mConfiguration = FooRun.toNonNull(configuration, "configuration");
 
         mListenerManager = new FooListenerAutoStartManager<>(this);
         mListenerManager.attach(new FooListenerAutoStartManagerCallbacks()
@@ -158,6 +155,7 @@ public class NotificationParserManager
         return mConfiguration.getTextToSpeech();
     }
 
+    /** @noinspection BooleanMethodIsAlwaysInverted*/
     private boolean isEnabled()
     {
         return mConfiguration.isNotificationParserEnabled();
@@ -208,6 +206,7 @@ public class NotificationParserManager
                     Notification notification = statusBarNotification.getNotification();
                     if ((notification.flags & Notification.FLAG_ONGOING_EVENT) == Notification.FLAG_ONGOING_EVENT)
                     {
+                        //noinspection SequencedCollectionMethodCanBeUsed
                         prioritized.add(0, statusBarNotification);
                         continue;
                     }

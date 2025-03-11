@@ -131,7 +131,7 @@ public class SpotifyNotificationParser
         mLastArtist = textArtist;
         mLastTitle = textTitle;
 
-        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getPackageAppSpokenName());
+        FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(getContext(), getPackageAppSpokenName());
 
         if (isPlaying)
         {
