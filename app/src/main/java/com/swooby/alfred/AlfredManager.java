@@ -4,14 +4,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.service.notification.StatusBarNotification;
 import android.speech.tts.TextToSpeech;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.core.content.ContextCompat;
 
 import com.smartfoo.android.core.FooListenerManager;
 import com.smartfoo.android.core.FooRun;
@@ -26,6 +24,7 @@ import com.smartfoo.android.core.network.FooDataConnectionListener;
 import com.smartfoo.android.core.network.FooDataConnectionListener.FooDataConnectionInfo;
 import com.smartfoo.android.core.network.FooDataConnectionListener.FooDataConnectionListenerCallbacks;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
+import com.smartfoo.android.core.permissions.FooPermissionsChecker;
 import com.smartfoo.android.core.platform.FooChargePortListener;
 import com.smartfoo.android.core.platform.FooChargePortListener.ChargePort;
 import com.smartfoo.android.core.platform.FooChargePortListener.FooChargePortListenerCallbacks;
@@ -238,6 +237,18 @@ public class AlfredManager
         return mIsStarted;
     }
 
+    /** @noinspection SameParameterValue*/
+    private boolean isPermissionGranted(@NonNull String permission)
+    {
+        return FooPermissionsChecker.isPermissionGranted(mApplicationContext, permission);
+    }
+
+    private boolean isPermissionGranted_POST_NOTIFICATIONS()
+    {
+        return isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS);
+    }
+
+    @SuppressLint("MissingPermission")
     public void start()
     {
         try
@@ -251,13 +262,14 @@ public class AlfredManager
 
             mIsStarted = true;
 
-            if (ContextCompat.checkSelfPermission(mApplicationContext, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                FooLog.e(TAG, "checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED");
+            if (!isPermissionGranted_POST_NOTIFICATIONS())
+            {
+                FooLog.e(TAG, "start: isPermissionGranted_POST_NOTIFICATIONS() == false");
                 //...
                 return;
             }
 
-            mNotificationManager.notifyInitializing("Text To Speech", "TBD text", "TBD subtext");
+            mNotificationManager.notifyOngoingInitializing("Text To Speech", "TBD text", "TBD subtext");
             final long timeStartMillis = System.currentTimeMillis();
             mTextToSpeechManager.attach(new TextToSpeechManagerCallbacks()
             {
@@ -436,18 +448,22 @@ public class AlfredManager
         return true;
     }
 
+    /** @noinspection SameParameterValue*/
     @SuppressLint("MissingPermission")
     private void notification(@NonNull NotificationStatus notificationStatus,
                               String text,
                               String subtext)
     {
-        if (notificationStatus instanceof NotificationStatusProfileNotEnabled)
+        if (isPermissionGranted_POST_NOTIFICATIONS())
         {
-            mNotificationManager.notifyPaused(notificationStatus, text, subtext);
-        }
-        else
-        {
-            mNotificationManager.notifyRunning(notificationStatus, text, subtext);
+            if (notificationStatus instanceof NotificationStatusProfileNotEnabled)
+            {
+                mNotificationManager.notifyOngoingPaused(notificationStatus, text, subtext);
+            }
+            else
+            {
+                mNotificationManager.notifyOngoingRunning(notificationStatus, text, subtext);
+            }
         }
     }
 
@@ -457,6 +473,9 @@ public class AlfredManager
                       ", status == " + FooTextToSpeech.statusToString(status));
         if (status != TextToSpeech.SUCCESS)
         {
+            FooLog.e(TAG, "onTextToSpeechInitialized: status != TextToSpeech.SUCCESS");
+            // TODO: Notify the user that this app, who's whole purpose is to speak, is pretty useless then.
+            // Similar to what `start()`'s `isPermissionGranted_POST_NOTIFICATIONS()` check needs to do.
             return;
         }
     }
