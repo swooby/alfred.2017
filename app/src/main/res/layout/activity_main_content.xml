@@ -297,12 +297,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                android:layout_column="1"
-                android:layout_gravity="center_vertical|end"
-                android:paddingEnd="0dp"
-                android:paddingStart="16dp"
-                android:text="@string/pitch"
-                />
+                    android:layout_column="1"
+                    android:layout_gravity="center_vertical|end"
+                    android:paddingEnd="0dp"
+                    android:paddingStart="16dp"
+                    android:text="@string/pitch"
+                    />
 
             <SeekBar
                 android:id="@+id/seekbarTextToSpeechVoicePitch"
@@ -338,7 +338,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@null"
-                    android:src="@drawable/ic_play_arrow_black_24dp"
+                    android:src="@drawable/ic_play_arrow"
                     />
 
             </TableRow>

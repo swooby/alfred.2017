@@ -133,7 +133,7 @@ public class NotificationManager
     {
         NotificationStatusStarting(@NonNull Context context, @NonNull String text, String subtext, Bundle extras)
         {
-            super(context, R.drawable.ic_warning_white_18dp, text, subtext, extras);
+            super(context, R.drawable.ic_warning, text, subtext, extras);
         }
     }
 
@@ -160,7 +160,7 @@ public class NotificationManager
 
         NotificationStatusRunning(@NonNull Context context, @NonNull String text, String subtext, Bundle extras)
         {
-            super(context, R.drawable.ic_alfred_running_white_18dp, text, subtext, extras);
+            super(context, R.drawable.ic_alfred_running, text, subtext, extras);
         }
     }
 
@@ -169,7 +169,7 @@ public class NotificationManager
     {
         NotificationStatusNotificationAccessNotEnabled(@NonNull Context context, @NonNull String text, String subtext, Bundle extras)
         {
-            super(context, R.drawable.ic_warning_white_18dp, text, subtext, extras, 0);
+            super(context, R.drawable.ic_warning, text, subtext, extras, 0);
         }
 
         @NonNull
@@ -213,7 +213,7 @@ public class NotificationManager
 
         NotificationStatusProfileNotEnabled(@NonNull Context context, Profile profile)
         {
-            super(context, R.drawable.ic_alfred_paused_white_18dp, FooRes.getString(context, R.string.alfred_paused), toString(context, profile), null);
+            super(context, R.drawable.ic_alfred_paused, FooRes.getString(context, R.string.alfred_paused), toString(context, profile), null);
         }
     }
 
