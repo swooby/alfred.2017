@@ -239,6 +239,39 @@ public class AlfredManager
         return mNotificationParserManager;
     }
 
+    //
+    //region Speak
+    //
+
+    public void speak(@NonNull String text)
+    {
+        speak(false, text);
+    }
+
+    public void speak(boolean clear, @NonNull String text)
+    {
+        mTextToSpeechManager.speak(clear, text);
+    }
+
+    public void speak(FooTextToSpeechBuilder builder)
+    {
+        speak(false, builder);
+    }
+
+    public void speak(boolean clear, FooTextToSpeechBuilder builder)
+    {
+        mTextToSpeechManager.speak(clear, builder);
+    }
+
+    public void speakGreeting()
+    {
+        speak(true, mSayingsManager.goodPartOfDayUserNoun());
+    }
+
+    //
+    //endregion Speak
+    //
+
     public boolean isStarted()
     {
         return mIsStarted;
@@ -326,7 +359,7 @@ public class AlfredManager
                 public void onUserUnlocked()
                 {
                     FooLog.e(TAG, "onUserUnlocked()");
-                    mTextToSpeechManager.speak("user unlocked");
+                    speak("user unlocked");
                 }
             });
             mBootListener.attach(new FooBootListener.FooBootListenerCallbacks()
@@ -339,13 +372,13 @@ public class AlfredManager
                 @Override
                 public void onReboot()
                 {
-                    mTextToSpeechManager.speak("rebooting");
+                    speak("rebooting");
                 }
 
                 @Override
                 public void onShutdown()
                 {
-                    mTextToSpeechManager.speak("shutting down");
+                    speak("shutting down");
                 }
             });
             mChargePortListener.attach(new FooChargePortListenerCallbacks()
@@ -507,15 +540,14 @@ public class AlfredManager
         // !!!!!!THIS IS WHERE THE REAL APP LOGIC ACTUALLY STARTS!!!!!!
         //
 
-        FooTextToSpeechBuilder builder = mSayingsManager.goodPartOfDayUserNoun();
-        mTextToSpeechManager.speak(builder);
+        speakGreeting();
 
         mIsUserUnlocked |= mScreenListener.isUserUnlocked();
         if (!mIsUserUnlocked)
         {
             FooLog.i(TAG, "onProfileEnabled: mIsUserUnlocked == false");
 
-            mTextToSpeechManager.speak("Your device has just been rebooted and needs to be unlocked before I can read notifications to you.");
+            speak("Your device has just been rebooted and needs to be unlocked before I can read notifications to you.");
         }
 
         NotificationStatus notificationStatus;
@@ -602,7 +634,7 @@ public class AlfredManager
         mDelayedRunnableNotificationAccessSettingDisabled = null;
 
         String speech = getString(R.string.alfred_notification_listener_connected);
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
 
         for (AlfredManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
@@ -671,7 +703,7 @@ public class AlfredManager
             FooPlatformUtils.toastLong(mApplicationContext, text);
         }
 
-        mTextToSpeechManager.speak(new FooTextToSpeechBuilder()
+        speak(new FooTextToSpeechBuilder()
                 .appendSpeech(title)
                 .appendSilenceWordBreak()
                 .appendSpeech(message));
@@ -757,7 +789,7 @@ public class AlfredManager
 
         String textHeadphone = getString(resIdHeadphone, headsetName);
         String speech = getString(resIdConnection, textHeadphone);
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
     }
 
     //
@@ -817,7 +849,7 @@ public class AlfredManager
                 speech = getString(R.string.alfred_screen_off);
             }
         }
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
     }
 
     //
@@ -858,7 +890,7 @@ public class AlfredManager
         {
             speech = getString(R.string.alfred_X_connected, chargePortName);
         }
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
     }
 
     private void onChargePortDisconnected(ChargePort chargePort)
@@ -884,7 +916,7 @@ public class AlfredManager
         {
             speech = getString(R.string.alfred_X_disconnected, chargePortName);
         }
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
     }
 
     //
@@ -906,12 +938,12 @@ public class AlfredManager
 
     private void onCellularOffHook()
     {
-        mTextToSpeechManager.speak("Phone Call Started");
+        speak("Phone Call Started");
     }
 
     private void onCellularOnHook()
     {
-        mTextToSpeechManager.speak("Phone Call Ended");
+        speak("Phone Call Ended");
     }
 
     private final FooLongSparseArray<Long> mTimeDataConnected    = new FooLongSparseArray<>();
@@ -941,7 +973,7 @@ public class AlfredManager
         {
             speech = dataConnectionTypeName + " connected";
         }
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
     }
 
     private void onDataDisconnected(FooDataConnectionInfo dataConnectionInfo)
@@ -968,7 +1000,7 @@ public class AlfredManager
         {
             speech = dataConnectionTypeName + " disconnected";
         }
-        mTextToSpeechManager.speak(speech);
+        speak(speech);
     }
 
     //
@@ -1030,6 +1062,6 @@ public class AlfredManager
         String audioStreamTypeName = FooAudioUtils.audioStreamTypeToString(mApplicationContext, audioStreamType);
         //String text = getString(R.string.alfred_X_volume_Y_of_Z, audioStreamTypeName, volume, volumeMax);
         String text = getString(R.string.alfred_X_volume_Y_percent, audioStreamTypeName, volumePercent);
-        mTextToSpeechManager.speak(text);
+        speak(text);
     }
 }
