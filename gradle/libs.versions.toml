@@ -1,26 +1,24 @@
 [versions]
 agp = "8.9.0"
-androidxComposeBom = "2025.02.00"
-androidxRecyclerview = "1.4.0"
-androidxTestExtJunit = "1.2.1"
-androidxTestEspressoCore = "3.6.1"
-appcompat = "1.7.0"
-googleAndroidMaterial = "1.12.0"
+androidx-appcompat = "1.7.0"
+androidx-recyclerview = "1.4.0"
+androidx-test-espresso-core = "3.6.1"
+androidx-test-ext-junit = "1.2.1"
+google-android-material = "1.12.0"
 junit = "4.13.2"
 kotlin = "2.1.0"
 
 [libraries]
-androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
-androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidxTestEspressoCore" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }
-androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "androidxRecyclerview" }
-google-android-material = { group = "com.google.android.material", name = "material", version.ref = "googleAndroidMaterial" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "androidx-recyclerview" }
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-test-espresso-core" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+google-android-material = { group = "com.google.android.material", name = "material", version.ref = "google-android-material" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+
+[bundles]

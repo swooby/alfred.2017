@@ -2,7 +2,6 @@ package com.swooby.alfred
 
 import android.content.Context
 import android.media.AudioManager
-import com.smartfoo.android.core.FooRun
 import com.smartfoo.android.core.R
 
 class AudioStreamType
@@ -16,7 +15,6 @@ private constructor(private val mName: String, val audioStreamType: Int) {
 
         fun getTypes(context: Context): List<AudioStreamType> {
             if (sTypes == null) {
-                FooRun.throwIllegalArgumentExceptionIfNull(context, "context")
                 sTypes = ArrayList()
                 sTypes!!.add(
                     AudioStreamType(

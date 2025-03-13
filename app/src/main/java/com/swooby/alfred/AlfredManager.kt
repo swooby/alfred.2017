@@ -9,7 +9,6 @@ import android.service.notification.StatusBarNotification
 import android.speech.tts.TextToSpeech
 import androidx.annotation.StringRes
 import com.smartfoo.android.core.FooListenerManager
-import com.smartfoo.android.core.FooRun
 import com.smartfoo.android.core.FooString
 import com.smartfoo.android.core.collections.FooLongSparseArray
 import com.smartfoo.android.core.logging.FooLog
@@ -49,8 +48,7 @@ import com.swooby.alfred.notification.parsers.AlfredNotificationParser
 import java.util.EnumMap
 import java.util.concurrent.TimeUnit
 
-class AlfredManager
-    (applicationContext: Context) {
+class AlfredManager(applicationContext: Context) {
 
     companion object {
         private val TAG: String = FooLog.TAG(AlfredManager::class.java)
@@ -100,8 +98,6 @@ class AlfredManager
             TAG,
             "+AlfredManager(applicationContext=$applicationContext)"
         )
-
-        FooRun.throwIllegalArgumentExceptionIfNull(applicationContext, "applicationContext")
 
         this.applicationContext = applicationContext
 
@@ -516,8 +512,10 @@ class AlfredManager
     private fun onNotificationListenerConnected(): Boolean {
         FooLog.i(TAG, "onNotificationListenerConnected()")
 
-        mHandler.removeCallbacks(mDelayedRunnableNotificationAccessSettingDisabled!!)
-        mDelayedRunnableNotificationAccessSettingDisabled = null
+        if (mDelayedRunnableNotificationAccessSettingDisabled != null) {
+            mHandler.removeCallbacks(mDelayedRunnableNotificationAccessSettingDisabled!!)
+            mDelayedRunnableNotificationAccessSettingDisabled = null
+        }
 
         val speech = getString(R.string.alfred_notification_listener_connected)
         speak(speech)
@@ -614,7 +612,6 @@ class AlfredManager
     }
 
     fun getNotificationListenerNotConnectedTitle(reason: NotConnectedReason): String {
-        FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason")
         val resId = when (reason) {
             NotConnectedReason.ConfirmedNotEnabled -> R.string.alfred_notification_access_not_enabled
             NotConnectedReason.ConnectedTimeout -> R.string.alfred_notification_listener_bind_timeout
@@ -624,7 +621,6 @@ class AlfredManager
     }
 
     fun getNotificationListenerNotConnectedMessage(reason: NotConnectedReason): String {
-        FooRun.throwIllegalArgumentExceptionIfNull(reason, "reason")
         val resId = when (reason) {
             NotConnectedReason.ConfirmedNotEnabled -> R.string.alfred_please_enable_notification_access_for_the_X_application
             NotConnectedReason.ConnectedTimeout -> R.string.alfred_please_reenable_notification_access_for_the_X_application

@@ -17,6 +17,7 @@ import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.collections.FooBundleBuilder;
 import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotification;
+import com.smartfoo.android.core.notification.FooNotification.Companion.ChannelInfo;
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooRes;
@@ -26,7 +27,7 @@ public class NotificationManager
 {
     private static final String TAG = FooLog.TAG(NotificationManager.class);
 
-    public static final FooNotification.ChannelInfo CHANNEL_INFO = new FooNotification.ChannelInfo(
+    public static final ChannelInfo CHANNEL_INFO = new ChannelInfo(
             "FOREGROUND_SERVICE_CHANNEL",
             "Foreground Service Channel",
             android.app.NotificationManager.IMPORTANCE_DEFAULT,
