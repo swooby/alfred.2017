@@ -88,12 +88,109 @@ class AlfredManager
     private val mAudioStreamVolumeObserver: FooAudioStreamVolumeObserver
     val profileManager: ProfileManager
 
-    //
-    //endregion Speak
-    //
     var isStarted: Boolean = false
         private set
     private var mIsUserUnlocked = false
+
+    private val mTimeDataConnected = FooLongSparseArray<Long>()
+    private val mTimeDataDisconnected = FooLongSparseArray<Long>()
+
+    init {
+        FooLog.v(
+            TAG,
+            "+AlfredManager(applicationContext=$applicationContext)"
+        )
+
+        FooRun.throwIllegalArgumentExceptionIfNull(applicationContext, "applicationContext")
+
+        this.applicationContext = applicationContext
+
+        mHandler = FooHandler { msg: Message ->
+            this@AlfredManager.handleMessage(
+                msg
+            )
+        }
+
+        mAppPreferences = AppPreferences(this.applicationContext)
+
+        //
+        // Create Managers/etc
+        //
+        mListenerManager = FooListenerManager(this)
+        mNotificationManager = NotificationManager(this.applicationContext)
+        mSayingsManager = SayingsManager(this.applicationContext)
+        textToSpeechManager =
+            TextToSpeechManager(this.applicationContext, object : TextToSpeechManagerConfiguration {
+                override fun getVoiceName(): String {
+                    return mAppPreferences.textToSpeechVoiceName()
+                }
+
+                override fun setVoiceName(voiceName: String) {
+                    mAppPreferences.setTextToSpeechVoiceName(voiceName)
+                }
+
+                override fun getAudioStreamType(): Int {
+                    return mAppPreferences.textToSpeechAudioStreamType
+                }
+
+                override fun isTextToSpeechEnabled(): Boolean {
+                    return this@AlfredManager.isTextToSpeechEnabled
+                }
+            })
+        notificationParserManager = NotificationParserManager(
+            this.applicationContext,
+            object : NotificationParserManagerConfiguration {
+                override fun isNotificationParserEnabled(): Boolean {
+                    return this@AlfredManager.isProfileEnabled
+                }
+
+                override fun getTextToSpeech(): TextToSpeechManager {
+                    return this@AlfredManager.textToSpeechManager
+                }
+            })
+
+        mScreenListener = FooScreenListener(this.applicationContext)
+        mBootListener = FooBootListener(this.applicationContext)
+        mChargePortListener = FooChargePortListener(this.applicationContext)
+
+        mCellularStateListener = FooCellularStateListener(this.applicationContext)
+        mCellularHookStateCallbacks = object : FooCellularHookStateCallbacks {
+            override fun onCellularOffHook() {
+                this@AlfredManager.onCellularOffHook()
+            }
+
+            override fun onCellularOnHook() {
+                this@AlfredManager.onCellularOnHook()
+            }
+        }
+        mDataConnectionListener = FooDataConnectionListener(this.applicationContext)
+        mDataConnectionListenerCallbacks = object : FooDataConnectionListenerCallbacks {
+            override fun onDataConnected(dataConnectionInfo: FooDataConnectionInfo) {
+                this@AlfredManager.onDataConnected(dataConnectionInfo)
+            }
+
+            override fun onDataDisconnected(dataConnectionInfo: FooDataConnectionInfo) {
+                this@AlfredManager.onDataDisconnected(dataConnectionInfo)
+            }
+        }
+        mAudioStreamVolumeObserver = FooAudioStreamVolumeObserver(this.applicationContext)
+
+        profileManager =
+            ProfileManager(this.applicationContext, object : ProfileManagerConfiguration {
+                override fun getProfileToken(): String {
+                    return mAppPreferences.profileToken()
+                }
+
+                override fun setProfileToken(profileToken: String?) {
+                    mAppPreferences.setProfileToken(profileToken)
+                }
+            })
+
+        FooLog.v(
+            TAG,
+            "-AlfredManager(applicationContext=$applicationContext)"
+        )
+    }
 
     fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String {
         return applicationContext.getString(resId, *formatArgs)
@@ -121,6 +218,10 @@ class AlfredManager
     fun speakGreeting() {
         speak(true, mSayingsManager.goodPartOfDayUserNoun())
     }
+
+    //
+    //endregion Speak
+    //
 
     private fun isPermissionGranted(permission: String): Boolean {
         return FooPermissionsChecker.isPermissionGranted(applicationContext, permission)
@@ -712,105 +813,6 @@ class AlfredManager
 
     private fun onCellularOnHook() {
         speak("Phone Call Ended")
-    }
-
-    private val mTimeDataConnected = FooLongSparseArray<Long>()
-    private val mTimeDataDisconnected = FooLongSparseArray<Long>()
-
-    init {
-        FooLog.v(
-            TAG,
-            "+AlfredManager(applicationContext=$applicationContext)"
-        )
-
-        FooRun.throwIllegalArgumentExceptionIfNull(applicationContext, "applicationContext")
-
-        this.applicationContext = applicationContext
-
-        mHandler = FooHandler { msg: Message ->
-            this@AlfredManager.handleMessage(
-                msg
-            )
-        }
-
-        mAppPreferences = AppPreferences(this.applicationContext)
-
-        //
-        // Create Managers/etc
-        //
-        mListenerManager = FooListenerManager(this)
-        mNotificationManager = NotificationManager(this.applicationContext)
-        mSayingsManager = SayingsManager(this.applicationContext)
-        textToSpeechManager =
-            TextToSpeechManager(this.applicationContext, object : TextToSpeechManagerConfiguration {
-                override fun getVoiceName(): String {
-                    return mAppPreferences.textToSpeechVoiceName()
-                }
-
-                override fun setVoiceName(voiceName: String) {
-                    mAppPreferences.setTextToSpeechVoiceName(voiceName)
-                }
-
-                override fun getAudioStreamType(): Int {
-                    return mAppPreferences.textToSpeechAudioStreamType
-                }
-
-                override fun isTextToSpeechEnabled(): Boolean {
-                    return this@AlfredManager.isTextToSpeechEnabled
-                }
-            })
-        notificationParserManager = NotificationParserManager(
-            this.applicationContext,
-            object : NotificationParserManagerConfiguration {
-                override fun isNotificationParserEnabled(): Boolean {
-                    return this@AlfredManager.isProfileEnabled
-                }
-
-                override fun getTextToSpeech(): TextToSpeechManager {
-                    return this@AlfredManager.textToSpeechManager
-                }
-            })
-        mScreenListener = FooScreenListener(this.applicationContext)
-        mBootListener = FooBootListener(this.applicationContext)
-        mChargePortListener = FooChargePortListener(this.applicationContext)
-
-        mCellularStateListener = FooCellularStateListener(this.applicationContext)
-        mCellularHookStateCallbacks = object : FooCellularHookStateCallbacks {
-            override fun onCellularOffHook() {
-                this@AlfredManager.onCellularOffHook()
-            }
-
-            override fun onCellularOnHook() {
-                this@AlfredManager.onCellularOnHook()
-            }
-        }
-        mDataConnectionListener = FooDataConnectionListener(this.applicationContext)
-        mDataConnectionListenerCallbacks = object : FooDataConnectionListenerCallbacks {
-            override fun onDataConnected(dataConnectionInfo: FooDataConnectionInfo) {
-                this@AlfredManager.onDataConnected(dataConnectionInfo)
-            }
-
-            override fun onDataDisconnected(dataConnectionInfo: FooDataConnectionInfo) {
-                this@AlfredManager.onDataDisconnected(dataConnectionInfo)
-            }
-        }
-        mAudioStreamVolumeObserver = FooAudioStreamVolumeObserver(this.applicationContext)
-
-        profileManager =
-            ProfileManager(this.applicationContext, object : ProfileManagerConfiguration {
-                override fun getProfileToken(): String {
-                    return mAppPreferences.profileToken()
-                }
-
-                override fun setProfileToken(profileToken: String?) {
-                    mAppPreferences.setProfileToken(profileToken)
-                }
-            })
-
-        FooLog.v(
-            TAG,
-            "-AlfredManager(applicationContext=$applicationContext)"
-        )
     }
 
     private fun onDataConnected(dataConnectionInfo: FooDataConnectionInfo) {
