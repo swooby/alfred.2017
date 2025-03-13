@@ -744,11 +744,11 @@ class AlfredManager
         textToSpeechManager =
             TextToSpeechManager(this.applicationContext, object : TextToSpeechManagerConfiguration {
                 override fun getVoiceName(): String {
-                    return mAppPreferences.textToSpeechVoiceName
+                    return mAppPreferences.textToSpeechVoiceName()
                 }
 
                 override fun setVoiceName(voiceName: String) {
-                    mAppPreferences.textToSpeechVoiceName = voiceName
+                    mAppPreferences.setTextToSpeechVoiceName(voiceName)
                 }
 
                 override fun getAudioStreamType(): Int {
@@ -799,7 +799,7 @@ class AlfredManager
         profileManager =
             ProfileManager(this.applicationContext, object : ProfileManagerConfiguration {
                 override fun getProfileToken(): String {
-                    return mAppPreferences.profileToken
+                    return mAppPreferences.profileToken()
                 }
 
                 override fun setProfileToken(profileToken: String?) {
