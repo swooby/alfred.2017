@@ -37,7 +37,8 @@
     <string name="profile">Profile:</string>
     <string name="enable_notification_access">Enable Notification Access</string>
     <string name="process_notifications">Process Notifications</string>
-    <string name="clear_text_to_speech">Clear Text To Speech</string>
+    <string name="text_to_speech_test">TextToSpeech: Test</string>
+    <string name="text_to_speech_stop_clear">TextToSpeech: Stop/Clear</string>
 
     <!-- Profile names: May these ever be spoken? -->
     <string name="profile_disabled">Disabled</string>

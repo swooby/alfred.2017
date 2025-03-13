@@ -11,13 +11,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -125,12 +123,12 @@ public class MainActivity
 
     private ActivityMainBinding binding;
 
-    private Spinner mSpinnerTextToSpeechVoices;
+    private UserTouchSpinner mSpinnerTextToSpeechVoices;
     private SeekBar mSeekbarTextToSpeechVoiceSpeed;
     private SeekBar mSeekbarTextToSpeechVoicePitch;
-    private Spinner mSpinnerTextToSpeechAudioStreamType;
+    private UserTouchSpinner mSpinnerTextToSpeechAudioStreamType;
     private SeekBar mSeekbarTextToSpeechAudioStreamVolume;
-    private Spinner mSpinnerProfiles;
+    private UserTouchSpinner mSpinnerProfiles;
     private Button  mButtonNotificationListenerSettings;
     private Button  mButtonProcessNotifications;
 
@@ -209,6 +207,14 @@ public class MainActivity
         */
 
         mSpinnerTextToSpeechVoices = binding.appBarMain.activityMainContent.spinnerTextToSpeechVoices;
+        ImageButton buttonTextToSpeechVoicesRefresh = binding.appBarMain.activityMainContent.buttonTextToSpeechVoicesRefresh;
+        buttonTextToSpeechVoicesRefresh.setOnClickListener(v -> {
+            textToSpeechVoicesUpdate();
+        });
+        Button buttonTextToSpeechVoicesTest = binding.appBarMain.activityMainContent.buttonTextToSpeechTest;
+        buttonTextToSpeechVoicesTest.setOnClickListener(v -> textToSpeechTest());
+        Button buttonTextToSpeechStop = binding.appBarMain.activityMainContent.buttonTextToSpeechStopClear;
+        buttonTextToSpeechStop.setOnClickListener(v -> mTextToSpeechManager.clear());
 
         mSeekbarTextToSpeechVoiceSpeed = binding.appBarMain.activityMainContent.seekbarTextToSpeechVoiceSpeed;
         mSeekbarTextToSpeechVoiceSpeed.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
@@ -220,7 +226,7 @@ public class MainActivity
                 {
                     float voiceSpeed = getRateFromSeekBarProgress(seekBar);
                     mTextToSpeechManager.setVoiceSpeed(voiceSpeed);
-                    mTextToSpeechManager.speak("Good morning, sir");
+                    textToSpeechTest();
                 }
             }
 
@@ -245,7 +251,7 @@ public class MainActivity
                 {
                     float voicePitch = getRateFromSeekBarProgress(seekBar);
                     mTextToSpeechManager.setVoicePitch(voicePitch);
-                    mTextToSpeechManager.speak("Good morning, sir");
+                    textToSpeechTest();
                 }
             }
 
@@ -264,27 +270,22 @@ public class MainActivity
         List<AudioStreamType> textToSpeechAudioStreamTypes = AudioStreamType.getTypes(this);
         ArrayAdapter<AudioStreamType> textToSpeechAudioStreamTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, textToSpeechAudioStreamTypes);
         mSpinnerTextToSpeechAudioStreamType.setAdapter(textToSpeechAudioStreamTypeAdapter);
-        mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new OnItemSelectedListener()
+        mSpinnerTextToSpeechAudioStreamType.setOnItemSelectedListener(new UserTouchSpinner.OnItemSelectedListener()
         {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean userTouched)
             {
+                if (!userTouched) return;
                 AudioStreamType audioStreamType = (AudioStreamType) parent.getAdapter().getItem(position);
                 int textToSpeechAudioStreamType = audioStreamType.getAudioStreamType();
-
                 onTextToSpeechAudioStreamTypeChanged(textToSpeechAudioStreamType);
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent)
+            public void onNothingSelected(AdapterView<?> parent, boolean userTouched)
             {
             }
         });
-
-        ImageButton buttonTextToSpeechAudioStreamTypeTest = binding.appBarMain.activityMainContent.buttonTextToSpeechAudioStreamTypeTest;
-        buttonTextToSpeechAudioStreamTypeTest.setOnClickListener(v ->
-                mTextToSpeechManager.speak("Testing testing 1 2 3")
-        );
 
         mSeekbarTextToSpeechAudioStreamVolume = binding.appBarMain.activityMainContent.seekbarTextToSpeechAudioStreamVolume;
         mSeekbarTextToSpeechAudioStreamVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener()
@@ -310,17 +311,18 @@ public class MainActivity
         List<Profile> profiles = mProfileManager.getProfiles();
         ArrayAdapter<Profile> profilesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profiles);
         mSpinnerProfiles.setAdapter(profilesAdapter);
-        mSpinnerProfiles.setOnItemSelectedListener(new OnItemSelectedListener()
+        mSpinnerProfiles.setOnItemSelectedListener(new UserTouchSpinner.OnItemSelectedListener()
         {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean userTouched)
             {
+                if (!userTouched) return;
                 Profile profile = (Profile) parent.getAdapter().getItem(position);
                 mProfileManager.setProfileToken(profile.getToken());
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent)
+            public void onNothingSelected(AdapterView<?> parent, boolean userTouched)
             {
             }
         });
@@ -548,6 +550,11 @@ public class MainActivity
         FooLog.v(TAG, "-onResume()");
     }
 
+    private void textToSpeechTest()
+    {
+        mAlfredManager.speak(true, "Testing testing 1 2 3");
+    }
+
     private void textToSpeechVoiceUpdate()
     {
         float voiceSpeed = mTextToSpeechManager.getVoiceSpeed();
@@ -718,7 +725,7 @@ public class MainActivity
                 {
                     case TextToSpeech.Engine.CHECK_VOICE_DATA_PASS:
                     {
-                        updateTextToSpeechVoices();
+                        textToSpeechVoicesUpdate();
                         break;
                     }
                 }
@@ -807,7 +814,7 @@ public class MainActivity
         }
     }
 
-    private void updateTextToSpeechVoices()
+    private void textToSpeechVoicesUpdate()
     {
         ArrayList<VoiceWrapper> availableVoices = new ArrayList<>();
         Set<Voice> voices = mTextToSpeechManager.getVoices();
@@ -844,19 +851,20 @@ public class MainActivity
         ArrayAdapter<VoiceWrapper> spinnerVoicesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, availableVoices);
         mSpinnerTextToSpeechVoices.setAdapter(spinnerVoicesAdapter);
         mSpinnerTextToSpeechVoices.setSelection(currentVoiceIndex);
-        mSpinnerTextToSpeechVoices.setOnItemSelectedListener(new OnItemSelectedListener()
+        mSpinnerTextToSpeechVoices.setOnItemSelectedListener(new UserTouchSpinner.OnItemSelectedListener()
         {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id)
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean userTouched)
             {
+                if (!userTouched) return;
                 VoiceWrapper voiceWrapper = (VoiceWrapper) parent.getAdapter().getItem(position);
                 Voice voice = voiceWrapper.getVoice();
-
                 mTextToSpeechManager.setVoice(voice);
+                textToSpeechTest();
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent)
+            public void onNothingSelected(AdapterView<?> parent, boolean userTouched)
             {
             }
         });
