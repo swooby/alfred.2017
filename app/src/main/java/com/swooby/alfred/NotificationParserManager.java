@@ -93,17 +93,18 @@ public class NotificationParserManager
         });
 
         mFooNotificationListenerManager = FooNotificationListenerManager.getInstance();
+        mFooNotificationListenerManager.setSlowMode(BuildConfig.DEBUG);
 
         mFooNotificationListenerManagerCallbacks = new FooNotificationListenerManagerCallbacks()
         {
             @Override
-            public boolean onNotificationListenerConnected(@NonNull StatusBarNotification[] activeNotifications)
+            public boolean onNotificationListenerServiceConnected(@NonNull StatusBarNotification[] activeNotifications)
             {
                 return NotificationParserManager.this.onNotificationListenerConnected(activeNotifications);
             }
 
             @Override
-            public void onNotificationListenerNotConnected(@NonNull NotConnectedReason reason, long elapsedMillis)
+            public void onNotificationListenerServiceNotConnected(@NonNull NotConnectedReason reason, long elapsedMillis)
             {
                 NotificationParserManager.this.onNotificationListenerNotConnected(reason, elapsedMillis);
             }
@@ -166,14 +167,14 @@ public class NotificationParserManager
         return mIsInitialized;
     }
 
-    public boolean isNotificationAccessSettingConfirmedNotEnabled()
+    public boolean isNotificationAccessSettingConfirmedEnabled()
     {
-        return FooNotificationListenerManager.isNotificationAccessSettingConfirmedNotEnabled(mContext);
+        return FooNotificationListenerManager.isNotificationAccessSettingConfirmedEnabled(mContext);
     }
 
     public boolean isNotificationListenerConnected()
     {
-        return mFooNotificationListenerManager.isNotificationListenerConnected();
+        return mFooNotificationListenerManager.isNotificationListenerServiceConnected();
     }
 
     public void startActivityNotificationListenerSettings(Context context)
@@ -320,6 +321,7 @@ public class NotificationParserManager
         NotificationParseResult result;
 
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
+        FooLog.v(TAG, "onNotificationPosted: notificationParser=" + notificationParser);
         if (notificationParser == null)
         {
             result = AbstractNotificationParser.defaultOnNotificationPosted(mContext, sbn, getTextToSpeech());

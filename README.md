@@ -124,3 +124,23 @@ environment might find this app useful.
 * https://github.com/AnnaForAndroid/ANNA
 * https://github.com/abhi007tyagi/JARVIS
 
+## Development
+* If Mobile or Wear physical device wireless debugging does not connect in Android Studio:  
+   (from https://youtu.be/lLUYPdaf_Ow)
+   1. Look on device Dev options Wireless debugging for **pairing** ip address and port
+   2. Example: `adb pair 10.0.0.113:42145`  
+      (replace the ip address and port with yours)
+   3. Look on device Dev options Wireless debugging for **connection** ip address and port
+   4. Example: `adb connect 10.0.0.113:43999`  
+      (replace the ip address and port with yours)
+* To record videos, use https://github.com/Genymobile/scrcpy  
+   https://github.com/Genymobile/scrcpy/blob/master/doc/recording.md#recording  
+   (confimed works on both Mobile/Phone and Wear/Watch!):
+   * `brew install scrcpy`
+   * `scrcpy -s 10.0.0.113:43999 --record=wear.mp4 & scrcpy -s 10.0.0.137:46129 --record=mobile.mp4 &`  
+     (replace the ip address and port with yours)
+* WATCH OUT FOR http://stackoverflow.com/a/37081128/252308!!!  
+* To list packages:
+   ```
+   adb -s 10.0.0.161 shell pm list packages | grep com.lockly.smartlock
+   ```

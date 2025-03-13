@@ -533,13 +533,16 @@ public class MainActivity
         mAlfredManager.attach(mAlfredManagerCallbacks);
         mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks);
 
-        if (mNotificationParserManager.isNotificationAccessSettingConfirmedNotEnabled())
+        if (mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled())
         {
-            onNotificationListenerNotConnected(NotConnectedReason.ConfirmedNotEnabled, false);
+            if (mNotificationParserManager.isNotificationListenerConnected())
+            {
+                onNotificationListenerConnected();
+            }
         }
-        else if (mNotificationParserManager.isNotificationListenerConnected())
+        else
         {
-            onNotificationListenerConnected();
+            onNotificationListenerNotConnected(NotConnectedReason.ConfirmedNotEnabled, true);
         }
 
         textToSpeechVoiceUpdate();
@@ -936,7 +939,7 @@ public class MainActivity
         switch (dialogFragment.getResult())
         {
             case Positive:
-                mNotificationParserManager.startActivityNotificationListenerSettings();
+                startActivityNotificationListenerSettings();
                 break;
         }
         return false;

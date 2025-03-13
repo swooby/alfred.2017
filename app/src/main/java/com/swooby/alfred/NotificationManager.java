@@ -54,17 +54,17 @@ public class NotificationManager
         return FooNotification.createPendingIntentForActivity(context, requestCode, MainActivity.class);
     }
 
-    @NonNull
+    @Nullable
     public static PendingIntent createPendingIntentNotificationListenerSettingsActivity(@NonNull Context context)
     {
         return createPendingIntentNotificationListenerSettingsActivity(context, NotificationIds.ONGOING);
     }
 
-    @NonNull
+    @Nullable
     public static PendingIntent createPendingIntentNotificationListenerSettingsActivity(@NonNull Context context, int requestCode)
     {
         Intent intent = FooNotificationListenerManager.getIntentNotificationListenerSettings();
-        return FooNotification.createPendingIntentForActivity(context, requestCode, intent);
+        return intent != null ? FooNotification.createPendingIntentForActivity(context, requestCode, intent) : null;
     }
 
     public static abstract class NotificationStatus
@@ -121,7 +121,7 @@ public class NotificationManager
             return mExtras;
         }
 
-        @NonNull
+        @Nullable
         public PendingIntent getPendingIntent()
         {
             return createPendingIntentMainActivity(mContext, mRequestCode);
@@ -172,7 +172,7 @@ public class NotificationManager
             super(context, R.drawable.ic_warning, text, subtext, extras, 0);
         }
 
-        @NonNull
+        @Nullable
         @Override
         public PendingIntent getPendingIntent()
         {
@@ -263,17 +263,27 @@ public class NotificationManager
 
         FooNotificationBuilder builder = new FooNotificationBuilder(mContext, CHANNEL_INFO.id);
 
-        if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE) {
+        if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE)
+        {
             builder.setOngoing(true);
+        }
+
+        PendingIntent pendingIntent = status.getPendingIntent();
+        if (pendingIntent != null)
+        {
+            builder.setContentIntent(pendingIntent)
+                .addExtras(new FooBundleBuilder()
+                .putBundle(EXTRA_ALFRED_EXTRAS, status.getExtras())
+                .build());
+        }
+        else
+        {
+            FooLog.w(TAG, "notificationShow: Unexpected pendingIntent == null");
         }
 
         builder.setSmallIcon(status.getSmallIcon())
                 .setSubText(status.getText())
-                .setContentTitle(contentTitle)
-                .setContentIntent(status.getPendingIntent())
-                .addExtras(new FooBundleBuilder()
-                        .putBundle(EXTRA_ALFRED_EXTRAS, status.getExtras())
-                        .build());
+                .setContentTitle(contentTitle);
         if (!FooString.isNullOrEmpty(contentText))
         {
             builder.setContentText(contentText);
