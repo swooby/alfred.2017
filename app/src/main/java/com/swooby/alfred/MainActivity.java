@@ -60,7 +60,7 @@ public class MainActivity
 
     private static final String FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED = "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED";
 
-    private final AlfredManagerCallbacks mMainApplicationCallbacks = new AlfredManagerCallbacks()
+    private final AlfredManagerCallbacks mAlfredManagerCallbacks = new AlfredManagerCallbacks()
     {
         @Override
         public Activity getActivity()
@@ -530,7 +530,7 @@ public class MainActivity
         FooLog.v(TAG, "+onResume()");
         super.onResume();
 
-        mAlfredManager.attach(mMainApplicationCallbacks);
+        mAlfredManager.attach(mAlfredManagerCallbacks);
         mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks);
 
         if (mNotificationParserManager.isNotificationAccessSettingConfirmedNotEnabled())
@@ -591,7 +591,7 @@ public class MainActivity
         FooLog.v(TAG, "+onPause()");
         super.onPause();
 
-        mAlfredManager.detach(mMainApplicationCallbacks);
+        mAlfredManager.detach(mAlfredManagerCallbacks);
         mTextToSpeechManager.detach(mTextToSpeechManagerCallbacks);
 
         FooLog.v(TAG, "-onPause()");
