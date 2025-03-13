@@ -615,7 +615,7 @@ public class MainActivity
 
     private void startActivityNotificationListenerSettings()
     {
-        mNotificationParserManager.startActivityNotificationListenerSettings();
+        mNotificationParserManager.startActivityNotificationListenerSettings(this);
     }
 
     /** @noinspection UnusedReturnValue*/

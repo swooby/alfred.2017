@@ -176,9 +176,9 @@ public class NotificationParserManager
         return mFooNotificationListenerManager.isNotificationListenerConnected();
     }
 
-    public void startActivityNotificationListenerSettings()
+    public void startActivityNotificationListenerSettings(Context context)
     {
-        FooNotificationListenerManager.startActivityNotificationListenerSettings(mContext);
+        FooNotificationListenerManager.startActivityNotificationListenerSettings(context);
     }
 
     public void initializeActiveNotifications()
