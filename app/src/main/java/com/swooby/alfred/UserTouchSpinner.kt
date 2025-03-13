@@ -36,9 +36,9 @@ class UserTouchSpinner : AppCompatSpinner {
          * @param view The view within the AdapterView that was clicked
          * @param position The position of the view in the adapter
          * @param id The row id of the item that is selected
-         * @param userTouched true if the user touched the view, otherwise false
+         * @param fromUser true if the user touched the view, otherwise false
          */
-        fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long, userTouched: Boolean)
+        fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long, fromUser: Boolean)
 
         /**
          * Callback method to be invoked when the selection disappears from this
@@ -46,9 +46,9 @@ class UserTouchSpinner : AppCompatSpinner {
          * or when the adapter becomes empty.
          *
          * @param parent The AdapterView that now contains no selected item.
-         * @param userTouched true if the user touched the view, otherwise false
+         * @param fromUser true if the user touched the view, otherwise false
          */
-        fun onNothingSelected(parent: AdapterView<*>?, userTouched: Boolean)
+        fun onNothingSelected(parent: AdapterView<*>, fromUser: Boolean)
     }
 
     private var userTouched = false
@@ -62,12 +62,12 @@ class UserTouchSpinner : AppCompatSpinner {
     }
     private var externalOnItemSelectedListener: OnItemSelectedListener? = null
     private val internalOnItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-        override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
             externalOnItemSelectedListener?.onItemSelected(parent, view, position, id, userTouched)
             userTouched = false
         }
 
-        override fun onNothingSelected(parent: AdapterView<*>?) {
+        override fun onNothingSelected(parent: AdapterView<*>) {
             externalOnItemSelectedListener?.onNothingSelected(parent, userTouched)
             userTouched = false
         }

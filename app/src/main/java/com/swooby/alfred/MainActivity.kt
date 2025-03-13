@@ -54,9 +54,8 @@ class MainActivity
     }
 
     private val mAlfredManagerCallbacks: AlfredManagerCallbacks = object : AlfredManagerCallbacks {
-        override fun getActivity(): Activity {
-            return this@MainActivity
-        }
+        override val activity: Activity
+            get() = this@MainActivity
 
         override fun onNotificationListenerConnected() {
             this@MainActivity.onNotificationListenerConnected()
@@ -416,6 +415,7 @@ class MainActivity
             }
             R.id.action_debug_clear_debug_log -> {
                 FooLog.clear()
+                return true
             }
         }
 
