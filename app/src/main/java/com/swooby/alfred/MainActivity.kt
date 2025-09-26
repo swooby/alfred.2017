@@ -1,10 +1,14 @@
 package com.swooby.alfred
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
 import android.view.Menu
@@ -17,6 +21,7 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.DialogFragment
@@ -47,7 +52,8 @@ class MainActivity
     companion object {
         private val TAG: String = FooLog.TAG(MainActivity::class.java)
 
-        private const val REQUEST_ACTION_CHECK_TTS_DATA = 100
+        private const val REQUEST_ALFRED_MANAGER_REQUIRED_PERMISSIONS = 100
+        private const val REQUEST_ACTION_CHECK_TTS_DATA = 101
 
         private const val FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED =
             "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED"
@@ -56,6 +62,14 @@ class MainActivity
     private val mAlfredManagerCallbacks: AlfredManagerCallbacks = object : AlfredManagerCallbacks {
         override val activity: Activity
             get() = this@MainActivity
+
+        override fun onAlfredPermissionsRequired(permissions: Set<String>): Boolean {
+            return this@MainActivity.onAlfredPermissionsRequired(permissions)
+        }
+
+        override fun onActivityAlfredPermissionGranted(permission: String): Boolean {
+            return this@MainActivity.onActivityAlfredPermissionGranted(permission)
+        }
 
         override fun onNotificationListenerConnected() {
             this@MainActivity.onNotificationListenerConnected()
@@ -114,7 +128,8 @@ class MainActivity
     private lateinit var mButtonNotificationListenerSettings: Button
     private lateinit var mButtonProcessNotifications: Button
 
-    private var mRequestedTextToSpeechData = false
+    private var mIsRequestingRequiredPermissions = false
+    private var mHasRequestedTextToSpeechData = false
 
     private val isDebugEnabled: Boolean
         get() = mDebugConfiguration.isDebugEnabled
@@ -322,7 +337,18 @@ class MainActivity
 
         if (savedInstanceState == null) {
             verifyRequirements()
+        } else {
+            loadSavedInstanceState(savedInstanceState)
         }
+    }
+
+    private fun loadSavedInstanceState(savedInstanceState: Bundle) {
+        mIsRequestingRequiredPermissions = savedInstanceState.getBoolean("mIsRequestingRequiredPermissions")
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+        outState.putBoolean("mIsRequestingRequiredPermissions", mIsRequestingRequiredPermissions)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -499,8 +525,74 @@ class MainActivity
         FooLog.v(TAG, "-onResume()")
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when (requestCode) {
+            REQUEST_ALFRED_MANAGER_REQUIRED_PERMISSIONS -> {
+                for (i in permissions.indices) {
+                    val permission = permissions[i]
+                    val isGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED
+                    if (isGranted) {
+                        onActivityAlfredPermissionGranted(permission)
+                    } else {
+                        onActivityAlfredPermissionDenied(permission)
+                    }
+                }
+                for (permission in permissions) {
+                    if (mAlfredManager.onActivityPermissionGranted(permission)) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private fun onAlfredPermissionsRequired(permissions: Set<String>): Boolean {
+        val forceRequest = !mIsRequestingRequiredPermissions
+        return requestRequiredPermissions(permissions, force = forceRequest)
+    }
+
+    private fun onActivityAlfredPermissionGranted(permission: String): Boolean {
+        FooLog.i(TAG, "onActivityAlfredPermissionGranted(permission=${FooString.quote(permission)}")
+        val allRequiredPermissionsGranted = mAlfredManager.onActivityPermissionGranted(permission)
+        mIsRequestingRequiredPermissions = !allRequiredPermissionsGranted
+        return allRequiredPermissionsGranted
+    }
+
+    private fun onActivityAlfredPermissionDenied(permission: String) {
+        FooLog.w(TAG, "onActivityAlfredPermissionDenied(permission=${FooString.quote(permission)}")
+        mIsRequestingRequiredPermissions = true
+    }
+
+    private fun requestRequiredPermissions(permissions: Set<String>, force: Boolean = false): Boolean {
+        if (permissions.isEmpty()) {
+            return false
+        }
+
+        if (!force && mIsRequestingRequiredPermissions) {
+            return false
+        }
+
+        mIsRequestingRequiredPermissions = true
+
+        FooLog.i(TAG, "requestMandatoryPermissionsIfNeeded: requesting")
+        ActivityCompat.requestPermissions(
+            this,
+            permissions.toTypedArray(),
+            REQUEST_ALFRED_MANAGER_REQUIRED_PERMISSIONS
+        )
+
+        return true
+    }
+
     private fun textToSpeechTest() {
         mAlfredManager.speak(true, "Testing testing 1 2 3")
+        //mAlfredManager.speakGreeting()
     }
 
     private fun textToSpeechVoiceUpdate() {
@@ -545,11 +637,10 @@ class MainActivity
             FooLog.e(TAG, "TODO:(pv) Report error and exit the app")
             return
         }
-        if (mRequestedTextToSpeechData) {
-            return
+        if (!mHasRequestedTextToSpeechData) {
+            mHasRequestedTextToSpeechData = true
+            mTextToSpeechManager.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA)
         }
-        mRequestedTextToSpeechData = true
-        mTextToSpeechManager.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA)
     }
 
     private fun startActivityNotificationListenerSettings() {
