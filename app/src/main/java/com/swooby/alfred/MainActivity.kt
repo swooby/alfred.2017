@@ -53,6 +53,7 @@ class MainActivity
 
         private const val REQUEST_ACTION_CHECK_TTS_DATA = 100
         private const val REQUEST_PERMISSION_POST_NOTIFICATIONS = 101
+        private const val REQUEST_PERMISSION_READ_PHONE_STATE = 102
 
         private const val FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED =
             "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED"
@@ -61,6 +62,14 @@ class MainActivity
     private val mAlfredManagerCallbacks: AlfredManagerCallbacks = object : AlfredManagerCallbacks {
         override val activity: Activity
             get() = this@MainActivity
+
+        override fun onReadPhoneStatePermissionRequired() {
+            this@MainActivity.onReadPhoneStatePermissionRequired()
+        }
+
+        override fun onReadPhoneStatePermissionGranted() {
+            this@MainActivity.onReadPhoneStatePermissionGranted()
+        }
 
         override fun onPostNotificationsPermissionRequired() {
             this@MainActivity.onPostNotificationsPermissionRequired()
@@ -129,6 +138,7 @@ class MainActivity
 
     private var mRequestedTextToSpeechData = false
     private var mHasRequestedPostNotificationsPermission = false
+    private var mHasRequestedReadPhoneStatePermission = false
 
     private val isDebugEnabled: Boolean
         get() = mDebugConfiguration.isDebugEnabled
@@ -497,6 +507,7 @@ class MainActivity
         mAlfredManager.attach(mAlfredManagerCallbacks)
         mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks)
 
+        handleReadPhoneStatePermissionState()
         handlePostNotificationsPermissionState()
 
         if (mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled) {
@@ -533,6 +544,16 @@ class MainActivity
                     onPostNotificationsPermissionDenied()
                 }
             }
+            REQUEST_PERMISSION_READ_PHONE_STATE -> {
+                val isGranted = grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED
+                if (isGranted) {
+                    mAlfredManager.onReadPhoneStatePermissionGranted()
+                    onReadPhoneStatePermissionGranted()
+                } else {
+                    onReadPhoneStatePermissionDenied()
+                }
+            }
         }
     }
 
@@ -548,8 +569,17 @@ class MainActivity
         if (mAlfredManager.hasPostNotificationsPermission) {
             mAlfredManager.onPostNotificationsPermissionGranted()
             onPostNotificationsPermissionGranted()
-        } else {
-            requestPostNotificationsPermissionIfNeeded()
+        }
+    }
+
+    private fun handleReadPhoneStatePermissionState() {
+        if (!isReadPhoneStatePermissionRuntimeRequired()) {
+            return
+        }
+
+        if (mAlfredManager.hasReadPhoneStatePermission) {
+            mAlfredManager.onReadPhoneStatePermissionGranted()
+            onReadPhoneStatePermissionGranted()
         }
     }
 
@@ -566,6 +596,21 @@ class MainActivity
     private fun onPostNotificationsPermissionDenied() {
         FooLog.w(TAG, "onPostNotificationsPermissionDenied()")
         mHasRequestedPostNotificationsPermission = true
+    }
+
+    private fun onReadPhoneStatePermissionRequired() {
+        val forceRequest = !mHasRequestedReadPhoneStatePermission
+        requestReadPhoneStatePermissionIfNeeded(force = forceRequest)
+    }
+
+    private fun onReadPhoneStatePermissionGranted() {
+        FooLog.i(TAG, "onReadPhoneStatePermissionGranted()")
+        mHasRequestedReadPhoneStatePermission = false
+    }
+
+    private fun onReadPhoneStatePermissionDenied() {
+        FooLog.w(TAG, "onReadPhoneStatePermissionDenied()")
+        mHasRequestedReadPhoneStatePermission = true
     }
 
     private fun requestPostNotificationsPermissionIfNeeded(force: Boolean = false) {
@@ -590,8 +635,34 @@ class MainActivity
         mHasRequestedPostNotificationsPermission = true
     }
 
+    private fun requestReadPhoneStatePermissionIfNeeded(force: Boolean = false) {
+        if (!isReadPhoneStatePermissionRuntimeRequired()) {
+            return
+        }
+
+        if (mAlfredManager.hasReadPhoneStatePermission) {
+            return
+        }
+
+        if (!force && mHasRequestedReadPhoneStatePermission) {
+            return
+        }
+
+        FooLog.i(TAG, "requestReadPhoneStatePermissionIfNeeded: requesting")
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_PHONE_STATE),
+            REQUEST_PERMISSION_READ_PHONE_STATE
+        )
+        mHasRequestedReadPhoneStatePermission = true
+    }
+
     private fun isPostNotificationsPermissionRuntimeRequired(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    }
+
+    private fun isReadPhoneStatePermissionRuntimeRequired(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
     }
 
     private fun textToSpeechVoiceUpdate() {
