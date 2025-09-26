@@ -11,12 +11,21 @@ class AppPreferences(applicationContext: Context?)
     : FooPreferences(applicationContext) {
 
     companion object {
-        const val DEFAULT_VOICE_NAME: String = "en-GB-language"
+        //const val DEFAULT_VOICE_NAME: String = "en-GB-language"
+        const val DEFAULT_VOICE_NAME: String = "en-gb-x-rjs-local"
 
         private const val KEY_USER_VOICE_NAME = "pref_user_tts_voice_name"
         private const val KEY_USER_VOICE_AUDIO_STREAM_TYPE = "pref_user_tts_voice_audio_stream_type"
         private const val KEY_USER_PROFILE_TOKEN = "pref_user_profile_token"
         private const val KEY_USER_KEYPHRASE = "pref_user_keyphrase"
+    }
+
+    init {
+        @Suppress("KotlinConstantConditions", "SimplifyBooleanWithConstants")
+        if (BuildConfig.DEBUG && false)
+        {
+            clearAll()
+        }
     }
 
     fun textToSpeechVoiceName(): String {

@@ -56,6 +56,8 @@ public class NotificationParserManager
         void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis);
 
         void onNotificationParsed(@NonNull AbstractNotificationParser parser);
+
+        void onNotificationRemoved(@NonNull AbstractNotificationParser parser);
     }
 
     private final Context                                                         mContext;
@@ -142,6 +144,12 @@ public class NotificationParserManager
             public void onNotificationParsed(@NonNull AbstractNotificationParser parser)
             {
                 NotificationParserManager.this.onNotificationParsed(parser);
+            }
+
+            @Override
+            public void onNotificationRemoved(@NonNull AbstractNotificationParser parser)
+            {
+                NotificationParserManager.this.onNotificationRemoved(parser);
             }
         };
 
@@ -366,6 +374,15 @@ public class NotificationParserManager
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
             callbacks.onNotificationParsed(parser);
+        }
+        mListenerManager.endTraversing();
+    }
+
+    private void onNotificationRemoved(AbstractNotificationParser parser)
+    {
+        for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
+        {
+            callbacks.onNotificationRemoved(parser);
         }
         mListenerManager.endTraversing();
     }

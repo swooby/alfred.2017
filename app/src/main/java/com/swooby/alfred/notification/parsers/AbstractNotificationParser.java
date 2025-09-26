@@ -211,6 +211,8 @@ public abstract class AbstractNotificationParser
         TextToSpeechManager getTextToSpeech();
 
         void onNotificationParsed(@NonNull AbstractNotificationParser parser);
+
+        void onNotificationRemoved(@NonNull AbstractNotificationParser parser);
     }
 
     private final   String                      mHashtag;

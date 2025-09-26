@@ -3,6 +3,7 @@ package com.swooby.alfred
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.os.Message
 import android.service.notification.StatusBarNotification
@@ -86,6 +87,7 @@ class AlfredManager(applicationContext: Context) {
     private val mSayingsManager: SayingsManager
     val textToSpeechManager: TextToSpeechManager
     val notificationParserManager: NotificationParserManager
+    private val mActivityLifecyclesObserver: ActivityLifecyclesObserver
     private val mScreenListener: FooScreenListener
     private val mBootListener: FooBootListener
     private val mChargePortListener: FooChargePortListener
@@ -154,6 +156,8 @@ class AlfredManager(applicationContext: Context) {
                     return this@AlfredManager.textToSpeechManager
                 }
             })
+
+        mActivityLifecyclesObserver = ActivityLifecyclesObserver(applicationContext as Application)
 
         mScreenListener = FooScreenListener(this.applicationContext)
         mBootListener = FooBootListener(this.applicationContext)
@@ -285,7 +289,12 @@ class AlfredManager(applicationContext: Context) {
                 override fun onNotificationParsed(parser: AbstractNotificationParser) {
                     this@AlfredManager.onNotificationParsed(parser)
                 }
+
+                override fun onNotificationRemoved(parser: AbstractNotificationParser) {
+                    this@AlfredManager.onNotificationRemoved(parser)
+                }
             })
+            mActivityLifecyclesObserver.start()
             mScreenListener.attach(object : FooScreenListenerCallbacks {
                 override fun onScreenOff() {
                     this@AlfredManager.onScreenOff()
@@ -348,6 +357,13 @@ class AlfredManager(applicationContext: Context) {
         } finally {
             FooLog.i(TAG, "-start()")
         }
+    }
+
+    fun stop() {
+        FooLog.i(TAG, "+stop()")
+        isStarted = false
+        mActivityLifecyclesObserver.stop()
+        FooLog.i(TAG, "-stop()")
     }
 
     /*
@@ -737,8 +753,17 @@ class AlfredManager(applicationContext: Context) {
         }
     }
 
+    private fun onNotificationRemoved(parser: AbstractNotificationParser) {
+        if (parser is AlfredNotificationParser) {
+            onAlfredNotificationRemoved(parser)
+        }
+    }
+
     private fun onAlfredNotificationParsed(parser: AlfredNotificationParser) {
         //...
+    }
+
+    private fun onAlfredNotificationRemoved(parser: AlfredNotificationParser) {
     }
 
     //

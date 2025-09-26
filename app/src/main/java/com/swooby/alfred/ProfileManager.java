@@ -34,7 +34,7 @@ public class ProfileManager
 {
     private static final String TAG = FooLog.TAG(ProfileManager.class);
 
-    public static String DEFAULT_PROFILE_TOKEN = Tokens.HEADPHONES_WIRED;
+    public static String DEFAULT_PROFILE_TOKEN = Tokens.ALWAYS_ON;
 
     public enum HeadsetType
     {
