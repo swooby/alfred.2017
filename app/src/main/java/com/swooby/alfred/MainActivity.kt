@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
 import android.view.Menu
@@ -51,10 +52,8 @@ class MainActivity
     companion object {
         private val TAG: String = FooLog.TAG(MainActivity::class.java)
 
-        private const val REQUEST_ACTION_CHECK_TTS_DATA = 100
-        private const val REQUEST_PERMISSION_POST_NOTIFICATIONS = 101
-        private const val REQUEST_PERMISSION_READ_PHONE_STATE = 102
-        private const val REQUEST_PERMISSION_BLUETOOTH_CONNECT = 103
+        private const val REQUEST_ALFRED_MANAGER_REQUIRED_PERMISSIONS = 100
+        private const val REQUEST_ACTION_CHECK_TTS_DATA = 101
 
         private const val FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED =
             "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED"
@@ -64,28 +63,12 @@ class MainActivity
         override val activity: Activity
             get() = this@MainActivity
 
-        override fun onReadPhoneStatePermissionRequired() {
-            this@MainActivity.onReadPhoneStatePermissionRequired()
+        override fun onAlfredPermissionsRequired(permissions: Set<String>): Boolean {
+            return this@MainActivity.onAlfredPermissionsRequired(permissions)
         }
 
-        override fun onReadPhoneStatePermissionGranted() {
-            this@MainActivity.onReadPhoneStatePermissionGranted()
-        }
-
-        override fun onBluetoothConnectPermissionRequired() {
-            this@MainActivity.onBluetoothConnectPermissionRequired()
-        }
-
-        override fun onBluetoothConnectPermissionGranted() {
-            this@MainActivity.onBluetoothConnectPermissionGranted()
-        }
-
-        override fun onPostNotificationsPermissionRequired() {
-            this@MainActivity.onPostNotificationsPermissionRequired()
-        }
-
-        override fun onPostNotificationsPermissionGranted() {
-            this@MainActivity.onPostNotificationsPermissionGranted()
+        override fun onActivityAlfredPermissionGranted(permission: String): Boolean {
+            return this@MainActivity.onActivityAlfredPermissionGranted(permission)
         }
 
         override fun onNotificationListenerConnected() {
@@ -145,10 +128,8 @@ class MainActivity
     private lateinit var mButtonNotificationListenerSettings: Button
     private lateinit var mButtonProcessNotifications: Button
 
-    private var mRequestedTextToSpeechData = false
-    private var mHasRequestedPostNotificationsPermission = false
-    private var mHasRequestedReadPhoneStatePermission = false
-    private var mHasRequestedBluetoothConnectPermission = false
+    private var mIsRequestingRequiredPermissions = false
+    private var mHasRequestedTextToSpeechData = false
 
     private val isDebugEnabled: Boolean
         get() = mDebugConfiguration.isDebugEnabled
@@ -356,7 +337,18 @@ class MainActivity
 
         if (savedInstanceState == null) {
             verifyRequirements()
+        } else {
+            loadSavedInstanceState(savedInstanceState)
         }
+    }
+
+    private fun loadSavedInstanceState(savedInstanceState: Bundle) {
+        mIsRequestingRequiredPermissions = savedInstanceState.getBoolean("mIsRequestingRequiredPermissions")
+    }
+
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+        super.onSaveInstanceState(outState, outPersistentState)
+        outState.putBoolean("mIsRequestingRequiredPermissions", mIsRequestingRequiredPermissions)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -517,10 +509,6 @@ class MainActivity
         mAlfredManager.attach(mAlfredManagerCallbacks)
         mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks)
 
-        handleBluetoothConnectPermissionState()
-        handleReadPhoneStatePermissionState()
-        handlePostNotificationsPermissionState()
-
         if (mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled) {
             if (mNotificationParserManager.isNotificationListenerConnected) {
                 onNotificationListenerConnected()
@@ -545,197 +533,66 @@ class MainActivity
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         when (requestCode) {
-            REQUEST_PERMISSION_POST_NOTIFICATIONS -> {
-                val isGranted = grantResults.isNotEmpty() &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED
-                if (isGranted) {
-                    mAlfredManager.onPostNotificationsPermissionGranted()
-                    onPostNotificationsPermissionGranted()
-                } else {
-                    onPostNotificationsPermissionDenied()
+            REQUEST_ALFRED_MANAGER_REQUIRED_PERMISSIONS -> {
+                for (i in permissions.indices) {
+                    val permission = permissions[i]
+                    val isGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED
+                    if (isGranted) {
+                        onActivityAlfredPermissionGranted(permission)
+                    } else {
+                        onActivityAlfredPermissionDenied(permission)
+                    }
                 }
-            }
-            REQUEST_PERMISSION_READ_PHONE_STATE -> {
-                val isGranted = grantResults.isNotEmpty() &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED
-                if (isGranted) {
-                    mAlfredManager.onReadPhoneStatePermissionGranted()
-                    onReadPhoneStatePermissionGranted()
-                } else {
-                    onReadPhoneStatePermissionDenied()
-                }
-            }
-            REQUEST_PERMISSION_BLUETOOTH_CONNECT -> {
-                val isGranted = grantResults.isNotEmpty() &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED
-                if (isGranted) {
-                    mAlfredManager.onBluetoothConnectPermissionGranted()
-                    onBluetoothConnectPermissionGranted()
-                } else {
-                    onBluetoothConnectPermissionDenied()
+                for (permission in permissions) {
+                    if (mAlfredManager.onActivityPermissionGranted(permission)) {
+                        break;
+                    }
                 }
             }
         }
+    }
+
+    private fun onAlfredPermissionsRequired(permissions: Set<String>): Boolean {
+        val forceRequest = !mIsRequestingRequiredPermissions
+        return requestRequiredPermissions(permissions, force = forceRequest)
+    }
+
+    private fun onActivityAlfredPermissionGranted(permission: String): Boolean {
+        FooLog.i(TAG, "onActivityAlfredPermissionGranted(permission=${FooString.quote(permission)}")
+        val allRequiredPermissionsGranted = mAlfredManager.onActivityPermissionGranted(permission)
+        mIsRequestingRequiredPermissions = !allRequiredPermissionsGranted
+        return allRequiredPermissionsGranted
+    }
+
+    private fun onActivityAlfredPermissionDenied(permission: String) {
+        FooLog.w(TAG, "onActivityAlfredPermissionDenied(permission=${FooString.quote(permission)}")
+        mIsRequestingRequiredPermissions = true
+    }
+
+    private fun requestRequiredPermissions(permissions: Set<String>, force: Boolean = false): Boolean {
+        if (permissions.isEmpty()) {
+            return false
+        }
+
+        if (!force && mIsRequestingRequiredPermissions) {
+            return false
+        }
+
+        mIsRequestingRequiredPermissions = true
+
+        FooLog.i(TAG, "requestMandatoryPermissionsIfNeeded: requesting")
+        ActivityCompat.requestPermissions(
+            this,
+            permissions.toTypedArray(),
+            REQUEST_ALFRED_MANAGER_REQUIRED_PERMISSIONS
+        )
+
+        return true
     }
 
     private fun textToSpeechTest() {
         mAlfredManager.speak(true, "Testing testing 1 2 3")
-    }
-
-    private fun handlePostNotificationsPermissionState() {
-        if (!isPostNotificationsPermissionRuntimeRequired()) {
-            return
-        }
-
-        if (mAlfredManager.hasPostNotificationsPermission) {
-            mAlfredManager.onPostNotificationsPermissionGranted()
-            onPostNotificationsPermissionGranted()
-        }
-    }
-
-    private fun handleBluetoothConnectPermissionState() {
-        if (!isBluetoothConnectPermissionRuntimeRequired()) {
-            return
-        }
-
-        if (mAlfredManager.hasBluetoothConnectPermission) {
-            mAlfredManager.onBluetoothConnectPermissionGranted()
-            onBluetoothConnectPermissionGranted()
-        }
-    }
-
-    private fun handleReadPhoneStatePermissionState() {
-        if (!isReadPhoneStatePermissionRuntimeRequired()) {
-            return
-        }
-
-        if (mAlfredManager.hasReadPhoneStatePermission) {
-            mAlfredManager.onReadPhoneStatePermissionGranted()
-            onReadPhoneStatePermissionGranted()
-        }
-    }
-
-    private fun onPostNotificationsPermissionRequired() {
-        val forceRequest = !mHasRequestedPostNotificationsPermission
-        requestPostNotificationsPermissionIfNeeded(force = forceRequest)
-    }
-
-    private fun onPostNotificationsPermissionGranted() {
-        FooLog.i(TAG, "onPostNotificationsPermissionGranted()")
-        mHasRequestedPostNotificationsPermission = false
-    }
-
-    private fun onPostNotificationsPermissionDenied() {
-        FooLog.w(TAG, "onPostNotificationsPermissionDenied()")
-        mHasRequestedPostNotificationsPermission = true
-    }
-
-    private fun onReadPhoneStatePermissionRequired() {
-        val forceRequest = !mHasRequestedReadPhoneStatePermission
-        requestReadPhoneStatePermissionIfNeeded(force = forceRequest)
-    }
-
-    private fun onReadPhoneStatePermissionGranted() {
-        FooLog.i(TAG, "onReadPhoneStatePermissionGranted()")
-        mHasRequestedReadPhoneStatePermission = false
-    }
-
-    private fun onReadPhoneStatePermissionDenied() {
-        FooLog.w(TAG, "onReadPhoneStatePermissionDenied()")
-        mHasRequestedReadPhoneStatePermission = true
-    }
-
-    private fun onBluetoothConnectPermissionRequired() {
-        val forceRequest = !mHasRequestedBluetoothConnectPermission
-        requestBluetoothConnectPermissionIfNeeded(force = forceRequest)
-    }
-
-    private fun onBluetoothConnectPermissionGranted() {
-        FooLog.i(TAG, "onBluetoothConnectPermissionGranted()")
-        mHasRequestedBluetoothConnectPermission = false
-    }
-
-    private fun onBluetoothConnectPermissionDenied() {
-        FooLog.w(TAG, "onBluetoothConnectPermissionDenied()")
-        mHasRequestedBluetoothConnectPermission = true
-    }
-
-    private fun requestPostNotificationsPermissionIfNeeded(force: Boolean = false) {
-        if (!isPostNotificationsPermissionRuntimeRequired()) {
-            return
-        }
-
-        if (mAlfredManager.hasPostNotificationsPermission) {
-            return
-        }
-
-        if (!force && mHasRequestedPostNotificationsPermission) {
-            return
-        }
-
-        FooLog.i(TAG, "requestPostNotificationsPermissionIfNeeded: requesting")
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-            REQUEST_PERMISSION_POST_NOTIFICATIONS
-        )
-        mHasRequestedPostNotificationsPermission = true
-    }
-
-    private fun requestReadPhoneStatePermissionIfNeeded(force: Boolean = false) {
-        if (!isReadPhoneStatePermissionRuntimeRequired()) {
-            return
-        }
-
-        if (mAlfredManager.hasReadPhoneStatePermission) {
-            return
-        }
-
-        if (!force && mHasRequestedReadPhoneStatePermission) {
-            return
-        }
-
-        FooLog.i(TAG, "requestReadPhoneStatePermissionIfNeeded: requesting")
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.READ_PHONE_STATE),
-            REQUEST_PERMISSION_READ_PHONE_STATE
-        )
-        mHasRequestedReadPhoneStatePermission = true
-    }
-
-    private fun requestBluetoothConnectPermissionIfNeeded(force: Boolean = false) {
-        if (!isBluetoothConnectPermissionRuntimeRequired()) {
-            return
-        }
-
-        if (mAlfredManager.hasBluetoothConnectPermission) {
-            return
-        }
-
-        if (!force && mHasRequestedBluetoothConnectPermission) {
-            return
-        }
-
-        FooLog.i(TAG, "requestBluetoothConnectPermissionIfNeeded: requesting")
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
-            REQUEST_PERMISSION_BLUETOOTH_CONNECT
-        )
-        mHasRequestedBluetoothConnectPermission = true
-    }
-
-    private fun isPostNotificationsPermissionRuntimeRequired(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-    }
-
-    private fun isBluetoothConnectPermissionRuntimeRequired(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    }
-
-    private fun isReadPhoneStatePermissionRuntimeRequired(): Boolean {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+        //mAlfredManager.speakGreeting()
     }
 
     private fun textToSpeechVoiceUpdate() {
@@ -780,11 +637,10 @@ class MainActivity
             FooLog.e(TAG, "TODO:(pv) Report error and exit the app")
             return
         }
-        if (mRequestedTextToSpeechData) {
-            return
+        if (!mHasRequestedTextToSpeechData) {
+            mHasRequestedTextToSpeechData = true
+            mTextToSpeechManager.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA)
         }
-        mRequestedTextToSpeechData = true
-        mTextToSpeechManager.requestTextToSpeechData(this, REQUEST_ACTION_CHECK_TTS_DATA)
     }
 
     private fun startActivityNotificationListenerSettings() {

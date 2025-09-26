@@ -108,6 +108,12 @@ public class ProfileManager
         FooLog.v(TAG, "-ProfileManager(...)");
     }
 
+    void onBluetoothConnectPermissionGranted()
+    {
+        attachBluetoothAudioConnectionListenerIfPossible();
+        updateProfiles();
+    }
+
     void start()
     {
         FooLog.v(TAG, "+start()");
@@ -127,24 +133,36 @@ public class ProfileManager
             }
         });
 
-        mBluetoothAudioConnectionListener.attach(new OnBluetoothAudioConnectionCallbacks()
-        {
-            @Override
-            public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
-            {
-                ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
-            }
-
-            @Override
-            public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
-            {
-                ProfileManager.this.onBluetoothAudioDisconnected(bluetoothDevice);
-            }
-        });
+        attachBluetoothAudioConnectionListenerIfPossible();
 
         updateProfiles();
 
         FooLog.v(TAG, "-start()");
+    }
+
+    private final OnBluetoothAudioConnectionCallbacks mBluetoothAudioConnectionListenerCallbacks = new OnBluetoothAudioConnectionCallbacks()
+    {
+        @Override
+        public void onBluetoothAudioConnected(BluetoothDevice bluetoothDevice)
+        {
+            ProfileManager.this.onBluetoothAudioConnected(bluetoothDevice);
+        }
+
+        @Override
+        public void onBluetoothAudioDisconnected(BluetoothDevice bluetoothDevice)
+        {
+            ProfileManager.this.onBluetoothAudioDisconnected(bluetoothDevice);
+        }
+    };
+
+    private void attachBluetoothAudioConnectionListenerIfPossible()
+    {
+        if (!isBluetoothPermissionEnabled())
+        {
+            FooLog.w(TAG, "attachBluetoothAudioConnectionListenerIfPossible: permission not granted; ignoring");
+            return;
+        }
+        mBluetoothAudioConnectionListener.attach(mBluetoothAudioConnectionListenerCallbacks);
     }
 
     //region Profile
