@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import android.os.Message
 import android.service.notification.StatusBarNotification
 import android.speech.tts.TextToSpeech
@@ -57,6 +58,18 @@ class AlfredManager(applicationContext: Context) {
     interface AlfredManagerCallbacks {
         val activity: Activity?
 
+        fun onReadPhoneStatePermissionRequired()
+
+        fun onReadPhoneStatePermissionGranted()
+
+        fun onBluetoothConnectPermissionRequired()
+
+        fun onBluetoothConnectPermissionGranted()
+
+        fun onPostNotificationsPermissionRequired()
+
+        fun onPostNotificationsPermissionGranted()
+
         fun onNotificationListenerConnected()
 
         fun onNotificationListenerNotConnected(reason: NotConnectedReason): Boolean
@@ -84,11 +97,18 @@ class AlfredManager(applicationContext: Context) {
     private val mDataConnectionListener: FooDataConnectionListener
     private val mDataConnectionListenerCallbacks: FooDataConnectionListenerCallbacks
     private val mAudioStreamVolumeObserver: FooAudioStreamVolumeObserver
+    private val mMandatoryPermissions: MandatoryPermissions
     val profileManager: ProfileManager
+    private val mProfileManagerCallbacks: ProfileManagerCallbacks
 
     var isStarted: Boolean = false
         private set
     private var mIsUserUnlocked = false
+    private var mHasCompletedPostNotificationSetup = false
+    private var mHasStartedProfileManager = false
+    private var mHasAttachedProfileManager = false
+    private var mHasStartedCellularStateListener = false
+    private var mHasStartedDataConnectionListener = false
 
     private val mTimeDataConnected = FooLongSparseArray<Long>()
     private val mTimeDataDisconnected = FooLongSparseArray<Long>()
@@ -181,6 +201,40 @@ class AlfredManager(applicationContext: Context) {
                     mAppPreferences.setProfileToken(profileToken)
                 }
             })
+        mProfileManagerCallbacks = object : ProfileManagerCallbacks() {
+            public override fun onHeadsetConnectionChanged(
+                headsetType: HeadsetType,
+                headsetName: String,
+                isConnected: Boolean
+            ) {
+                this@AlfredManager.onHeadsetConnectionChanged(
+                    headsetType,
+                    headsetName,
+                    isConnected
+                )
+            }
+
+            override fun onProfileEnabled(profile: Profile) {
+                this@AlfredManager.onProfileEnabled(profile)
+            }
+
+            override fun onProfileDisabled(profile: Profile) {
+                this@AlfredManager.onProfileDisabled(profile)
+            }
+        }
+
+        mMandatoryPermissions = MandatoryPermissions(
+            this.applicationContext,
+            object : MandatoryPermissions.Listener {
+                override fun onMandatoryPermissionRequired(permission: String) {
+                    this@AlfredManager.onMandatoryPermissionRequired(permission)
+                }
+
+                override fun onMandatoryPermissionGranted(permission: String) {
+                    this@AlfredManager.onMandatoryPermissionGranted(permission)
+                }
+            }
+        )
 
         FooLog.v(
             TAG,
@@ -226,28 +280,33 @@ class AlfredManager(applicationContext: Context) {
     private val isPermissionGranted_POST_NOTIFICATIONS: Boolean
         get() = isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
 
+    private val isPermissionGranted_READ_PHONE_STATE: Boolean
+        get() = isPermissionGranted(Manifest.permission.READ_PHONE_STATE)
+
+    private val isPermissionGranted_BLUETOOTH_CONNECT: Boolean
+        get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+                isPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT)
+
+    val hasPostNotificationsPermission: Boolean
+        get() = isPermissionGranted_POST_NOTIFICATIONS
+
+    val hasReadPhoneStatePermission: Boolean
+        get() = isPermissionGranted_READ_PHONE_STATE
+
+    val hasBluetoothConnectPermission: Boolean
+        get() = isPermissionGranted_BLUETOOTH_CONNECT
+
     @SuppressLint("MissingPermission")
     fun start() {
         try {
             FooLog.i(TAG, "+start()")
 
             if (isStarted) {
+                mMandatoryPermissions.evaluate()
                 return
             }
 
             isStarted = true
-
-            if (!isPermissionGranted_POST_NOTIFICATIONS) {
-                FooLog.e(TAG, "start: isPermissionGranted_POST_NOTIFICATIONS() == false")
-                //...
-                return
-            }
-
-            mNotificationManager.notifyOngoingInitializing(
-                "Text To Speech",
-                "TBD text",
-                "TBD subtext"
-            )
             val timeStartMillis = System.currentTimeMillis()
             textToSpeechManager.attach(object : TextToSpeechManagerCallbacks() {
                 override fun onTextToSpeechInitialized(status: Int) {
@@ -311,35 +370,30 @@ class AlfredManager(applicationContext: Context) {
                     this@AlfredManager.onChargePortDisconnected(chargePort)
                 }
             })
-            mCellularStateListener.start(mCellularHookStateCallbacks, null)
-            mDataConnectionListener.start(mDataConnectionListenerCallbacks)
             for (audioStreamType in FooAudioUtils.getAudioStreamTypes()) {
                 volumeObserverStart(audioStreamType)
             }
             // TODO:(pv) Phone doze listener
             // TODO:(pv) etc…
-            profileManager.start()
-            profileManager.attach(object : ProfileManagerCallbacks() {
-                public override fun onHeadsetConnectionChanged(
-                    headsetType: HeadsetType,
-                    headsetName: String,
-                    isConnected: Boolean
-                ) {
-                    this@AlfredManager.onHeadsetConnectionChanged(
-                        headsetType,
-                        headsetName,
-                        isConnected
-                    )
-                }
+            val requiresBluetoothPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            if (requiresBluetoothPermission) {
+                mMandatoryPermissions.register(
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                    this::startProfileManagerIfPossible
+                )
+            } else {
+                startProfileManagerIfPossible()
+            }
 
-                override fun onProfileEnabled(profile: Profile) {
-                    this@AlfredManager.onProfileEnabled(profile)
-                }
-
-                override fun onProfileDisabled(profile: Profile) {
-                    this@AlfredManager.onProfileDisabled(profile)
-                }
-            })
+            mMandatoryPermissions.register(
+                Manifest.permission.POST_NOTIFICATIONS,
+                this::completePostNotificationSetupIfPossible
+            )
+            mMandatoryPermissions.register(
+                Manifest.permission.READ_PHONE_STATE,
+                this::startTelephonyListenersIfPossible
+            )
+            mMandatoryPermissions.evaluate()
 
             /*
             if (!isRecognitionAvailable())
@@ -374,6 +428,17 @@ class AlfredManager(applicationContext: Context) {
     fun attach(callbacks: AlfredManagerCallbacks) {
         FooLog.i(TAG, "attach(callbacks=$callbacks)")
         mListenerManager.attach(callbacks)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            mMandatoryPermissions.isPermissionMissing(Manifest.permission.BLUETOOTH_CONNECT)
+        ) {
+            callbacks.onBluetoothConnectPermissionRequired()
+        }
+        if (mMandatoryPermissions.isPermissionMissing(Manifest.permission.READ_PHONE_STATE)) {
+            callbacks.onReadPhoneStatePermissionRequired()
+        }
+        if (mMandatoryPermissions.isPermissionMissing(Manifest.permission.POST_NOTIFICATIONS)) {
+            callbacks.onPostNotificationsPermissionRequired()
+        }
         if (callbacks.activity != null) {
             // TODO:(pv) Cancel any pending Toasts…
         }
@@ -382,6 +447,21 @@ class AlfredManager(applicationContext: Context) {
     fun detach(callbacks: AlfredManagerCallbacks) {
         FooLog.i(TAG, "detach(callbacks=$callbacks)")
         mListenerManager.detach(callbacks)
+    }
+
+    fun onPostNotificationsPermissionGranted() {
+        FooLog.i(TAG, "onPostNotificationsPermissionGranted()")
+        mMandatoryPermissions.onPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
+    fun onReadPhoneStatePermissionGranted() {
+        FooLog.i(TAG, "onReadPhoneStatePermissionGranted()")
+        mMandatoryPermissions.onPermissionGranted(Manifest.permission.READ_PHONE_STATE)
+    }
+
+    fun onBluetoothConnectPermissionGranted() {
+        FooLog.i(TAG, "onBluetoothConnectPermissionGranted()")
+        mMandatoryPermissions.onPermissionGranted(Manifest.permission.BLUETOOTH_CONNECT)
     }
 
     private val isProfileEnabled: Boolean
@@ -414,6 +494,159 @@ class AlfredManager(applicationContext: Context) {
                 mNotificationManager.notifyOngoingRunning(notificationStatus, text, subtext)
             }
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun completePostNotificationSetupIfPossible(): Boolean {
+        if (mHasCompletedPostNotificationSetup) {
+            return true
+        }
+        if (!isPermissionGranted_POST_NOTIFICATIONS) {
+            FooLog.v(TAG, "completePostNotificationSetupIfPossible: permission not granted")
+            return false
+        }
+        mHasCompletedPostNotificationSetup = true
+
+        mNotificationManager.notifyOngoingInitializing(
+            "Text To Speech",
+            "TBD text",
+            "TBD subtext"
+        )
+        return true
+    }
+
+    private fun notifyPostNotificationsPermissionRequired() {
+        FooLog.i(TAG, "notifyPostNotificationsPermissionRequired()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onPostNotificationsPermissionRequired()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun notifyPostNotificationsPermissionGranted() {
+        FooLog.i(TAG, "notifyPostNotificationsPermissionGranted()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onPostNotificationsPermissionGranted()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun notifyBluetoothConnectPermissionRequired() {
+        FooLog.i(TAG, "notifyBluetoothConnectPermissionRequired()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onBluetoothConnectPermissionRequired()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun notifyBluetoothConnectPermissionGranted() {
+        FooLog.i(TAG, "notifyBluetoothConnectPermissionGranted()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onBluetoothConnectPermissionGranted()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun notifyReadPhoneStatePermissionRequired() {
+        FooLog.i(TAG, "notifyReadPhoneStatePermissionRequired()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onReadPhoneStatePermissionRequired()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun onMandatoryPermissionRequired(permission: String) {
+        when (permission) {
+            Manifest.permission.POST_NOTIFICATIONS -> notifyPostNotificationsPermissionRequired()
+            Manifest.permission.READ_PHONE_STATE -> notifyReadPhoneStatePermissionRequired()
+            Manifest.permission.BLUETOOTH_CONNECT -> notifyBluetoothConnectPermissionRequired()
+            else -> FooLog.w(TAG, "Unhandled mandatory permission required notification: $permission")
+        }
+    }
+
+    private fun onMandatoryPermissionGranted(permission: String) {
+        when (permission) {
+            Manifest.permission.POST_NOTIFICATIONS -> notifyPostNotificationsPermissionGranted()
+            Manifest.permission.READ_PHONE_STATE -> notifyReadPhoneStatePermissionGranted()
+            Manifest.permission.BLUETOOTH_CONNECT -> notifyBluetoothConnectPermissionGranted()
+            else -> FooLog.w(TAG, "Unhandled mandatory permission granted notification: $permission")
+        }
+    }
+
+    private fun notifyReadPhoneStatePermissionGranted() {
+        FooLog.i(TAG, "notifyReadPhoneStatePermissionGranted()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onReadPhoneStatePermissionGranted()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun startProfileManagerIfPossible(): Boolean {
+        if (!isPermissionGranted_BLUETOOTH_CONNECT) {
+            FooLog.v(TAG, "startProfileManagerIfPossible: permission not granted")
+            return false
+        }
+
+        if (!mHasStartedProfileManager) {
+            try {
+                profileManager.start()
+                mHasStartedProfileManager = true
+            } catch (e: SecurityException) {
+                FooLog.w(TAG, "startProfileManagerIfPossible: unable to start profile manager", e)
+                return false
+            }
+        }
+
+        if (!mHasAttachedProfileManager) {
+            try {
+                profileManager.attach(mProfileManagerCallbacks)
+                mHasAttachedProfileManager = true
+            } catch (e: SecurityException) {
+                FooLog.w(TAG, "startProfileManagerIfPossible: unable to attach profile manager", e)
+                return false
+            }
+        }
+
+        return mHasStartedProfileManager && mHasAttachedProfileManager
+    }
+
+    private fun startTelephonyListenersIfPossible(): Boolean {
+        if (!isPermissionGranted_READ_PHONE_STATE) {
+            FooLog.v(TAG, "startTelephonyListenersIfPossible: permission not granted")
+            return false
+        }
+
+        var permissionError = false
+        if (!mHasStartedCellularStateListener) {
+            try {
+                mCellularStateListener.start(mCellularHookStateCallbacks, null)
+                mHasStartedCellularStateListener = true
+            } catch (e: SecurityException) {
+                FooLog.w(TAG, "startTelephonyListenersIfPossible: unable to start cellular listener", e)
+                permissionError = true
+            }
+        }
+
+        if (!permissionError && !mHasStartedDataConnectionListener) {
+            try {
+                mDataConnectionListener.start(mDataConnectionListenerCallbacks)
+                mHasStartedDataConnectionListener = true
+            } catch (e: SecurityException) {
+                FooLog.w(TAG, "startTelephonyListenersIfPossible: unable to start data connection listener", e)
+                permissionError = true
+            }
+        }
+
+        val listenersStarted = mHasStartedCellularStateListener && mHasStartedDataConnectionListener
+        if (listenersStarted && !permissionError) {
+            updateDataConnectionInfo()
+            return true
+        }
+
+        if (permissionError) {
+            FooLog.v(TAG, "startTelephonyListenersIfPossible: still waiting for permission")
+        }
+        return false
     }
 
     private fun onTextToSpeechInitialized(status: Int, timeElapsedMillis: Long) {
@@ -795,6 +1028,10 @@ class AlfredManager(applicationContext: Context) {
     // Data Connection…
     //
     private fun updateDataConnectionInfo() {
+        if (!mHasStartedDataConnectionListener) {
+            FooLog.v(TAG, "updateDataConnectionInfo: data connection listener not started")
+            return
+        }
         val dataConnectionInfo = mDataConnectionListener.dataConnectionInfo
         if (dataConnectionInfo.isConnected) {
             onDataConnected(dataConnectionInfo)
