@@ -57,6 +57,10 @@ class AlfredManager(applicationContext: Context) {
     interface AlfredManagerCallbacks {
         val activity: Activity?
 
+        fun onPostNotificationsPermissionRequired()
+
+        fun onPostNotificationsPermissionGranted()
+
         fun onNotificationListenerConnected()
 
         fun onNotificationListenerNotConnected(reason: NotConnectedReason): Boolean
@@ -89,6 +93,8 @@ class AlfredManager(applicationContext: Context) {
     var isStarted: Boolean = false
         private set
     private var mIsUserUnlocked = false
+    private var mHasCompletedPostNotificationSetup = false
+    private var mNeedsPostNotificationPermission = false
 
     private val mTimeDataConnected = FooLongSparseArray<Long>()
     private val mTimeDataDisconnected = FooLongSparseArray<Long>()
@@ -226,28 +232,22 @@ class AlfredManager(applicationContext: Context) {
     private val isPermissionGranted_POST_NOTIFICATIONS: Boolean
         get() = isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
 
+    val hasPostNotificationsPermission: Boolean
+        get() = isPermissionGranted_POST_NOTIFICATIONS
+
     @SuppressLint("MissingPermission")
     fun start() {
         try {
             FooLog.i(TAG, "+start()")
 
             if (isStarted) {
+                completePostNotificationSetupIfPossible()
                 return
             }
 
             isStarted = true
+            mNeedsPostNotificationPermission = !isPermissionGranted_POST_NOTIFICATIONS
 
-            if (!isPermissionGranted_POST_NOTIFICATIONS) {
-                FooLog.e(TAG, "start: isPermissionGranted_POST_NOTIFICATIONS() == false")
-                //...
-                return
-            }
-
-            mNotificationManager.notifyOngoingInitializing(
-                "Text To Speech",
-                "TBD text",
-                "TBD subtext"
-            )
             val timeStartMillis = System.currentTimeMillis()
             textToSpeechManager.attach(object : TextToSpeechManagerCallbacks() {
                 override fun onTextToSpeechInitialized(status: Int) {
@@ -341,6 +341,11 @@ class AlfredManager(applicationContext: Context) {
                 }
             })
 
+            completePostNotificationSetupIfPossible()
+            if (mNeedsPostNotificationPermission) {
+                notifyPostNotificationsPermissionRequired()
+            }
+
             /*
             if (!isRecognitionAvailable())
             {
@@ -374,6 +379,9 @@ class AlfredManager(applicationContext: Context) {
     fun attach(callbacks: AlfredManagerCallbacks) {
         FooLog.i(TAG, "attach(callbacks=$callbacks)")
         mListenerManager.attach(callbacks)
+        if (mNeedsPostNotificationPermission && !hasPostNotificationsPermission) {
+            callbacks.onPostNotificationsPermissionRequired()
+        }
         if (callbacks.activity != null) {
             // TODO:(pv) Cancel any pending Toasts…
         }
@@ -382,6 +390,16 @@ class AlfredManager(applicationContext: Context) {
     fun detach(callbacks: AlfredManagerCallbacks) {
         FooLog.i(TAG, "detach(callbacks=$callbacks)")
         mListenerManager.detach(callbacks)
+    }
+
+    fun onPostNotificationsPermissionGranted() {
+        FooLog.i(TAG, "onPostNotificationsPermissionGranted()")
+        val wasMissingPermission = mNeedsPostNotificationPermission
+        mNeedsPostNotificationPermission = false
+        completePostNotificationSetupIfPossible()
+        if (wasMissingPermission) {
+            notifyPostNotificationsPermissionGranted()
+        }
     }
 
     private val isProfileEnabled: Boolean
@@ -414,6 +432,41 @@ class AlfredManager(applicationContext: Context) {
                 mNotificationManager.notifyOngoingRunning(notificationStatus, text, subtext)
             }
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun completePostNotificationSetupIfPossible() {
+        if (mHasCompletedPostNotificationSetup) {
+            return
+        }
+        if (!isPermissionGranted_POST_NOTIFICATIONS) {
+            FooLog.v(TAG, "completePostNotificationSetupIfPossible: permission not granted")
+            return
+        }
+        mHasCompletedPostNotificationSetup = true
+        mNeedsPostNotificationPermission = false
+
+        mNotificationManager.notifyOngoingInitializing(
+            "Text To Speech",
+            "TBD text",
+            "TBD subtext"
+        )
+    }
+
+    private fun notifyPostNotificationsPermissionRequired() {
+        FooLog.i(TAG, "notifyPostNotificationsPermissionRequired()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onPostNotificationsPermissionRequired()
+        }
+        mListenerManager.endTraversing()
+    }
+
+    private fun notifyPostNotificationsPermissionGranted() {
+        FooLog.i(TAG, "notifyPostNotificationsPermissionGranted()")
+        for (callbacks in mListenerManager.beginTraversing()) {
+            callbacks.onPostNotificationsPermissionGranted()
+        }
+        mListenerManager.endTraversing()
     }
 
     private fun onTextToSpeechInitialized(status: Int, timeElapsedMillis: Long) {

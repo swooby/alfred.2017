@@ -1,9 +1,12 @@
 package com.swooby.alfred
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.Voice
@@ -17,6 +20,7 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.DialogFragment
@@ -48,6 +52,7 @@ class MainActivity
         private val TAG: String = FooLog.TAG(MainActivity::class.java)
 
         private const val REQUEST_ACTION_CHECK_TTS_DATA = 100
+        private const val REQUEST_PERMISSION_POST_NOTIFICATIONS = 101
 
         private const val FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED =
             "FRAGMENT_DIALOG_NOTIFICATION_ACCESS_DISABLED"
@@ -56,6 +61,14 @@ class MainActivity
     private val mAlfredManagerCallbacks: AlfredManagerCallbacks = object : AlfredManagerCallbacks {
         override val activity: Activity
             get() = this@MainActivity
+
+        override fun onPostNotificationsPermissionRequired() {
+            this@MainActivity.onPostNotificationsPermissionRequired()
+        }
+
+        override fun onPostNotificationsPermissionGranted() {
+            this@MainActivity.onPostNotificationsPermissionGranted()
+        }
 
         override fun onNotificationListenerConnected() {
             this@MainActivity.onNotificationListenerConnected()
@@ -115,6 +128,7 @@ class MainActivity
     private lateinit var mButtonProcessNotifications: Button
 
     private var mRequestedTextToSpeechData = false
+    private var mHasRequestedPostNotificationsPermission = false
 
     private val isDebugEnabled: Boolean
         get() = mDebugConfiguration.isDebugEnabled
@@ -483,6 +497,8 @@ class MainActivity
         mAlfredManager.attach(mAlfredManagerCallbacks)
         mTextToSpeechManager.attach(mTextToSpeechManagerCallbacks)
 
+        handlePostNotificationsPermissionState()
+
         if (mNotificationParserManager.isNotificationAccessSettingConfirmedEnabled) {
             if (mNotificationParserManager.isNotificationListenerConnected) {
                 onNotificationListenerConnected()
@@ -499,8 +515,83 @@ class MainActivity
         FooLog.v(TAG, "-onResume()")
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when (requestCode) {
+            REQUEST_PERMISSION_POST_NOTIFICATIONS -> {
+                val isGranted = grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED
+                if (isGranted) {
+                    mAlfredManager.onPostNotificationsPermissionGranted()
+                    onPostNotificationsPermissionGranted()
+                } else {
+                    onPostNotificationsPermissionDenied()
+                }
+            }
+        }
+    }
+
     private fun textToSpeechTest() {
         mAlfredManager.speak(true, "Testing testing 1 2 3")
+    }
+
+    private fun handlePostNotificationsPermissionState() {
+        if (!isPostNotificationsPermissionRuntimeRequired()) {
+            return
+        }
+
+        if (mAlfredManager.hasPostNotificationsPermission) {
+            mAlfredManager.onPostNotificationsPermissionGranted()
+            onPostNotificationsPermissionGranted()
+        } else {
+            requestPostNotificationsPermissionIfNeeded()
+        }
+    }
+
+    private fun onPostNotificationsPermissionRequired() {
+        val forceRequest = !mHasRequestedPostNotificationsPermission
+        requestPostNotificationsPermissionIfNeeded(force = forceRequest)
+    }
+
+    private fun onPostNotificationsPermissionGranted() {
+        FooLog.i(TAG, "onPostNotificationsPermissionGranted()")
+        mHasRequestedPostNotificationsPermission = false
+    }
+
+    private fun onPostNotificationsPermissionDenied() {
+        FooLog.w(TAG, "onPostNotificationsPermissionDenied()")
+        mHasRequestedPostNotificationsPermission = true
+    }
+
+    private fun requestPostNotificationsPermissionIfNeeded(force: Boolean = false) {
+        if (!isPostNotificationsPermissionRuntimeRequired()) {
+            return
+        }
+
+        if (mAlfredManager.hasPostNotificationsPermission) {
+            return
+        }
+
+        if (!force && mHasRequestedPostNotificationsPermission) {
+            return
+        }
+
+        FooLog.i(TAG, "requestPostNotificationsPermissionIfNeeded: requesting")
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            REQUEST_PERMISSION_POST_NOTIFICATIONS
+        )
+        mHasRequestedPostNotificationsPermission = true
+    }
+
+    private fun isPostNotificationsPermissionRuntimeRequired(): Boolean {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     }
 
     private fun textToSpeechVoiceUpdate() {
