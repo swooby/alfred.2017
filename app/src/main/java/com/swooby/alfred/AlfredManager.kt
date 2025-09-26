@@ -360,10 +360,27 @@ class AlfredManager(applicationContext: Context) {
     }
 
     fun stop() {
+        if (!isStarted) {
+            FooLog.i(TAG, "stop(): already stopped")
+            return
+        }
         FooLog.i(TAG, "+stop()")
         isStarted = false
         mActivityLifecyclesObserver.stop()
         FooLog.i(TAG, "-stop()")
+    }
+
+    fun quit() {
+        FooLog.i(TAG, "+quit()")
+        mNotificationManager.cancelOngoingNotification()
+        mActivityLifecyclesObserver.finishStartedActivities()
+        textToSpeechManager.clear()
+        if (isStarted) {
+            stop()
+        } else {
+            mActivityLifecyclesObserver.stop()
+        }
+        FooLog.i(TAG, "-quit()")
     }
 
     /*

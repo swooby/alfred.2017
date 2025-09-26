@@ -26,12 +26,29 @@ class ActivityLifecyclesObserver(private val application: Application)  {
     val isBackground: Boolean
         get() = !isForeground
 
+    private var isRegistered = false
+
     fun start() {
+        if (isRegistered) {
+            return
+        }
         application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+        isRegistered = true
     }
 
     fun stop() {
+        if (!isRegistered) {
+            return
+        }
         application.unregisterActivityLifecycleCallbacks(activityLifecycleCallbacks)
+        isRegistered = false
+    }
+
+    fun finishStartedActivities() {
+        val activities = startedActivities.toList()
+        for (activity in activities) {
+            activity.finish()
+        }
     }
 
     private val startedActivities = mutableSetOf<Activity>()

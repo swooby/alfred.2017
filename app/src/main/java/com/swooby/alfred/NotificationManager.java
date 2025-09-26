@@ -24,6 +24,7 @@ import com.smartfoo.android.core.notification.FooNotification.Companion.ChannelI
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooRes;
+import com.swooby.alfred.NotificationActionReceiver;
 import com.swooby.alfred.Profile.Tokens;
 
 public class NotificationManager
@@ -224,6 +225,7 @@ public class NotificationManager
     private interface NotificationIds
     {
         int ONGOING = 100;
+        int ACTION_QUIT = 101;
     }
 
     private final Context mContext;
@@ -272,12 +274,24 @@ public class NotificationManager
 
         FooNotificationBuilder builder = new FooNotificationBuilder(mContext, CHANNEL_INFO.id);
 
-        if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE)
+        boolean isOngoingNotification = requestCode == NotificationIds.ONGOING;
+
+        if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE || isOngoingNotification)
         {
             builder.setOngoing(true)
                     .setAutoCancel(false)
                     .setOnlyAlertOnce(true)
                     .setCategory(NotificationCompat.CATEGORY_SERVICE);
+        }
+
+        if (isOngoingNotification)
+        {
+            builder.addActionBroadcast(
+                    R.drawable.ic_warning,
+                    R.string.alfred_notification_action_quit,
+                    NotificationIds.ACTION_QUIT,
+                    NotificationActionReceiver.createQuitIntent(mContext),
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         }
 
         PendingIntent pendingIntent = status.getPendingIntent();
@@ -308,6 +322,12 @@ public class NotificationManager
     private void notificationOngoingShow(@NonNull NotificationStatus notificationStatus, @NonNull String contentTitle, @Nullable String contentText)
     {
         mNotificationOngoing = notificationShow(NotificationIds.ONGOING, FOREGROUND_SERVICE_TYPE, notificationStatus, contentTitle, contentText);
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    void cancelOngoingNotification()
+    {
+        notificationOngoingCancel();
     }
 
     private void notificationOngoingCancel()
