@@ -1,6 +1,7 @@
 package com.swooby.alfred;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -248,6 +249,11 @@ public class NotificationManager
     {
         FooNotification notification = new FooNotification(requestCode, foregroundServiceType, builder);
         FooLog.v(TAG, "notificationShow: notification=" + notification);
+        if (requestCode == NotificationIds.ONGOING)
+        {
+            Notification androidNotification = notification.getNotification();
+            androidNotification.flags |= Notification.FLAG_NO_CLEAR;
+        }
         notification.show(mContext);
         return notification;
     }
