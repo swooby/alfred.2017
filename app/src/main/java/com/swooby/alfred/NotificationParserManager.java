@@ -68,7 +68,9 @@ public class NotificationParserManager
 
     private boolean mIsInitialized;
 
-    public NotificationParserManager(@NonNull Context context, @NonNull NotificationParserManagerConfiguration configuration)
+    public NotificationParserManager(
+            @NonNull Context context,
+            @NonNull NotificationParserManagerConfiguration configuration)
     {
         FooLog.v(TAG, "+NotificationParserManager(...)");
 
@@ -192,6 +194,9 @@ public class NotificationParserManager
         }
     }
 
+    /**
+     * Prioritized this app's "ongoing" notifications to the front of the list of notifications.
+     */
     @NonNull
     private List<StatusBarNotification> prioritizeNotifications(StatusBarNotification[] statusBarNotifications)
     {
@@ -361,6 +366,11 @@ public class NotificationParserManager
         notificationParser.onNotificationRemoved(sbn);
     }
 
+    /**
+     * Called by any parser when it has parsed a notification.
+     *
+     * @param parser
+     */
     private void onNotificationParsed(AbstractNotificationParser parser)
     {
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())

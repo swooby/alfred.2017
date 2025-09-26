@@ -101,6 +101,7 @@ class AlfredManager(applicationContext: Context) {
     private var mHasCompletedPostNotificationSetup = false
     private var mHasStartedCellularStateListener = false
     private var mHasStartedDataConnectionListener = false
+    private var mHasAttachedProfileManager = false
 
     private val mTimeDataConnected = FooLongSparseArray<Long>()
     private val mTimeDataDisconnected = FooLongSparseArray<Long>()
@@ -248,17 +249,17 @@ class AlfredManager(applicationContext: Context) {
         return FooPermissionsChecker.isPermissionGranted(applicationContext, permission)
     }
 
-    private val isPermissionGranted_POST_NOTIFICATIONS: Boolean
+    private val _isPermissionGranted_POST_NOTIFICATIONS: Boolean
         get() = isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)
 
-    private val isPermissionGranted_READ_PHONE_STATE: Boolean
+    private val _isPermissionGranted_READ_PHONE_STATE: Boolean
         get() = isPermissionGranted(Manifest.permission.READ_PHONE_STATE)
 
     val hasPostNotificationsPermission: Boolean
-        get() = isPermissionGranted_POST_NOTIFICATIONS
+        get() = _isPermissionGranted_POST_NOTIFICATIONS
 
     val hasReadPhoneStatePermission: Boolean
-        get() = isPermissionGranted_READ_PHONE_STATE
+        get() = _isPermissionGranted_READ_PHONE_STATE
 
     @SuppressLint("MissingPermission")
     fun start() {
@@ -340,27 +341,6 @@ class AlfredManager(applicationContext: Context) {
             // TODO:(pv) Phone doze listener
             // TODO:(pv) etc…
             profileManager.start()
-            profileManager.attach(object : ProfileManagerCallbacks() {
-                public override fun onHeadsetConnectionChanged(
-                    headsetType: HeadsetType,
-                    headsetName: String,
-                    isConnected: Boolean
-                ) {
-                    this@AlfredManager.onHeadsetConnectionChanged(
-                        headsetType,
-                        headsetName,
-                        isConnected
-                    )
-                }
-
-                override fun onProfileEnabled(profile: Profile) {
-                    this@AlfredManager.onProfileEnabled(profile)
-                }
-
-                override fun onProfileDisabled(profile: Profile) {
-                    this@AlfredManager.onProfileDisabled(profile)
-                }
-            })
 
             mMandatoryPermissions.register(
                 Manifest.permission.POST_NOTIFICATIONS,
@@ -454,7 +434,7 @@ class AlfredManager(applicationContext: Context) {
         text: String,
         subtext: String
     ) {
-        if (isPermissionGranted_POST_NOTIFICATIONS) {
+        if (hasPostNotificationsPermission) {
             if (notificationStatus is NotificationStatusProfileNotEnabled) {
                 mNotificationManager.notifyOngoingPaused(notificationStatus, text, subtext)
             } else {
@@ -468,7 +448,7 @@ class AlfredManager(applicationContext: Context) {
         if (mHasCompletedPostNotificationSetup) {
             return true
         }
-        if (!isPermissionGranted_POST_NOTIFICATIONS) {
+        if (!hasPostNotificationsPermission) {
             FooLog.v(TAG, "completePostNotificationSetupIfPossible: permission not granted")
             return false
         }
@@ -531,7 +511,7 @@ class AlfredManager(applicationContext: Context) {
     }
 
     private fun startTelephonyListenersIfPossible(): Boolean {
-        if (!isPermissionGranted_READ_PHONE_STATE) {
+        if (!hasReadPhoneStatePermission) {
             FooLog.v(TAG, "startTelephonyListenersIfPossible: permission not granted")
             return false
         }
@@ -557,7 +537,32 @@ class AlfredManager(applicationContext: Context) {
             }
         }
 
-        val listenersStarted = mHasStartedCellularStateListener && mHasStartedDataConnectionListener
+        if (mHasAttachedProfileManager) {
+            profileManager.attach(object : ProfileManagerCallbacks() {
+                public override fun onHeadsetConnectionChanged(
+                    headsetType: HeadsetType,
+                    headsetName: String,
+                    isConnected: Boolean
+                ) {
+                    this@AlfredManager.onHeadsetConnectionChanged(
+                        headsetType,
+                        headsetName,
+                        isConnected
+                    )
+                }
+
+                override fun onProfileEnabled(profile: Profile) {
+                    this@AlfredManager.onProfileEnabled(profile)
+                }
+
+                override fun onProfileDisabled(profile: Profile) {
+                    this@AlfredManager.onProfileDisabled(profile)
+                }
+            })
+            mHasAttachedProfileManager = true
+        }
+
+        val listenersStarted = mHasStartedCellularStateListener && mHasStartedDataConnectionListener && mHasAttachedProfileManager
         if (listenersStarted && !permissionError) {
             updateDataConnectionInfo()
             return true
