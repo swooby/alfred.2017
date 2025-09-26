@@ -357,9 +357,16 @@ class MainActivity
     }
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+        val isDebugEnabled = true // TODO: Preferences...isDebugEnabled
         val isLoggingEnabled = FooLog.isEnabled()
 
-        var menuItem = menu.findItem(R.id.action_notification_access)
+        var menuItem = menu.findItem(R.id.action_development_settings)
+        menuItem?.setVisible(isDebugEnabled)
+
+        menuItem = menu.findItem(R.id.action_adb_wireless_settings)
+        menuItem?.setVisible(isDebugEnabled)
+
+        menuItem = menu.findItem(R.id.action_notification_access)
         menuItem?.setVisible(FooNotificationListenerManager.supportsNotificationListenerSettings())
 
         menuItem = menu.findItem(R.id.action_debug_show_debug_log)
@@ -393,6 +400,14 @@ class MainActivity
             //    return true;
             R.id.action_application_info -> {
                 FooPlatformUtils.showAppSettings(this)
+                return true
+            }
+            R.id.action_development_settings -> {
+                FooPlatformUtils.showDevelopmentSettings(this)
+                return true
+            }
+            R.id.action_adb_wireless_settings -> {
+                FooPlatformUtils.showAdbWirelessSettings(this)
                 return true
             }
             R.id.action_notification_access -> {

@@ -34,8 +34,8 @@ public abstract class AbstractNotificationParser
      * @return NotificationParseResult
      */
     public static NotificationParseResult defaultOnNotificationPosted(
-            Context context,
-            StatusBarNotification sbn,
+            @NonNull Context context,
+            @NonNull StatusBarNotification sbn,
             TextToSpeechManager textToSpeechManager)
     {
         return defaultOnNotificationPosted(context, sbn, textToSpeechManager, null);
@@ -146,6 +146,9 @@ public abstract class AbstractNotificationParser
 
         //String category = notification.category;
 
+        //
+        // Intentionally after the above parsing output to help view/debug the notification
+        //
         if (textToSpeechManager == null)
         {
             return NotificationParseResult.ParsedIgnored;
@@ -216,7 +219,9 @@ public abstract class AbstractNotificationParser
     protected String                 mLastTextToSpeechString;
     protected FooTextToSpeechBuilder mLastTextToSpeechBuilder;
 
-    protected AbstractNotificationParser(@NonNullNonEmpty String hashtag, @NonNull NotificationParserCallbacks callbacks)
+    protected AbstractNotificationParser(
+            @NonNullNonEmpty String hashtag,
+            @NonNull NotificationParserCallbacks callbacks)
     {
         mHashtag = FooRun.toNonNullNonEmpty(hashtag, "hashtag").startsWith("#") ? hashtag : ("#" + hashtag);
         mCallbacks = FooRun.toNonNull(callbacks, "callbacks");
@@ -232,6 +237,9 @@ public abstract class AbstractNotificationParser
         return FooString.isNullOrEmpty(methodName) ? mHashtag : (methodName + ": " + mHashtag);
     }
 
+    /**
+     * @return required package name of the app; DefaultNotificationParser is a special case exception that returns "*"
+     */
     @NonNullNonEmpty
     public abstract String getPackageName();
 

@@ -16,6 +16,8 @@
 
     <string name="action_settings">Settings</string>
     <string name="action_application_info">Application Info</string>
+    <string name="action_developer_options">Developer Options</string>
+    <string name="action_adb_wireless_settings">ADB Wireless Settings</string>
     <string name="action_notification_access">Notification Access</string>
     <string name="action_text_to_speech">Text-To-Speech</string>
     <string name="action_debug_show_debug_log">Show Debug Log</string>
