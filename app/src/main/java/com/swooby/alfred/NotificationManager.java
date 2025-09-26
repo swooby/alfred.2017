@@ -12,6 +12,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
 
+import androidx.core.app.NotificationCompat;
+
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.collections.FooBundleBuilder;
@@ -266,7 +268,10 @@ public class NotificationManager
 
         if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE)
         {
-            builder.setOngoing(true);
+            builder.setOngoing(true)
+                    .setAutoCancel(false)
+                    .setOnlyAlertOnce(true)
+                    .setCategory(NotificationCompat.CATEGORY_SERVICE);
         }
 
         PendingIntent pendingIntent = status.getPendingIntent();
