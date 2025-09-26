@@ -19,6 +19,7 @@ import com.swooby.alfred.notification.parsers.AbstractNotificationParser.Notific
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParserCallbacks;
 import com.swooby.alfred.notification.parsers.AlfredNotificationParser;
 import com.swooby.alfred.notification.parsers.ChromeNotificationParser;
+import com.swooby.alfred.notification.parsers.DefaultNotificationParser;
 import com.swooby.alfred.notification.parsers.DownloadManagerNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleCameraNotificationParser;
 import com.swooby.alfred.notification.parsers.GoogleDialerNotificationParser;
@@ -67,6 +68,8 @@ public class NotificationParserManager
     private final FooNotificationListenerManagerCallbacks                         mFooNotificationListenerManagerCallbacks;
     private final NotificationParserCallbacks                                     mNotificationParserCallbacks;
     private final Map<String, AbstractNotificationParser>                         mNotificationParsers;
+
+    private final DefaultNotificationParser                                       mDefaultNotificationParser;
 
     private boolean mIsInitialized;
 
@@ -154,6 +157,7 @@ public class NotificationParserManager
         };
 
         mNotificationParsers = new HashMap<>();
+        mDefaultNotificationParser = new DefaultNotificationParser(mNotificationParserCallbacks);
 
         FooLog.v(TAG, "-NotificationParserManager(...)");
     }
@@ -206,6 +210,7 @@ public class NotificationParserManager
         List<StatusBarNotification> prioritized = new LinkedList<>();
         if (statusBarNotifications != null)
         {
+            int numPrioritized = 0;
             String packageNameSelf = mContext.getPackageName();
             for (StatusBarNotification statusBarNotification : statusBarNotifications)
             {
@@ -215,8 +220,7 @@ public class NotificationParserManager
                     Notification notification = statusBarNotification.getNotification();
                     if ((notification.flags & Notification.FLAG_ONGOING_EVENT) == Notification.FLAG_ONGOING_EVENT)
                     {
-                        //noinspection SequencedCollectionMethodCanBeUsed
-                        prioritized.add(0, statusBarNotification);
+                        prioritized.add(numPrioritized++, statusBarNotification);
                         continue;
                     }
                 }
@@ -238,7 +242,7 @@ public class NotificationParserManager
 
     private void onFirstAttach()
     {
-        notificationParsersAdd();
+        notificationParsersInit();
         mFooNotificationListenerManager.attach(mContext, mFooNotificationListenerManagerCallbacks);
     }
 
@@ -253,7 +257,7 @@ public class NotificationParserManager
         mNotificationParsers.put(notificationParser.getPackageName(), notificationParser);
     }
 
-    private void notificationParsersAdd()
+    private void notificationParsersInit()
     {
         // TODO:(pv) In DEBUG, show any parsers that do not have app installed w/ link to install app from Google Play
         // TODO:(pv) Listen for installation/removal of apps (especially ones w/ parsers)
@@ -332,12 +336,9 @@ public class NotificationParserManager
         FooLog.v(TAG, "onNotificationPosted: notificationParser=" + notificationParser);
         if (notificationParser == null)
         {
-            result = AbstractNotificationParser.defaultOnNotificationPosted(mContext, sbn, getTextToSpeech());
+            notificationParser = mDefaultNotificationParser;
         }
-        else
-        {
-            result = notificationParser.onNotificationPosted(sbn);
-        }
+        result = notificationParser.onNotificationPosted(sbn);
 
         //noinspection SwitchStatementWithTooFewBranches
         switch (result)
@@ -362,7 +363,7 @@ public class NotificationParserManager
         AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
         if (notificationParser == null)
         {
-            return;
+            notificationParser = mDefaultNotificationParser;
         }
 
         // TODO:(pv) Reset any cache in the parser…
