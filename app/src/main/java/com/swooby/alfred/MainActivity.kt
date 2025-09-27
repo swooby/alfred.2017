@@ -1,12 +1,10 @@
 package com.swooby.alfred
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.AudioManager
-import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.speech.tts.TextToSpeech

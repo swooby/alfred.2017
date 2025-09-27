@@ -361,9 +361,31 @@ class AlfredManager(applicationContext: Context) {
 
     fun stop() {
         FooLog.i(TAG, "+stop()")
-        isStarted = false
-        mActivityLifecyclesObserver.stop()
+        if (isStarted) {
+            isStarted = false
+            //...
+            mActivityLifecyclesObserver.stop()
+            //...
+        } else {
+            FooLog.i(TAG, "stop(): already stopped")
+        }
         FooLog.i(TAG, "-stop()")
+    }
+
+    fun quit() {
+        FooLog.i(TAG, "+quit()")
+        if (isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)) {
+            //noinspection MissingPermission
+            mNotificationManager.cancelOngoingNotification()
+        }
+        mActivityLifecyclesObserver.finishStartedActivities()
+        textToSpeechManager.clear()
+        if (isStarted) {
+            stop()
+        } else {
+            mActivityLifecyclesObserver.stop()
+        }
+        FooLog.i(TAG, "-quit()")
     }
 
     /*
