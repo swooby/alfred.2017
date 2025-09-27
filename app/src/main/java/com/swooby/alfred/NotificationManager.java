@@ -6,7 +6,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.Bundle;
+import android.service.notification.StatusBarNotification;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
@@ -25,6 +27,7 @@ import com.smartfoo.android.core.notification.FooNotificationBuilder;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooRes;
 import com.swooby.alfred.NotificationActionReceiver;
+import com.swooby.alfred.PersistentNotificationDialogActivity;
 import com.swooby.alfred.Profile.Tokens;
 
 public class NotificationManager
@@ -226,6 +229,7 @@ public class NotificationManager
     {
         int ONGOING = 100;
         int ACTION_QUIT = 101;
+        int ACTION_PERSISTENT = 102;
     }
 
     private final Context mContext;
@@ -286,6 +290,15 @@ public class NotificationManager
 
         if (isOngoingNotification)
         {
+            if (shouldShowPersistentNotificationAction())
+            {
+                builder.addActionActivity(
+                        R.drawable.ic_warning,
+                        R.string.alfred_notification_action_persistent,
+                        NotificationIds.ACTION_PERSISTENT,
+                        PersistentNotificationDialogActivity.createIntent(mContext),
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            }
             builder.addActionBroadcast(
                     R.drawable.ic_warning,
                     R.string.alfred_notification_action_quit,
@@ -316,6 +329,59 @@ public class NotificationManager
         }
 
         return notificationShow(requestCode, foregroundServiceType, builder);
+    }
+
+    private boolean shouldShowPersistentNotificationAction()
+    {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+        {
+            return true;
+        }
+
+        if (mNotificationOngoing != null)
+        {
+            Notification ongoingNotification = mNotificationOngoing.getNotification();
+            if ((ongoingNotification.flags & Notification.FLAG_NO_DISMISS) == Notification.FLAG_NO_DISMISS)
+            {
+                FooLog.v(TAG, "shouldShowPersistentNotificationAction: Cached notification already has NO_DISMISS flag");
+                return false;
+            }
+        }
+
+        android.app.NotificationManager notificationManager =
+                mContext.getSystemService(android.app.NotificationManager.class);
+        if (notificationManager == null)
+        {
+            FooLog.w(TAG, "shouldShowPersistentNotificationAction: notificationManager == null");
+            return true;
+        }
+
+        try
+        {
+            StatusBarNotification[] activeNotifications = notificationManager.getActiveNotifications();
+            if (activeNotifications != null)
+            {
+                for (StatusBarNotification statusBarNotification : activeNotifications)
+                {
+                    if (statusBarNotification.getId() == NotificationIds.ONGOING)
+                    {
+                        Notification notification = statusBarNotification.getNotification();
+                        if ((notification.flags & Notification.FLAG_NO_DISMISS) == Notification.FLAG_NO_DISMISS)
+                        {
+                            FooLog.v(TAG, "shouldShowPersistentNotificationAction: Active notification already has NO_DISMISS flag");
+                            return false;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        catch (SecurityException | RuntimeException e)
+        {
+            FooLog.w(TAG, "shouldShowPersistentNotificationAction: Unable to query active notifications", e);
+        }
+
+        return true;
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
