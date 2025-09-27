@@ -64,6 +64,7 @@ environment might find this app useful.
 * Better Facebook messenger parsing
 * How to detect phone boot and launch app without requiring screen unlock?
 * Screen unlock/lock listener
+* Screen dim/un-dim listener
 * Button to test adding two notifications and reading them serially but cancelable
 * Button to test repetitive notifications
 * "Share to Alfred" could read whatever is being shared
