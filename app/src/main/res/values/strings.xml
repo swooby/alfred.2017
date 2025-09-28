@@ -22,13 +22,6 @@
     <string name="action_text_to_speech">Text-To-Speech</string>
     <string name="action_debug_show_debug_log">Show Debug Log</string>
     <string name="action_debug_clear_debug_log">Clear Debug Log</string>
-    <string name="alfred_notification_action_quit">Quit</string>
-    <string name="alfred_notification_action_persistent">Persistent</string>
-    <string name="alfred_notification_persistent_dialog_title">Keep Alfred's notification persistent</string>
-    <string name="alfred_notification_persistent_command">adb shell appops set --uid com.swooby.alfred2017m2 SYSTEM_EXEMPT_FROM_DISMISSIBLE_NOTIFICATIONS allow</string>
-    <string name="alfred_notification_persistent_dialog_message">Run the following command from a computer with the Android Debug Bridge (ADB) to prevent Android from dismissing Alfred&apos;s ongoing notification:
-
-%1$s</string>
     <!--
     <string name="action_debug_disable_debug_mode">Disable Debug Mode</string>
     -->

@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Visual/Text & Audio/Phonetic representation of spoken phrases -->
     <string name="alfred_app_name">@string/app_name</string>
+
+    <string name="alfred_notification_action_quit">Quit</string>
+    <string name="alfred_notification_action_persistent">Pin</string>
+    <string name="alfred_notification_persistent_dialog_title">Pin Notification To Be Persistent</string>
+    <string name="alfred_notification_persistent_dialog_message">To pin the Notification to be persistent, run the following command from a computer with ADB access to the phone:</string>
+    <string name="alfred_notification_persistent_command" tools:ignore="TypographyDashes">adb shell appops set --uid %1$s SYSTEM_EXEMPT_FROM_DISMISSIBLE_NOTIFICATIONS allow</string>
+    <string name="alfred_notification_persistent_copy_button">Copy To Clipboard</string>
+    <string name="alfred_notification_persistent_command_copied_to_clipboard">Command copied to clipboard</string>
+    <string name="alfred_notification_persistent_ignore_button">Ignore</string>
+    <string name="alfred_notification_persistent_ignore_confirmation">Persistent action hidden. You can reopen this help from the app menu.</string>
+    <string name="action_show_persistent_notification_help">Persistent Notification</string>
 
     <string name="alfred_initializing">Initializing</string>
     <string name="alfred_running">Running</string>
@@ -35,7 +46,7 @@
     <string name="alfred_notification_access_not_enabled">Notification Access Not Enabled</string>
     <string name="alfred_notification_listener_bind_timeout">Notification Listener Bind Timeout</string>
     <string name="alfred_please_enable_notification_access_for_the_X_application">Please enable Notification Access for the \"%1$s\" application.</string>
-    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please re-enable notification access for the \"%1$s\" application, or if the problem persists, restart your device.</string>
+    <string name="alfred_please_reenable_notification_access_for_the_X_application">This usually happens after updating the app during development, and can sometimes persist until your device is rebooted. Please disable and re-enable notification access for the \"%1$s\" application, or if the problem persists, restart your device.</string>
     <string name="alfred_visual_only_tap_to_configure">Tap to configure.</string>
 
     <!-- TODO:(pv) Better sentence concatenation strategy... -->

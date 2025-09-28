@@ -108,6 +108,7 @@ class MainActivity
     private lateinit var mTextToSpeechManager: TextToSpeechManager
     private lateinit var mProfileManager: ProfileManager
     private lateinit var mNotificationParserManager: NotificationParserManager
+    private lateinit var mAppPreferences: AppPreferences
 
     private lateinit var mAudioManager: AudioManager
     private lateinit var mAudioStreamVolumeObserver: FooAudioStreamVolumeObserver
@@ -142,6 +143,7 @@ class MainActivity
         mTextToSpeechManager = mAlfredManager.textToSpeechManager
         mProfileManager = mAlfredManager.profileManager
         mNotificationParserManager = mAlfredManager.notificationParserManager
+        mAppPreferences = AppPreferences(applicationContext)
 
         mAudioManager = getSystemService(AUDIO_SERVICE) as AudioManager
 
@@ -406,6 +408,9 @@ class MainActivity
         menuItem = menu.findItem(R.id.action_debug_clear_debug_log)
         menuItem?.setVisible(isLoggingEnabled)
 
+        menuItem = menu.findItem(R.id.action_show_persistent_notification_help)
+        menuItem?.setVisible(mAppPreferences.isPersistentNotificationActionIgnored())
+
         //…
         return super.onPrepareOptionsMenu(menu)
     }
@@ -461,6 +466,10 @@ class MainActivity
             }
             R.id.action_debug_clear_debug_log -> {
                 FooLog.clear()
+                return true
+            }
+            R.id.action_show_persistent_notification_help -> {
+                showPersistentNotificationHelp()
                 return true
             }
         }
@@ -527,7 +536,13 @@ class MainActivity
 
         profilesUpdate()
 
+        invalidateOptionsMenu()
+
         FooLog.v(TAG, "-onResume()")
+    }
+
+    private fun showPersistentNotificationHelp() {
+        startActivity(PersistentNotificationDialogActivity.createIntent(this))
     }
 
     override fun onRequestPermissionsResult(
