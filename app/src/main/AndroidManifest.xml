@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Must match `com.swooby.alfredai.MobileForegroundService.FOREGROUND_SERVICE_PERMISSION`-->

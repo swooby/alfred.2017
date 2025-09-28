@@ -20,6 +20,8 @@ class AppPreferences(applicationContext: Context?)
         private const val KEY_USER_KEYPHRASE = "pref_user_keyphrase"
         private const val KEY_USER_PERSISTENT_NOTIFICATION_ACTION_IGNORED =
             "pref_user_persistent_notification_action_ignored"
+        private const val KEY_USER_NAME = "pref_user_name"
+        private const val KEY_USER_GENDER = "pref_user_gender"
     }
 
     init {
@@ -106,6 +108,50 @@ class AppPreferences(applicationContext: Context?)
             FILE_NAME_USER,
             KEY_USER_PERSISTENT_NOTIFICATION_ACTION_IGNORED,
             value
+        )
+    }
+
+    fun userName(): String? {
+        val storedValue = getString(
+            FILE_NAME_USER,
+            KEY_USER_NAME,
+            ""
+        )
+        val trimmedValue = storedValue?.trim()
+        return if (trimmedValue.isNullOrEmpty()) {
+            null
+        } else {
+            trimmedValue
+        }
+    }
+
+    fun setUserName(value: String?) {
+        val trimmedValue = value?.trim().orEmpty()
+        setString(
+            FILE_NAME_USER,
+            KEY_USER_NAME,
+            trimmedValue
+        )
+    }
+
+    fun userGender(): SayingsManager.Gender {
+        val storedValue = getString(
+            FILE_NAME_USER,
+            KEY_USER_GENDER,
+            SayingsManager.Gender.Unspecified.name
+        )
+        return try {
+            SayingsManager.Gender.valueOf(storedValue ?: SayingsManager.Gender.Unspecified.name)
+        } catch (ignored: IllegalArgumentException) {
+            SayingsManager.Gender.Unspecified
+        }
+    }
+
+    fun setUserGender(value: SayingsManager.Gender) {
+        setString(
+            FILE_NAME_USER,
+            KEY_USER_GENDER,
+            value.name
         )
     }
 }

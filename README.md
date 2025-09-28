@@ -53,22 +53,28 @@ environment might find this app useful.
 1. 20170501: DebugActivity Share doesn't sent file (99% certain this is just a permissions issue)
 
 ### Unscheduled Ideas (Unsorted; typically most recent at top):
+* Get user name from logged in user
+* Vary the startup text to jump between username and Sir/Ma'am
 * Better handling of startup on some problematic devices:
   * http://stackoverflow.com/a/41627296/252308
 * Interop w/ http://x.ai?
+* Add `Start After Boot` setting
 * Support "Direct Boot"
   * https://developer.android.com/training/articles/direct-boot.html
   * https://android-developers.googleblog.com/2016/04/developing-for-direct-boot.html
+* How to detect phone boot and launch app without requiring screen unlock?
 * Option to not speak volume if screen unlocked (or some other way to defeat speech)
 * Options to not speak some other things if screen unlocked
 * Better Facebook messenger parsing
-* How to detect phone boot and launch app without requiring screen unlock?
 * Screen unlock/lock listener
 * Screen dim/un-dim listener
 * Button to test adding two notifications and reading them serially but cancelable
 * Button to test repetitive notifications
 * "Share to Alfred" could read whatever is being shared
-* When you plug in, Alfred says "Good Morning|Afternoon|Evening Sir|Mame" and then runs down general status
+* Run through general status when...
+  * ...you plug in
+  * ...you list your phone off of the [Qi] charger
+* Have Android debugging/charging parser add/remove announce charger stat (and remove ChargePortListener?)
 * Speak "Shutting down" (and/or detect "Restarting") when power off/reboot detected
 * Detect volume up/down and play bonk sound if at max/min
 * https://developers.google.com/android/reference/com/google/android/gms/location/ActivityRecognitionApi
@@ -79,7 +85,6 @@ environment might find this app useful.
   * https://github.com/frogermcs/Google-Actions-Java-SDK
 * http://stackoverflow.com/questions/41410211/how-to-open-maps-and-calls-using-action-recognize-speech
 * Add ability to go in to Debug Mode
-* Have Android debugging/charging parser add/remove announce charger stat (and remove ChargePortListener?)
 * Media Button Controller or Notification Action to repeat last speech or specifically Song info.
   Maybe to also just enable/disable Profile?
 * Bluetooth controls to like/add song or start new station from song
@@ -92,7 +97,7 @@ environment might find this app useful.
   * Extract resource from app and mock a notification to see if it still works.
 * Log notification content to location
 * Widget that allows shortcut of another name
-* FooTTSBuilder equals and cache to not say if recently spoken
+* FooTTSBuilder utterance "equals" impl and cache to not say if current utterance is equivalent to previous
 * Notification controls to disable/enable/snooze/etc
 * Ongoing Notification w/ Action to snooze or disable (until morning?)
 * Snooze for X minutes/hours

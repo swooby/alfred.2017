@@ -4,8 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ContentResolver
 import android.content.Context
 import android.os.Message
+import android.provider.ContactsContract
 import android.service.notification.StatusBarNotification
 import android.speech.tts.TextToSpeech
 import androidx.annotation.StringRes
@@ -48,6 +50,7 @@ import com.swooby.alfred.notification.parsers.AbstractNotificationParser
 import com.swooby.alfred.notification.parsers.AlfredNotificationParser
 import java.util.EnumMap
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class AlfredManager(applicationContext: Context) {
 
@@ -126,7 +129,7 @@ class AlfredManager(applicationContext: Context) {
         //
         mListenerManager = FooListenerManager(this)
         mNotificationManager = NotificationManager(this.applicationContext)
-        mSayingsManager = SayingsManager(this.applicationContext)
+        mSayingsManager = SayingsManager(this.applicationContext, mAppPreferences)
         textToSpeechManager =
             TextToSpeechManager(this.applicationContext, object : TextToSpeechManagerConfiguration {
                 override fun getVoiceName(): String {
@@ -244,7 +247,17 @@ class AlfredManager(applicationContext: Context) {
     }
 
     fun speakGreeting() {
-        speak(true, mSayingsManager.goodPartOfDayUserNoun())
+        val storedUserName = mAppPreferences.userName()
+        val effectiveUserName = storedUserName ?: getLoggedInUserName()?.also {
+            mAppPreferences.setUserName(it)
+        }
+        val shouldUseUserName = !effectiveUserName.isNullOrEmpty() && Random.nextBoolean()
+        val greetingBuilder = if (shouldUseUserName) {
+            mSayingsManager.goodPartOfDayUserName(effectiveUserName)
+        } else {
+            mSayingsManager.goodPartOfDayUserNoun()
+        }
+        speak(true, greetingBuilder)
     }
 
     //
@@ -401,6 +414,29 @@ class AlfredManager(applicationContext: Context) {
 
     private fun isPermissionGranted(permission: String): Boolean {
         return FooPermissionsChecker.isPermissionGranted(applicationContext, permission)
+    }
+
+    fun getLoggedInUserName(): String? {
+        if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
+            return null
+        }
+
+        val contentResolver: ContentResolver = applicationContext.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.Profile.CONTENT_URI,
+            null, null, null, null
+        )
+
+        var ownerName: String? = null
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameColumnIndex = it.getColumnIndex(ContactsContract.Profile.DISPLAY_NAME)
+                if (nameColumnIndex != -1) {
+                    ownerName = it.getString(nameColumnIndex)
+                }
+            }
+        }
+        return ownerName
     }
 
     fun attach(callbacks: AlfredManagerCallbacks) {
