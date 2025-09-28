@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,8 +9,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/app_bar_main"
-    >
+    tools:showIn="@layout/app_bar_main">
 
     <!--
     TODO:(pv) Move to a "Filter" dialog
@@ -176,323 +174,322 @@
 
     <TableLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="wrap_content">
 
-        <TableRow>
+        <LinearLayout android:orientation="vertical">
 
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_span="3"
-                android:layout_weight="1"
-                >
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonProcessNotifications"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:textAllCaps="false"
-                    android:text="@string/process_notifications"
-                    />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonNotificationListenerSettings"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:textAllCaps="false"
-                    android:text="@string/enable_notification_access"
-                    />
-
-            </LinearLayout>
-
-        </TableRow>
-
-        <TableRow
-            android:layout_marginTop="16dp">
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayoutUserName"
-                android:layout_width="0dp"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonProcessNotifications"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_span="2"
-                android:layout_weight="1"
-                android:hint="@string/user_name_label">
+                android:text="@string/process_notifications"
+                android:textAllCaps="false" />
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/editTextUserName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    android:inputType="textPersonName"
-                    android:singleLine="true" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonNotificationListenerSettings"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:paddingStart="16dp">
+                android:text="@string/enable_notification_access"
+                android:textAllCaps="false" />
 
-                <TextView
-                    android:id="@+id/textViewUserGenderLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/user_gender_label"
-                    android:textStyle="bold" />
-
-                <com.swooby.alfred.UserTouchSpinner
-                    android:id="@+id/spinnerUserGender"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </LinearLayout>
-
-        </TableRow>
+        </LinearLayout>
 
         <TableRow android:layout_marginTop="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:text="@string/profile"
-                android:textStyle="bold"
-                />
-
-            <com.swooby.alfred.UserTouchSpinner
-                android:id="@+id/spinnerProfiles"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
                 android:layout_weight="1"
-                android:layout_gravity="center_vertical"
-                />
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
 
-            <ImageButton
-                android:id="@+id/buttonDevicesRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_refresh_24dp"
-                />
-
-        </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:text="@string/voice"
-                android:textStyle="bold"
-                />
-
-            <com.swooby.alfred.UserTouchSpinner
-                android:id="@+id/spinnerTextToSpeechVoices"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_gravity="center_vertical"
-                />
-
-            <!--
-            <ImageButton
-                android:id="@+id/buttonTextToSpeechVoicesFilter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_filter_list_black_24dp"
-                />
-                -->
-
-            <ImageButton
-                android:id="@+id/buttonTextToSpeechVoicesRefresh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_refresh_24dp"
-                />
-
-        </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_column="1"
-                android:layout_gravity="center_vertical|end"
-                android:paddingStart="16dp"
-                android:paddingEnd="0dp"
-                android:text="@string/speed"
-                android:textStyle="bold"
-                />
-
-            <SeekBar
-                android:id="@+id/seekbarTextToSpeechVoiceSpeed"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_gravity="center_vertical"
-                android:max="30"
-                android:progress="20"
-                />
-
-        </TableRow>
-
-        <TableRow>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_column="2"
-                android:layout_marginStart="-32dp"
-                android:layout_marginEnd="-32dp"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                tools:ignore="SmallSp"
-                >
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:text="@string/one_tenth"
-                    android:textSize="10sp"
-                    />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:text="@string/one"
-                    android:textSize="10sp"
-                    />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:text="@string/two"
-                    android:textSize="10sp"
-                    />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_horizontal"
-                    android:text="@string/three"
-                    android:textSize="10sp"
-                    />
-
-            </LinearLayout>
-
-        </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_column="1"
-                android:layout_gravity="center_vertical|end"
-                android:paddingStart="16dp"
-                android:paddingEnd="0dp"
-                android:text="@string/pitch"
-                android:textStyle="bold"
-                />
-
-            <SeekBar
-                android:id="@+id/seekbarTextToSpeechVoicePitch"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:max="30"
-                android:progress="10"
-                />
-
-        </TableRow>
-
-        <TableRow android:layout_marginTop="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:text="@string/stream"
-                android:textStyle="bold"
-                />
-
-            <com.swooby.alfred.UserTouchSpinner
-                android:id="@+id/spinnerTextToSpeechAudioStreamType"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_gravity="center_vertical"
-                />
-
-        </TableRow>
-
-        <TableRow>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_column="1"
-                android:layout_gravity="center_vertical|end"
-                android:paddingStart="16dp"
-                android:paddingEnd="0dp"
-                android:text="@string/volume"
-                android:textStyle="bold"
-                />
-
-            <SeekBar
-                android:id="@+id/seekbarTextToSpeechAudioStreamVolume"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_gravity="center_vertical"
-                />
-
-        </TableRow>
-
-        <TableRow
-            android:layout_marginTop="16dp"
-            >
-
-            <LinearLayout
-                android:orientation="vertical"
-                android:layout_span="3"
-                android:layout_weight="1"
-                >
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonTextToSpeechTest"
+                <TableLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:textAllCaps="false"
-                    android:text="@string/text_to_speech_test"
-                    />
+                    android:padding="16dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/buttonTextToSpeechStopClear"
-                    android:layout_marginTop="16dp"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/you"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <!-- Content of the group box goes here -->
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/textInputLayoutUserName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/user_name_label">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/editTextUserName"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:imeOptions="actionDone"
+                                android:inputType="textPersonName"
+                                android:singleLine="true" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <TableRow>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/user_gender_label"
+                                android:textStyle="bold" />
+
+                            <com.swooby.alfred.UserTouchSpinner
+                                android:id="@+id/spinnerUserGender"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1" />
+
+                        </TableRow>
+
+                        <TableRow android:layout_marginTop="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/profile"
+                                android:textStyle="bold" />
+
+                            <com.swooby.alfred.UserTouchSpinner
+                                android:id="@+id/spinnerProfiles"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1" />
+
+                            <ImageButton
+                                android:id="@+id/buttonDevicesRefresh"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_refresh_24dp" />
+
+                        </TableRow>
+
+                    </TableLayout>
+
+                </TableLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </TableRow>
+
+        <TableRow>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:layout_weight="1"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp">
+
+                <TableLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    android:textAllCaps="false"
-                    android:text="@string/text_to_speech_stop_clear"
-                    />
+                    android:padding="16dp">
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/alfred_name"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <!-- Content of the group box goes here -->
+
+                        <TableRow>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/voice"
+                                android:textStyle="bold" />
+
+                            <com.swooby.alfred.UserTouchSpinner
+                                android:id="@+id/spinnerTextToSpeechVoices"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1" />
+
+                            <!--
+                            <ImageButton
+                                android:id="@+id/buttonTextToSpeechVoicesFilter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/ic_filter_list_black_24dp"
+                                />
+                                -->
+
+                            <ImageButton
+                                android:id="@+id/buttonTextToSpeechVoicesRefresh"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_refresh_24dp" />
+
+                        </TableRow>
+
+                        <TableRow>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_column="1"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/speed"
+                                android:textStyle="bold" />
+
+                            <SeekBar
+                                android:id="@+id/seekbarTextToSpeechVoiceSpeed"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1"
+                                android:max="30"
+                                android:progress="20" />
+
+                        </TableRow>
+
+                        <TableRow tools:ignore="SmallSp,TooDeepLayout">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_column="2"
+                                android:layout_marginStart="-13dp"
+                                android:layout_weight="1"
+                                android:gravity="center_horizontal"
+                                android:text="@string/one_tenth"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center_horizontal"
+                                android:text="@string/one"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center_horizontal"
+                                android:text="@string/two"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="-13dp"
+                                android:layout_weight="1"
+                                android:gravity="center_horizontal"
+                                android:text="@string/three"
+                                android:textSize="10sp" />
+
+                        </TableRow>
+
+                        <TableRow>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_column="1"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/pitch"
+                                android:textStyle="bold" />
+
+                            <SeekBar
+                                android:id="@+id/seekbarTextToSpeechVoicePitch"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1"
+                                android:max="30"
+                                android:progress="10" />
+
+                        </TableRow>
+
+                        <TableRow>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/stream"
+                                android:textStyle="bold" />
+
+                            <com.swooby.alfred.UserTouchSpinner
+                                android:id="@+id/spinnerTextToSpeechAudioStreamType"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1" />
+
+                        </TableRow>
+
+                        <TableRow>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_column="1"
+                                android:layout_gravity="center_vertical|end"
+                                android:text="@string/volume"
+                                android:textStyle="bold" />
+
+                            <SeekBar
+                                android:id="@+id/seekbarTextToSpeechAudioStreamVolume"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_weight="1" />
+
+                        </TableRow>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonTextToSpeechTest"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/text_to_speech_test"
+                            android:textAllCaps="false" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonTextToSpeechStopClear"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/text_to_speech_stop_clear"
+                            android:textAllCaps="false" />
+
+                    </TableLayout>
+
+                </TableLayout>
+
+            </androidx.cardview.widget.CardView>
 
         </TableRow>
 

@@ -41,14 +41,15 @@
     <string name="process_notifications">Process Notifications</string>
     <string name="text_to_speech_test">TextToSpeech: Test</string>
     <string name="text_to_speech_stop_clear">TextToSpeech: Stop/Clear</string>
+    <string name="you">You</string>
     <string name="user_name_label">Name</string>
-    <string name="user_gender_label">Gender</string>
+    <string name="user_gender_label">Gender:</string>
     <string name="user_gender_unspecified">Prefer not to say</string>
     <string name="user_gender_male">Male</string>
     <string name="user_gender_female">Female</string>
     <string name="user_pronoun_male">Sir</string>
     <string name="user_pronoun_female_formal">Madam</string>
-    <string name="user_pronoun_female_casual">Ma'am</string>
+    <string name="user_pronoun_female_casual">Ma\'am</string>
     <string name="user_pronoun_unspecified">friend</string>
 
     <!-- Profile names: May these ever be spoken? -->

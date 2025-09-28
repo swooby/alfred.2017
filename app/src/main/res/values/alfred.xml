@@ -4,6 +4,8 @@
     <!-- Visual/Text & Audio/Phonetic representation of spoken phrases -->
     <string name="alfred_app_name">@string/app_name</string>
 
+    <string name="alfred_name">Alfred</string>
+
     <string name="alfred_notification_action_quit">Quit</string>
     <string name="alfred_notification_action_persistent">Pin</string>
     <string name="alfred_notification_persistent_dialog_title">Pin Notification To Be Persistent</string>

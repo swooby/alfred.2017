@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.content.ContentResolver
 import android.content.Context
 import android.os.Message
 import android.provider.ContactsContract
@@ -416,34 +417,26 @@ class AlfredManager(applicationContext: Context) {
     }
 
     fun getLoggedInUserName(): String? {
-        val hasReadContactsPermission = isPermissionGranted(Manifest.permission.READ_CONTACTS)
-        val hasReadProfilePermission = isPermissionGranted(Manifest.permission.READ_PROFILE)
-        if (!hasReadContactsPermission && !hasReadProfilePermission) {
-            FooLog.v(TAG, "getLoggedInUserName: profile permissions not granted")
+        if (!isPermissionGranted(Manifest.permission.READ_CONTACTS)) {
             return null
         }
 
-        return try {
-            applicationContext.contentResolver.query(
-                ContactsContract.Profile.CONTENT_URI,
-                arrayOf(ContactsContract.Profile.DISPLAY_NAME),
-                null,
-                null,
-                null,
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    cursor.getString(0)?.trim()?.takeIf { it.isNotEmpty() }
-                } else {
-                    null
+        val contentResolver: ContentResolver = applicationContext.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.Profile.CONTENT_URI,
+            null, null, null, null
+        )
+
+        var ownerName: String? = null
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameColumnIndex = it.getColumnIndex(ContactsContract.Profile.DISPLAY_NAME)
+                if (nameColumnIndex != -1) {
+                    ownerName = it.getString(nameColumnIndex)
                 }
             }
-        } catch (securityException: SecurityException) {
-            FooLog.w(TAG, "getLoggedInUserName: unable to query profile", securityException)
-            null
-        } catch (throwable: Throwable) {
-            FooLog.e(TAG, "getLoggedInUserName: unexpected failure", throwable)
-            null
         }
+        return ownerName
     }
 
     fun attach(callbacks: AlfredManagerCallbacks) {
