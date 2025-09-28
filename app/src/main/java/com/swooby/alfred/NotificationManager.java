@@ -12,7 +12,6 @@ import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresPermission;
-
 import androidx.core.app.NotificationCompat;
 
 import com.smartfoo.android.core.FooRun;
@@ -24,7 +23,6 @@ import com.smartfoo.android.core.notification.FooNotification.Companion.ChannelI
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooRes;
-import com.swooby.alfred.NotificationActionReceiver;
 import com.swooby.alfred.Profile.Tokens;
 
 public class NotificationManager
@@ -226,9 +224,11 @@ public class NotificationManager
     {
         int ONGOING = 100;
         int ACTION_QUIT = 101;
+        int ACTION_PERSISTENT = 102;
     }
 
     private final Context mContext;
+    private final AppPreferences mAppPreferences;
 
     private FooNotification mNotificationOngoing;
 
@@ -236,28 +236,13 @@ public class NotificationManager
     {
         FooRun.throwIllegalArgumentExceptionIfNull(context, "context");
         mContext = context;
+        mAppPreferences = new AppPreferences(context.getApplicationContext());
         FooNotification.createNotificationChannel(mContext, CHANNEL_INFO);
     }
 
     private String getString(int resId, Object... formatArgs)
     {
         return mContext.getString(resId, formatArgs);
-    }
-
-    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
-    private FooNotification notificationShow(int requestCode,
-                                             int foregroundServiceType,
-                                             @NonNull FooNotificationBuilder builder)
-    {
-        FooNotification notification = new FooNotification(requestCode, foregroundServiceType, builder);
-        FooLog.v(TAG, "notificationShow: notification=" + notification);
-        if (requestCode == NotificationIds.ONGOING)
-        {
-            Notification androidNotification = notification.getNotification();
-            androidNotification.flags |= Notification.FLAG_NO_CLEAR;
-        }
-        notification.show(mContext);
-        return notification;
     }
 
     /** @noinspection SameParameterValue*/
@@ -272,20 +257,45 @@ public class NotificationManager
         FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentTitle, "contentTitle");
         //FooRun.throwIllegalArgumentExceptionIfNullOrEmpty(contentText, "contentText");
 
-        FooNotificationBuilder builder = new FooNotificationBuilder(mContext, CHANNEL_INFO.id);
+        FooNotificationBuilder builder = new FooNotificationBuilder(mContext, CHANNEL_INFO.getId());
 
-        boolean isOngoingNotification = requestCode == NotificationIds.ONGOING;
-
-        if (foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE || isOngoingNotification)
+        boolean isOngoingNotification = requestCode == NotificationIds.ONGOING || foregroundServiceType != FooNotification.FOREGROUND_SERVICE_TYPE_NONE;
+        if (isOngoingNotification)
         {
             builder.setOngoing(true)
                     .setAutoCancel(false)
                     .setOnlyAlertOnce(true)
                     .setCategory(NotificationCompat.CATEGORY_SERVICE);
-        }
 
-        if (isOngoingNotification)
-        {
+            if (!mAppPreferences.isPersistentNotificationActionIgnored())
+            {
+                Notification existingNotification = FooNotification.findCallingAppNotification(mContext, requestCode);
+                if (!FooNotification.getNoDismiss(existingNotification))
+                {
+                    //
+                    // NOTE: Since Android 14 (API34) persistent notifications can be dismissed by the user...
+                    // ...unless...
+                    // https://www.reddit.com/r/tasker/comments/1fv9ez4/how_to_enable_nondismissible_persistent/
+                    //
+                    // To enable:
+                    // `adb shell appops set --uid com.swooby.alfred2017m2 SYSTEM_EXEMPT_FROM_DISMISSIBLE_NOTIFICATIONS allow`
+                    //
+                    // This will add a `android.app.Notification.FLAG_NO_DISMISS` to the notification that can be seen with:
+                    // `adb shell dumpsys notification --noredact | grep alfred2017m2`
+                    //
+                    // To disable:
+                    // `adb shell appops set --uid com.swooby.alfred2017m2 SYSTEM_EXEMPT_FROM_DISMISSIBLE_NOTIFICATIONS default`
+                    //
+                    // There are some other goodies in this article that might be of some help in the future.
+                    //
+                    builder.addActionActivity(
+                            R.drawable.ic_warning,
+                            R.string.alfred_notification_action_persistent,
+                            NotificationIds.ACTION_PERSISTENT,
+                            PersistentNotificationDialogActivity.createIntent(mContext),
+                            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                }
+            }
             builder.addActionBroadcast(
                     R.drawable.ic_warning,
                     R.string.alfred_notification_action_quit,
@@ -316,6 +326,17 @@ public class NotificationManager
         }
 
         return notificationShow(requestCode, foregroundServiceType, builder);
+    }
+
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    private FooNotification notificationShow(int requestCode,
+                                             int foregroundServiceType,
+                                             @NonNull FooNotificationBuilder builder)
+    {
+        FooNotification notification = new FooNotification(requestCode, foregroundServiceType, builder);
+        FooLog.v(TAG, "notificationShow: notification=" + notification);
+        notification.show(mContext);
+        return notification;
     }
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)

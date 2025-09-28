@@ -455,6 +455,28 @@ class AlfredManager(applicationContext: Context) {
         }
     }
 
+    fun refreshOngoingNotification() {
+        val notificationStatus: NotificationStatus = when {
+            !isProfileEnabled -> {
+                val profile = profileManager.profile
+                NotificationStatusProfileNotEnabled(applicationContext, profile)
+            }
+            !notificationParserManager.isNotificationListenerConnected -> {
+                NotificationStatusNotificationAccessNotEnabled(
+                    applicationContext,
+                    getString(R.string.alfred_running),
+                    getString(R.string.alfred_waiting_for_notification_access),
+                    null,
+                )
+            }
+            else -> {
+                NotificationStatusRunning(applicationContext)
+            }
+        }
+
+        notification(notificationStatus, "TBD text", "refreshOngoingNotification")
+    }
+
     fun onActivityPermissionGranted(permission: String): Boolean {
         FooLog.i(TAG, "onActivityPermissionGranted(permission=${FooString.quote(permission)})")
         return checkRequiredPermissions()

@@ -18,6 +18,8 @@ class AppPreferences(applicationContext: Context?)
         private const val KEY_USER_VOICE_AUDIO_STREAM_TYPE = "pref_user_tts_voice_audio_stream_type"
         private const val KEY_USER_PROFILE_TOKEN = "pref_user_profile_token"
         private const val KEY_USER_KEYPHRASE = "pref_user_keyphrase"
+        private const val KEY_USER_PERSISTENT_NOTIFICATION_ACTION_IGNORED =
+            "pref_user_persistent_notification_action_ignored"
     }
 
     init {
@@ -88,6 +90,21 @@ class AppPreferences(applicationContext: Context?)
         setString(
             FILE_NAME_USER,
             KEY_USER_KEYPHRASE,
+            value
+        )
+    }
+
+    fun isPersistentNotificationActionIgnored(): Boolean {
+        return getBoolean(
+            FILE_NAME_USER,
+            KEY_USER_PERSISTENT_NOTIFICATION_ACTION_IGNORED,
+            false
+        )
+    }
+    fun setPersistentNotificationActionIgnored(value: Boolean) {
+        setBoolean(
+            FILE_NAME_USER,
+            KEY_USER_PERSISTENT_NOTIFICATION_ACTION_IGNORED,
             value
         )
     }

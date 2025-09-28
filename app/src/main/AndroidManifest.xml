@@ -43,6 +43,15 @@
         </activity>
 
         <activity
+            android:name=".PersistentNotificationDialogActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:finishOnTaskLaunch="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.Alfred.Dialog"
+            />
+
+        <activity
             android:name="com.smartfoo.android.core.app.FooDebugActivity"
             android:label="@string/activity_debug_title"
             android:parentActivityName=".MainActivity"

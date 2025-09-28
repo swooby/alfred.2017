@@ -22,7 +22,6 @@
     <string name="action_text_to_speech">Text-To-Speech</string>
     <string name="action_debug_show_debug_log">Show Debug Log</string>
     <string name="action_debug_clear_debug_log">Clear Debug Log</string>
-    <string name="alfred_notification_action_quit">Quit</string>
     <!--
     <string name="action_debug_disable_debug_mode">Disable Debug Mode</string>
     -->
