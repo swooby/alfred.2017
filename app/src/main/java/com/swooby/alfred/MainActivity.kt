@@ -12,19 +12,23 @@ import android.speech.tts.Voice
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
+import androidx.core.widget.doOnTextChanged
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.textfield.TextInputEditText
 import com.smartfoo.android.core.FooString
 import com.smartfoo.android.core.app.FooDebugActivity
 import com.smartfoo.android.core.app.FooDebugConfiguration
@@ -119,6 +123,8 @@ class MainActivity
 
     private lateinit var binding: ActivityMainBinding
 
+    private lateinit var mEditTextUserName: TextInputEditText
+    private lateinit var mSpinnerUserGender: UserTouchSpinner
     private lateinit var mSpinnerTextToSpeechVoices: UserTouchSpinner
     private lateinit var mSeekbarTextToSpeechVoiceSpeed: SeekBar
     private lateinit var mSeekbarTextToSpeechVoicePitch: SeekBar
@@ -302,6 +308,67 @@ class MainActivity
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar) {
+            }
+        })
+
+        mEditTextUserName = binding.appBarMain.activityMainContent.editTextUserName
+        val storedUserName = mAppPreferences.userName()
+        val defaultUserName = storedUserName ?: mAlfredManager.getLoggedInUserName()
+        if (storedUserName.isNullOrEmpty() && !defaultUserName.isNullOrEmpty()) {
+            mAppPreferences.setUserName(defaultUserName)
+        }
+        mEditTextUserName.setText(defaultUserName ?: "")
+        mEditTextUserName.doOnTextChanged { text, _, _, _ ->
+            val updatedName = text?.toString()?.trim()
+            if (updatedName != mAppPreferences.userName()) {
+                mAppPreferences.setUserName(updatedName)
+            }
+        }
+
+        mSpinnerUserGender = binding.appBarMain.activityMainContent.spinnerUserGender
+        val genderValues = SayingsManager.Gender.values()
+        val genderAdapter = object : ArrayAdapter<SayingsManager.Gender>(
+            this,
+            android.R.layout.simple_spinner_item,
+            genderValues
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent) as TextView
+                view.text = getString(genderValues[position].getDisplayNameResId())
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getDropDownView(position, convertView, parent) as TextView
+                view.text = getString(genderValues[position].getDisplayNameResId())
+                return view
+            }
+        }
+        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        mSpinnerUserGender.adapter = genderAdapter
+        val initialGender = mAppPreferences.userGender()
+        val selectedGenderIndex = genderValues.indexOf(initialGender).takeIf { it >= 0 } ?: 0
+        mSpinnerUserGender.setSelection(selectedGenderIndex)
+        if (genderValues.getOrNull(selectedGenderIndex) != initialGender) {
+            mAppPreferences.setUserGender(genderValues[selectedGenderIndex])
+        }
+        mSpinnerUserGender.setOnItemSelectedListener(object : UserTouchSpinner.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long,
+                fromUser: Boolean
+            ) {
+                if (fromUser) {
+                    val selectedGender = parent.adapter.getItem(position) as SayingsManager.Gender
+                    if (selectedGender != mAppPreferences.userGender()) {
+                        mAppPreferences.setUserGender(selectedGender)
+                    }
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>, fromUser: Boolean) {
             }
         })
 

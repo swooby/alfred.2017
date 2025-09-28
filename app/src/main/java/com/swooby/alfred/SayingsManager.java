@@ -4,9 +4,11 @@ import android.content.Context;
 import android.icu.util.Calendar;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 
 import com.smartfoo.android.core.texttospeech.FooTextToSpeechBuilder;
+import com.smartfoo.android.core.FooString;
 
 import java.util.Random;
 
@@ -27,11 +29,13 @@ public class SayingsManager
     }
 
     private final Context mContext;
+    private final AppPreferences mAppPreferences;
     private final Random  mRandom;
 
-    SayingsManager(@NonNull Context context)
+    SayingsManager(@NonNull Context context, @NonNull AppPreferences appPreferences)
     {
         mContext = context;
+        mAppPreferences = appPreferences;
         mRandom = new Random();
     }
 
@@ -79,30 +83,46 @@ public class SayingsManager
 
     public enum Gender
     {
-        Male,
-        Female,
+        Unspecified(R.string.user_gender_unspecified),
+        Male(R.string.user_gender_male),
+        Female(R.string.user_gender_female);
+
+        @StringRes
+        private final int mDisplayNameResId;
+
+        Gender(@StringRes int displayNameResId)
+        {
+            mDisplayNameResId = displayNameResId;
+        }
+
+        @StringRes
+        int getDisplayNameResId()
+        {
+            return mDisplayNameResId;
+        }
     }
 
     private String userPronoun(Formality formality)
     {
         formality = formalityOrRandomFormality(formality);
 
-        // TODO:(pv) Settable or pull from settings...
-        Gender gender = Gender.Male;
+        Gender gender = mAppPreferences.userGender();
 
         switch (gender)
         {
             case Male:
-                return "Sir";
+                return mContext.getString(R.string.user_pronoun_male);
             case Female:
                 switch (formality)
                 {
                     case Frozen:
                     case Formal:
-                        return "Madam";
+                        return mContext.getString(R.string.user_pronoun_female_formal);
                     default:
-                        return "Ma'am";
+                        return mContext.getString(R.string.user_pronoun_female_casual);
                 }
+            case Unspecified:
+                return mContext.getString(R.string.user_pronoun_unspecified);
             default:
                 throw new IllegalArgumentException("Unexpected gender == " + gender);
         }
@@ -110,8 +130,7 @@ public class SayingsManager
 
     private String userName()
     {
-        // TODO:(pv) Settable or pull from settings...
-        return "Paul";
+        return mAppPreferences.userName();
     }
 
     private String userNoun()
@@ -130,7 +149,12 @@ public class SayingsManager
                 return userPronoun(formality);
             case Casual:
             case Intimate:
-                return userName();
+                String userName = userName();
+                if (FooString.isNullOrEmpty(userName))
+                {
+                    return userPronoun(formality);
+                }
+                return userName;
             default:
                 throw new IllegalArgumentException("Unexpected formality == " + formality);
         }
@@ -138,39 +162,75 @@ public class SayingsManager
 
     FooTextToSpeechBuilder goodPartOfDayUserNoun()
     {
+        return goodPartOfDayUser(userNoun(FORMALITY_DEFAULT));
+    }
+
+    FooTextToSpeechBuilder goodPartOfDayUserName(@Nullable String userName)
+    {
+        if (userName == null)
+        {
+            return goodPartOfDayUserNoun();
+        }
+
+        String trimmedUserName = userName.trim();
+        if (trimmedUserName.isEmpty())
+        {
+            return goodPartOfDayUserNoun();
+        }
+
+        return goodPartOfDayUser(trimmedUserName);
+    }
+
+    private FooTextToSpeechBuilder goodPartOfDayUser(@NonNull String user)
+    {
         FooTextToSpeechBuilder builder;
         int hourOfDay = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         // TODO:(pv) Make these settable?
         if (hourOfDay > 18) // 6PM
         {
-            builder = goodEveningUserNoun();
+            builder = goodEveningUser(user);
         }
         else if (hourOfDay > 12) // 12PM
         {
-            builder = goodAfternoonUserNoun();
+            builder = goodAfternoonUser(user);
         }
         else
         {
-            builder = goodMorningUserNoun();
+            builder = goodMorningUser(user);
         }
         return builder;
     }
 
     private FooTextToSpeechBuilder goodMorningUserNoun()
     {
-        return new FooTextToSpeechBuilder(mContext)
-                .appendSpeech("Good morning " + userNoun(FORMALITY_DEFAULT));
+        return goodMorningUser(userNoun(FORMALITY_DEFAULT));
     }
 
     private FooTextToSpeechBuilder goodAfternoonUserNoun()
     {
-        return new FooTextToSpeechBuilder(mContext)
-                .appendSpeech("Good afternoon " + userNoun(FORMALITY_DEFAULT));
+        return goodAfternoonUser(userNoun(FORMALITY_DEFAULT));
     }
 
     private FooTextToSpeechBuilder goodEveningUserNoun()
     {
+        return goodEveningUser(userNoun(FORMALITY_DEFAULT));
+    }
+
+    private FooTextToSpeechBuilder goodMorningUser(@NonNull String user)
+    {
         return new FooTextToSpeechBuilder(mContext)
-                .appendSpeech("Good evening " + userNoun(FORMALITY_DEFAULT));
+                .appendSpeech("Good morning " + user);
+    }
+
+    private FooTextToSpeechBuilder goodAfternoonUser(@NonNull String user)
+    {
+        return new FooTextToSpeechBuilder(mContext)
+                .appendSpeech("Good afternoon " + user);
+    }
+
+    private FooTextToSpeechBuilder goodEveningUser(@NonNull String user)
+    {
+        return new FooTextToSpeechBuilder(mContext)
+                .appendSpeech("Good evening " + user);
     }
 }

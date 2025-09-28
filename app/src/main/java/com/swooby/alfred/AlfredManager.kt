@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Message
+import android.provider.ContactsContract
 import android.service.notification.StatusBarNotification
 import android.speech.tts.TextToSpeech
 import androidx.annotation.StringRes
@@ -48,6 +49,7 @@ import com.swooby.alfred.notification.parsers.AbstractNotificationParser
 import com.swooby.alfred.notification.parsers.AlfredNotificationParser
 import java.util.EnumMap
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class AlfredManager(applicationContext: Context) {
 
@@ -126,7 +128,7 @@ class AlfredManager(applicationContext: Context) {
         //
         mListenerManager = FooListenerManager(this)
         mNotificationManager = NotificationManager(this.applicationContext)
-        mSayingsManager = SayingsManager(this.applicationContext)
+        mSayingsManager = SayingsManager(this.applicationContext, mAppPreferences)
         textToSpeechManager =
             TextToSpeechManager(this.applicationContext, object : TextToSpeechManagerConfiguration {
                 override fun getVoiceName(): String {
@@ -244,7 +246,17 @@ class AlfredManager(applicationContext: Context) {
     }
 
     fun speakGreeting() {
-        speak(true, mSayingsManager.goodPartOfDayUserNoun())
+        val storedUserName = mAppPreferences.userName()
+        val effectiveUserName = storedUserName ?: getLoggedInUserName()?.also {
+            mAppPreferences.setUserName(it)
+        }
+        val shouldUseUserName = !effectiveUserName.isNullOrEmpty() && Random.nextBoolean()
+        val greetingBuilder = if (shouldUseUserName) {
+            mSayingsManager.goodPartOfDayUserName(effectiveUserName)
+        } else {
+            mSayingsManager.goodPartOfDayUserNoun()
+        }
+        speak(true, greetingBuilder)
     }
 
     //
@@ -401,6 +413,37 @@ class AlfredManager(applicationContext: Context) {
 
     private fun isPermissionGranted(permission: String): Boolean {
         return FooPermissionsChecker.isPermissionGranted(applicationContext, permission)
+    }
+
+    fun getLoggedInUserName(): String? {
+        val hasReadContactsPermission = isPermissionGranted(Manifest.permission.READ_CONTACTS)
+        val hasReadProfilePermission = isPermissionGranted(Manifest.permission.READ_PROFILE)
+        if (!hasReadContactsPermission && !hasReadProfilePermission) {
+            FooLog.v(TAG, "getLoggedInUserName: profile permissions not granted")
+            return null
+        }
+
+        return try {
+            applicationContext.contentResolver.query(
+                ContactsContract.Profile.CONTENT_URI,
+                arrayOf(ContactsContract.Profile.DISPLAY_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getString(0)?.trim()?.takeIf { it.isNotEmpty() }
+                } else {
+                    null
+                }
+            }
+        } catch (securityException: SecurityException) {
+            FooLog.w(TAG, "getLoggedInUserName: unable to query profile", securityException)
+            null
+        } catch (throwable: Throwable) {
+            FooLog.e(TAG, "getLoggedInUserName: unexpected failure", throwable)
+            null
+        }
     }
 
     fun attach(callbacks: AlfredManagerCallbacks) {
