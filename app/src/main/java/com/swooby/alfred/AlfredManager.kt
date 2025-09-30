@@ -284,7 +284,7 @@ class AlfredManager(applicationContext: Context) {
                 }
             })
             notificationParserManager.attach(object : NotificationParserManagerCallbacks {
-                override fun onNotificationListenerConnected(activeNotifications: Array<StatusBarNotification>): Boolean {
+                override fun onNotificationListenerConnected(activeNotifications: List<StatusBarNotification>): Boolean {
                     return this@AlfredManager.onNotificationListenerConnected()
                 }
 
@@ -479,14 +479,14 @@ class AlfredManager(applicationContext: Context) {
     @SuppressLint("MissingPermission")
     private fun notification(
         notificationStatus: NotificationStatus,
-        text: String,
-        subtext: String
+        contentTitle: String,
+        contentText: String
     ) {
         if (isPermissionGranted(Manifest.permission.POST_NOTIFICATIONS)) {
             if (notificationStatus is NotificationStatusProfileNotEnabled) {
-                mNotificationManager.notifyOngoingPaused(notificationStatus, text, subtext)
+                mNotificationManager.notifyOngoingPaused(notificationStatus, contentTitle, contentText)
             } else {
-                mNotificationManager.notifyOngoingRunning(notificationStatus, text, subtext)
+                mNotificationManager.notifyOngoingRunning(notificationStatus, contentTitle, contentText)
             }
         }
     }
@@ -510,7 +510,7 @@ class AlfredManager(applicationContext: Context) {
             }
         }
 
-        notification(notificationStatus, "TBD text", "refreshOngoingNotification")
+        notification(notificationStatus, "TBD title", "refreshOngoingNotification")
     }
 
     fun onActivityPermissionGranted(permission: String): Boolean {
@@ -607,8 +607,8 @@ class AlfredManager(applicationContext: Context) {
 
             mNotificationManager.notifyOngoingInitializing(
                 "Text To Speech",
-                "TBD text",
-                "TBD subtext"
+                "TBD title",
+                "TBD text"
             )
         }
         return emptySet()
@@ -641,10 +641,9 @@ class AlfredManager(applicationContext: Context) {
             speak("Your device has just been rebooted and needs to be unlocked before I can read notifications to you.")
         }
 
-        val notificationStatus: NotificationStatus
         val isNotificationListenerConnected =
             notificationParserManager.isNotificationListenerConnected
-        notificationStatus = if (isNotificationListenerConnected) {
+        val notificationStatus = if (isNotificationListenerConnected) {
             NotificationStatusRunning(applicationContext)
         } else {
             NotificationStatusNotificationAccessNotEnabled(
@@ -654,7 +653,7 @@ class AlfredManager(applicationContext: Context) {
                 null
             ) // <-- TODO:(pv) Put above/below speech in here
         }
-        notification(notificationStatus, "TBD text", "onProfileEnabled")
+        notification(notificationStatus, "TBD title", "onProfileEnabled")
 
         updateScreenInfo()
         updateChargePortInfo()
@@ -676,7 +675,7 @@ class AlfredManager(applicationContext: Context) {
         val notificationStatus: NotificationStatus = NotificationStatusProfileNotEnabled(
             applicationContext, profile
         )
-        notification(notificationStatus, "TBD text", "onProfileDisabled")
+        notification(notificationStatus, "TBD title", "onProfileDisabled")
 
         textToSpeechManager.clear()
 
@@ -687,8 +686,9 @@ class AlfredManager(applicationContext: Context) {
     }
 
     //
+    //region Notification Listener
     //
-    //
+
     private inner class DelayedRunnableNotificationListenerNotConnected
         (private val mReason: NotConnectedReason, private val mElapsedMillis: Long) : Runnable {
         private val TAG: String =
@@ -730,7 +730,7 @@ class AlfredManager(applicationContext: Context) {
             val profile = profileManager.profile
             notificationStatus = NotificationStatusProfileNotEnabled(applicationContext, profile)
         }
-        notification(notificationStatus, "TBD text", "onNotificationAccessSettingConfirmedEnabled")
+        notification(notificationStatus, "TBD title", "onNotificationAccessSettingConfirmedEnabled")
 
         return true
     }
@@ -803,7 +803,7 @@ class AlfredManager(applicationContext: Context) {
             val profile = profileManager.profile
             notificationStatus = NotificationStatusProfileNotEnabled(applicationContext, profile)
         }
-        notification(notificationStatus, "TBD text", "onNotificationAccessSettingDisabled")
+        notification(notificationStatus, "TBD title", "onNotificationAccessSettingDisabled")
     }
 
     fun getNotificationListenerNotConnectedTitle(reason: NotConnectedReason): String {
@@ -845,6 +845,10 @@ class AlfredManager(applicationContext: Context) {
 
     private fun onAlfredNotificationRemoved(parser: AlfredNotificationParser) {
     }
+
+    //
+    //endregion Notification Listener
+    //
 
     //
     //

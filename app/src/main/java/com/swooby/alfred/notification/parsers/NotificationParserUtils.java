@@ -109,7 +109,7 @@ public class NotificationParserUtils
     }
 
     /**
-     * @param sbn
+     * @param sbn StatusBarNotification
      * @return "As of N, this field may be null" :(
      */
     public static RemoteViews getBigContentRemoteViews(StatusBarNotification sbn)
@@ -120,7 +120,7 @@ public class NotificationParserUtils
     }
 
     /**
-     * @param sbn
+     * @param sbn StatusBarNotification
      * @return "As of N, this field may be null" :(
      */
     public static RemoteViews getContentRemoteViews(StatusBarNotification sbn)
@@ -234,6 +234,7 @@ public class NotificationParserUtils
 
     public static int getIdentifier(@NonNull Resources resources, @NonNull String packageName, @NonNull ResourceType resourceType, @NonNull String name)
     {
+        //noinspection DiscouragedApi
         return resources.getIdentifier(name, resourceType.name(), packageName);
     }
 
@@ -242,9 +243,11 @@ public class NotificationParserUtils
         //noinspection TryWithIdenticalCatches
         try
         {
+            //noinspection DiscouragedPrivateApi
             Field field = imageView.getClass().getDeclaredField("mResource");
             field.setAccessible(true);
-            return (int) field.get(imageView);
+            final Object id = field.get(imageView);
+            return id == null ? 0 : (int) id;
         }
         catch (NoSuchFieldException e)
         {
@@ -254,37 +257,30 @@ public class NotificationParserUtils
         {
             FooLog.e(TAG, "getImageResource", e);
         }
-
         return 0;
     }
 
     /**
-     * Gets the [android.view.RemotableViewMethod] Notification's BitmapDrawable.
-     *
-     * Used in PandoraNotificationParser as a boolean concept to know if the bitmap exists and is visible or not.
-     *
-     * Since Android12 (https://developer.android.com/about/versions/12/non-sdk-12), gives compiler error:
-     * ```
-     * Reflective access to `mRecycleableBitmapDrawable` will throw an exception when targeting API 35 and above.
-     * ```
-     *
+     * Gets the <a href="https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/view/RemotableViewMethod.java">android.view.RemotableViewMethod</a> Notification's BitmapDrawable.
+     * <p>
+     * Used in {@link PandoraNotificationParser} as a boolean concept to know if the bitmap exists and is visible or not.
+     * <p>
+     * Per <a href="https://developer.android.com/about/versions/12/non-sdk-12#new-blocked">"Non-SDK interfaces that are now blocked in Android 12"</a>, gives compiler error:
+     * <p>
+     * {@code Reflective access to `mRecycleableBitmapDrawable` will throw an exception when targeting API 35 and above.}
+     * <p>
      * Per:
-     * https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/widget/ImageView.java
-     * ```
+     * <a href="https://cs.android.com/android/platform/superproject/main/+/main:frameworks/base/core/java/android/widget/ImageView.java">ImageView.java</a>
+     * <pre>{@code
      *      @UnsupportedAppUsage
      *      private Drawable mDrawable = null;
      *      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
      *      private BitmapDrawable mRecycleableBitmapDrawable = null;
-     * ```
-     * (`trackingBug = 170729553` == https://android.googlesource.com/platform/system/security/+/271f57b52c39aeada2d606cd53bda93236cc3dc8)
-     *
+     * }</pre>
+     * <a href="https://android.googlesource.com/platform/system/security/+/271f57b52c39aeada2d606cd53bda93236cc3dc8">{@code trackingBug = 170729553}</a>)
+     * <p>
      * ImageView.java code still shows:
-     * ```
-     *      /**
-     *       * Sets a Bitmap as the content of this ImageView.
-     *       *
-     *       * @param bm The bitmap to set
-     *       *\/
+     * <pre>{@code
      *      @android.view.RemotableViewMethod
      *      public void setImageBitmap(Bitmap bm) {
      *          // Hacky fix to force setImageDrawable to do a full setImageDrawable
@@ -297,7 +293,7 @@ public class NotificationParserUtils
      *          }
      *          setImageDrawable(mRecycleableBitmapDrawable);
      *      }
-     * ```
+     * }</pre>
      * This seems like proof that the only way to get the bitmap is to use reflection. :/
      *
      * @param imageView ImageView
@@ -366,30 +362,30 @@ public class NotificationParserUtils
     public interface TagTypes
     {
         /**
-         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L733
+         * <a href="https://cs.android.com/android/platform/superproject/+/android-7.1.2_r39:frameworks/base/core/java/android/widget/RemoteViews.java;l=811">android.widget.RemoteViews.SetOnClickPendingIntent.TAG</a>
          */
         int PendingIntent               = 1;
         /**
-         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1057
+         * <a href="https://cs.android.com/android/platform/superproject/+/android-7.1.2_r39:frameworks/base/core/java/android/widget/RemoteViews.java;l=1172">android.widget.RemoteViews.ReflectionAction.TAG</a>
          */
         int ReflectionAction            = 2;
         /**
-         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L437
+         * <a href="https://cs.android.com/android/platform/superproject/+/android-7.1.2_r39:frameworks/base/core/java/android/widget/RemoteViews.java;l=515">android.widget.RemoteViews.SetOnClickFillInIntent.TAG</a>
          */
         int SetOnClickFillInIntent      = 9;
         /**
-         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L655
+         * <a href="https://cs.android.com/android/platform/superproject/+/android-7.1.2_r39:frameworks/base/core/java/android/widget/RemoteViews.java;l=733">android.widget.RemoteViews.SetRemoteViewsAdapterIntent.TAG</a>
          */
         int SetRemoteViewsAdapterIntent = 10;
         /**
-         * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1050
+         * <a href="https://cs.android.com/android/platform/superproject/+/android-7.1.2_r39:frameworks/base/core/java/android/widget/RemoteViews.java;l=1165">android.widget.RemoteViews.BitmapReflectionAction.TAG</a>
          */
         int BitmapReflectionAction      = 12;
     }
 
     /**
      * From:
-     * https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1074
+     * <a href="https://cs.android.com/android/platform/superproject/+/android-7.1.2_r39:frameworks/base/core/java/android/widget/RemoteViews.java;l=1174-1191">android.widget.RemoteViews.ReflectionAction</a>
      */
     public interface ActionTypes
     {
@@ -448,198 +444,199 @@ public class NotificationParserUtils
 
             @SuppressWarnings("unchecked")
             ArrayList<Parcelable> actions = (ArrayList<Parcelable>) field.get(remoteViews);
-
-            for (int i = 0; i < actions.size(); i++)
+            if (actions != null)
             {
-                Parcelable parcelable = actions.get(i);
-
-                Parcel parcel = Parcel.obtain();
-
-                try
+                for (int i = 0; i < actions.size(); i++)
                 {
-                    parcelable.writeToParcel(parcel, 0);
+                    Parcelable parcelable = actions.get(i);
 
-                    parcel.setDataPosition(0);
+                    Parcel parcel = Parcel.obtain();
 
-                    int actionTag = parcel.readInt();
-                    FooLog.v(TAG, "getRemoteViewValueById: actionTag=" + toVerboseString(actionTag));
-                    switch (valueType)
+                    try
                     {
-                        case PENDING_INTENT:
-                            switch (actionTag)
-                            {
-                                case TagTypes.PendingIntent:
-                                    break;
-                                default:
-                                    continue;
-                            }
-                            break;
-                        case TEXT:
-                        case VISIBILITY:
-                        case ENABLED:
-                        case IMAGE_RESOURCE_ID:
-                            switch (actionTag)
-                            {
-                                case TagTypes.ReflectionAction:
-                                    break;
-                                default:
-                                    continue;
-                            }
-                            break;
-                        case INTENT:
-                            switch (actionTag)
-                            {
-                                case TagTypes.SetOnClickFillInIntent:
-                                case TagTypes.SetRemoteViewsAdapterIntent:
-                                    break;
-                                default:
-                                    continue;
-                            }
-                            break;
-                        case BITMAP_RESOURCE_ID:
-                            switch (actionTag)
-                            {
-                                case TagTypes.BitmapReflectionAction:
-                                    break;
-                                default:
-                                    continue;
-                            }
-                            break;
-                        default:
-                            continue;
-                    }
+                        parcelable.writeToParcel(parcel, 0);
 
-                    int actionViewId = parcel.readInt();
-                    FooLog.v(TAG, "getRemoteViewValueById: actionViewId=" + toVerboseString(actionViewId));
-                    if (actionViewId != viewId)
-                    {
-                        continue;
-                    }
+                        parcel.setDataPosition(0);
 
-                    Object value = null;
-
-                    switch (actionTag)
-                    {
-                        case TagTypes.PendingIntent:
+                        int actionTag = parcel.readInt();
+                        FooLog.v(TAG, "getRemoteViewValueById: actionTag=" + toVerboseString(actionTag));
+                        switch (valueType)
                         {
-                            if (parcel.readInt() != 0)
-                            {
-                                value = PendingIntent.readPendingIntentOrNullFromParcel(parcel);
-                            }
-                            break;
+                            case PENDING_INTENT:
+                                switch (actionTag)
+                                {
+                                    case TagTypes.PendingIntent:
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                                break;
+                            case TEXT:
+                            case VISIBILITY:
+                            case ENABLED:
+                            case IMAGE_RESOURCE_ID:
+                                switch (actionTag)
+                                {
+                                    case TagTypes.ReflectionAction:
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                                break;
+                            case INTENT:
+                                switch (actionTag)
+                                {
+                                    case TagTypes.SetOnClickFillInIntent:
+                                    case TagTypes.SetRemoteViewsAdapterIntent:
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                                break;
+                            case BITMAP_RESOURCE_ID:
+                                switch (actionTag)
+                                {
+                                    case TagTypes.BitmapReflectionAction:
+                                        break;
+                                    default:
+                                        continue;
+                                }
+                                break;
+                            default:
+                                continue;
                         }
-                        case TagTypes.ReflectionAction:
-                        {
-                            String actionMethodName = parcel.readString();
-                            FooLog.v(TAG,
-                                    "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
-                            switch (valueType)
-                            {
-                                case TEXT:
-                                    if (!"setText".equals(actionMethodName))
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                                case VISIBILITY:
-                                    if (!"setVisibility".equals(actionMethodName))
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                                case IMAGE_RESOURCE_ID:
-                                    if (!"setImageResource".equals(actionMethodName))
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                                case ENABLED:
-                                    if (!"setEnabled".equals(actionMethodName))
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                                default:
-                                    continue;
-                            }
 
-                            int actionType = parcel.readInt();
-                            // per:
-                            // https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1101
-                            switch (actionType)
+                        int actionViewId = parcel.readInt();
+                        FooLog.v(TAG, "getRemoteViewValueById: actionViewId=" + toVerboseString(actionViewId));
+                        if (actionViewId != viewId)
+                        {
+                            continue;
+                        }
+
+                        Object value = null;
+
+                        switch (actionTag)
+                        {
+                            case TagTypes.PendingIntent:
                             {
-                                case ActionTypes.BOOLEAN:
-                                    value = parcel.readInt() != 0;
-                                    break;
-                                case ActionTypes.INT:
-                                    value = parcel.readInt();
-                                    break;
-                                case ActionTypes.CHAR_SEQUENCE:
-                                    value = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel)
-                                            .toString()
-                                            .trim();
-                                    break;
-                                /*
-                                case ActionTypes.INTENT:
-                                    if (parcel.readInt() != 0)
-                                    {
-                                        value = Intent.CREATOR.createFromParcel(parcel);
-                                    }
-                                    break;
-                                case ActionTypes.ICON:
-                                    if (parcel.readInt() != 0)
-                                    {
-                                        value = Icon.CREATOR.createFromParcel(parcel);
-                                    }
+                                if (parcel.readInt() != 0)
+                                {
+                                    value = PendingIntent.readPendingIntentOrNullFromParcel(parcel);
+                                }
+                                break;
+                            }
+                            case TagTypes.ReflectionAction:
+                            {
+                                String actionMethodName = parcel.readString();
+                                FooLog.v(TAG,
+                                        "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
+                                switch (valueType)
+                                {
+                                    case TEXT:
+                                        if (!"setText".equals(actionMethodName))
+                                        {
+                                            continue;
+                                        }
+                                        break;
+                                    case VISIBILITY:
+                                        if (!"setVisibility".equals(actionMethodName))
+                                        {
+                                            continue;
+                                        }
+                                        break;
+                                    case IMAGE_RESOURCE_ID:
+                                        if (!"setImageResource".equals(actionMethodName))
+                                        {
+                                            continue;
+                                        }
+                                        break;
+                                    case ENABLED:
+                                        if (!"setEnabled".equals(actionMethodName))
+                                        {
+                                            continue;
+                                        }
+                                        break;
+                                    default:
+                                        continue;
+                                }
+
+                                int actionType = parcel.readInt();
+                                // per:
+                                // https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1101
+                                switch (actionType)
+                                {
+                                    case ActionTypes.BOOLEAN:
+                                        value = parcel.readInt() != 0;
+                                        break;
+                                    case ActionTypes.INT:
+                                        value = parcel.readInt();
+                                        break;
+                                    case ActionTypes.CHAR_SEQUENCE:
+                                        value = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel)
+                                                .toString()
+                                                .trim();
+                                        break;
+                                    /*
+                                    case ActionTypes.INTENT:
+                                        if (parcel.readInt() != 0)
+                                        {
+                                            value = Intent.CREATOR.createFromParcel(parcel);
+                                        }
+                                        break;
+                                    case ActionTypes.ICON:
+                                        if (parcel.readInt() != 0)
+                                        {
+                                            value = Icon.CREATOR.createFromParcel(parcel);
+                                        }
                                     */
+                                }
+                                break;
                             }
-                            break;
-                        }
-                        case TagTypes.SetOnClickFillInIntent:
-                        case TagTypes.SetRemoteViewsAdapterIntent:
-                        {
-                            if (parcel.readInt() != 0)
+                            case TagTypes.SetOnClickFillInIntent:
+                            case TagTypes.SetRemoteViewsAdapterIntent:
                             {
-                                value = Intent.CREATOR.createFromParcel(parcel);
+                                if (parcel.readInt() != 0)
+                                {
+                                    value = Intent.CREATOR.createFromParcel(parcel);
+                                }
+                                break;
                             }
-                            break;
-                        }
-                        case TagTypes.BitmapReflectionAction:
-                        {
-                            String actionMethodName = parcel.readString();
-                            FooLog.v(TAG,
-                                    "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
-                            switch (valueType)
+                            case TagTypes.BitmapReflectionAction:
                             {
-                                case BITMAP_RESOURCE_ID:
-                                    if (!"setImageBitmap".equals(actionMethodName))
-                                    {
+                                String actionMethodName = parcel.readString();
+                                FooLog.v(TAG, "getRemoteViewValueById: actionMethodName=" + FooString.quote(actionMethodName));
+                                switch (valueType)
+                                {
+                                    case BITMAP_RESOURCE_ID:
+                                        if (!"setImageBitmap".equals(actionMethodName))
+                                        {
+                                            continue;
+                                        }
+                                        break;
+                                    default:
                                         continue;
-                                    }
-                                    break;
-                                default:
-                                    continue;
+                                }
+
+                                value = parcel.readInt();
+
+                                break;
                             }
-
-                            value = parcel.readInt();
-
-                            break;
+                            default:
+                                continue;
                         }
-                        default:
-                            continue;
-                    }
 
-                    int parcelDataAvail = parcel.dataAvail();
-                    if (parcelDataAvail > 0)
+                        int parcelDataAvail = parcel.dataAvail();
+                        if (parcelDataAvail > 0)
+                        {
+                            FooLog.w(TAG, "getRemoteViewValueById: parcel.dataAvail()=" + parcelDataAvail);
+                        }
+
+                        return value;
+                    }
+                    finally
                     {
-                        FooLog.w(TAG, "getRemoteViewValueById: parcel.dataAvail()=" + parcelDataAvail);
+                        parcel.recycle();
                     }
-
-                    return value;
-                }
-                finally
-                {
-                    parcel.recycle();
                 }
             }
         }
@@ -743,12 +740,7 @@ public class NotificationParserUtils
         {
             int viewId = actionInfo.mViewId;
 
-            Map<ActionValueType, ActionInfo> actionInfos = mViewIdToActionValueTypeToActionInfo.get(viewId);
-            if (actionInfos == null)
-            {
-                actionInfos = new LinkedHashMap<>();
-                mViewIdToActionValueTypeToActionInfo.put(viewId, actionInfos);
-            }
+            Map<ActionValueType, ActionInfo> actionInfos = mViewIdToActionValueTypeToActionInfo.computeIfAbsent(viewId, k -> new LinkedHashMap<>());
 
             actionInfos.put(actionInfo.mValueType, actionInfo);
         }
@@ -780,122 +772,115 @@ public class NotificationParserUtils
 
             @SuppressWarnings("unchecked")
             ArrayList<Parcelable> actions = (ArrayList<Parcelable>) field.get(remoteViews);
-
-            for (int i = 0; i < actions.size(); i++)
+            if (actions != null)
             {
-                Parcelable parcelable = actions.get(i);
-
-                Parcel parcel = Parcel.obtain();
-
-                try
+                for (int i = 0; i < actions.size(); i++)
                 {
-                    parcelable.writeToParcel(parcel, 0);
+                    Parcelable parcelable = actions.get(i);
 
-                    parcel.setDataPosition(0);
+                    Parcel parcel = Parcel.obtain();
 
-                    int actionTag = parcel.readInt();
-                    //FooLog.v(TAG, "walkActions: actionTag=" + toVerboseString(actionTag));
-
-                    int actionViewId = parcel.readInt();
-                    //FooLog.v(TAG, "walkActions: actionViewId=" + toVerboseString(actionViewId));
-
-                    ActionValueType actionValueType;
-                    Object value = null;
-
-                    switch (actionTag)
+                    try
                     {
-                        case TagTypes.PendingIntent:
+                        parcelable.writeToParcel(parcel, 0);
+
+                        parcel.setDataPosition(0);
+
+                        int actionTag = parcel.readInt();
+                        //FooLog.v(TAG, "walkActions: actionTag=" + toVerboseString(actionTag));
+
+                        int actionViewId = parcel.readInt();
+                        //FooLog.v(TAG, "walkActions: actionViewId=" + toVerboseString(actionViewId));
+
+                        ActionValueType actionValueType = null;
+                        Object value = null;
+
+                        switch (actionTag)
                         {
-                            actionValueType = ActionValueType.PENDING_INTENT;
-                            if (parcel.readInt() != 0)
+                            case TagTypes.PendingIntent:
                             {
-                                value = PendingIntent.readPendingIntentOrNullFromParcel(parcel);
+                                actionValueType = ActionValueType.PENDING_INTENT;
+                                if (parcel.readInt() != 0)
+                                {
+                                    value = PendingIntent.readPendingIntentOrNullFromParcel(parcel);
+                                }
+                                break;
                             }
-                            break;
+                            case TagTypes.ReflectionAction:
+                            {
+                                String actionMethodName = parcel.readString();
+                                //FooLog.e(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
+                                if (actionMethodName != null) {
+                                    actionValueType = switch (actionMethodName) {
+                                        case "setText" -> ActionValueType.TEXT;
+                                        case "setVisibility" -> ActionValueType.VISIBILITY;
+                                        case "setImageResource" -> ActionValueType.IMAGE_RESOURCE_ID;
+                                        case "setEnabled" -> ActionValueType.ENABLED;
+                                        default -> ActionValueType.UNKNOWN;
+                                    };
+                                }
+
+                                int actionType = parcel.readInt();
+                                // per:
+                                // https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1101
+                                switch (actionType)
+                                {
+                                    case ActionTypes.BOOLEAN:
+                                        value = parcel.readInt() != 0;
+                                        break;
+                                    case ActionTypes.INT:
+                                        value = parcel.readInt();
+                                        break;
+                                    case ActionTypes.CHAR_SEQUENCE:
+                                        value = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel);
+                                        break;
+                                    case ActionTypes.INTENT:
+                                        if (parcel.readInt() != 0)
+                                        {
+                                            value = Intent.CREATOR.createFromParcel(parcel);
+                                        }
+                                        break;
+                                    case ActionTypes.ICON:
+                                        if (parcel.readInt() != 0)
+                                        {
+                                            value = Icon.CREATOR.createFromParcel(parcel);
+                                        }
+                                }
+                                break;
+                            }
+                            case TagTypes.BitmapReflectionAction:
+                            {
+                                String actionMethodName = parcel.readString();
+                                //FooLog.v(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
+
+                                actionValueType = ActionValueType.BITMAP_RESOURCE_ID;
+
+                                value = parcel.readInt();
+
+                                break;
+                            }
+                            default:
+                                continue;
                         }
-                        case TagTypes.ReflectionAction:
+
+                        int parcelDataAvail = parcel.dataAvail();
+                        if (parcelDataAvail > 0)
                         {
-                            String actionMethodName = parcel.readString();
-                            //FooLog.e(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
-                            switch (actionMethodName)
-                            {
-                                case "setText":
-                                    actionValueType = ActionValueType.TEXT;
-                                    break;
-                                case "setVisibility":
-                                    actionValueType = ActionValueType.VISIBILITY;
-                                    break;
-                                case "setImageResource":
-                                    actionValueType = ActionValueType.IMAGE_RESOURCE_ID;
-                                    break;
-                                case "setEnabled":
-                                    actionValueType = ActionValueType.ENABLED;
-                                    break;
-                                default:
-                                    actionValueType = ActionValueType.UNKNOWN;
-                                    break;
-                            }
-
-                            int actionType = parcel.readInt();
-                            // per:
-                            // https://github.com/android/platform_frameworks_base/blob/master/core/java/android/widget/RemoteViews.java#L1101
-                            switch (actionType)
-                            {
-                                case ActionTypes.BOOLEAN:
-                                    value = parcel.readInt() != 0;
-                                    break;
-                                case ActionTypes.INT:
-                                    value = parcel.readInt();
-                                    break;
-                                case ActionTypes.CHAR_SEQUENCE:
-                                    value = TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(parcel);
-                                    break;
-                                case ActionTypes.INTENT:
-                                    if (parcel.readInt() != 0)
-                                    {
-                                        value = Intent.CREATOR.createFromParcel(parcel);
-                                    }
-                                    break;
-                                case ActionTypes.ICON:
-                                    if (parcel.readInt() != 0)
-                                    {
-                                        value = Icon.CREATOR.createFromParcel(parcel);
-                                    }
-                            }
-                            break;
+                            FooLog.w(TAG, "walkActions: parcel.dataAvail()=" + parcelDataAvail);
                         }
-                        case TagTypes.BitmapReflectionAction:
+
+                        ActionInfo actionInfo = new ActionInfo(actionViewId, actionValueType, value);
+                        //FooLog.i(TAG, "walkActions: actionInfo=" + actionInfo);
+
+                        if (actionInfos != null)
                         {
-                            String actionMethodName = parcel.readString();
-                            //FooLog.v(TAG, "walkActions: actionMethodName=" + FooString.quote(actionMethodName));
-
-                            actionValueType = ActionValueType.BITMAP_RESOURCE_ID;
-
-                            value = parcel.readInt();
-
-                            break;
+                            actionInfos.add(actionInfo);
                         }
-                        default:
-                            continue;
                     }
-
-                    int parcelDataAvail = parcel.dataAvail();
-                    if (parcelDataAvail > 0)
+                    finally
                     {
-                        FooLog.w(TAG, "walkActions: parcel.dataAvail()=" + parcelDataAvail);
+                        parcel.recycle();
                     }
-
-                    ActionInfo actionInfo = new ActionInfo(actionViewId, actionValueType, value);
-                    //FooLog.i(TAG, "walkActions: actionInfo=" + actionInfo);
-
-                    if (actionInfos != null)
-                    {
-                        actionInfos.add(actionInfo);
-                    }
-                }
-                finally
-                {
-                    parcel.recycle();
                 }
             }
         }
@@ -909,12 +894,12 @@ public class NotificationParserUtils
         }
     }
 
-    interface WalkViewCallbacks
+    public interface WalkViewCallbacks
     {
         void onTextView(TextView textView);
     }
 
-    static class ViewWrapper
+    public static class ViewWrapper
     {
         public final View   mView;
         public final String mViewEntryName;
@@ -951,6 +936,7 @@ public class NotificationParserUtils
             return mView.getId();
         }
 
+        @NonNull
         @Override
         public String toString()
         {
@@ -958,7 +944,7 @@ public class NotificationParserUtils
         }
     }
 
-    static class ViewWrappers
+    public static class ViewWrappers
     {
         private final Map<String, ViewWrapper>  mViewEntryNameToViewInfo;
         private final Map<Integer, ViewWrapper> mViewIdToViewInfo;
@@ -986,6 +972,7 @@ public class NotificationParserUtils
             return mViewIdToViewInfo.get(id);
         }
 
+        @NonNull
         @Override
         public String toString()
         {
@@ -1042,16 +1029,14 @@ public class NotificationParserUtils
 
         if (callbacks != null)
         {
-            if (view instanceof TextView &&
-                !(view instanceof Button))
+            if (view instanceof TextView && !(view instanceof Button))
             {
                 callbacks.onTextView((TextView) view);
             }
         }
 
-        if (view instanceof ViewGroup)
+        if (view instanceof ViewGroup viewGroup)
         {
-            ViewGroup viewGroup = (ViewGroup) view;
             int childCount = viewGroup.getChildCount();
             for (int i = 0; i < childCount; i++)
             {

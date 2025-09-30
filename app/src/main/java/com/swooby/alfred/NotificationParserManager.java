@@ -2,6 +2,7 @@ package com.swooby.alfred;
 
 import android.app.Notification;
 import android.content.Context;
+import android.service.notification.NotificationListenerService.RankingMap;
 import android.service.notification.StatusBarNotification;
 
 import androidx.annotation.NonNull;
@@ -52,7 +53,7 @@ public class NotificationParserManager
 
     public interface NotificationParserManagerCallbacks
     {
-        boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications);
+        boolean onNotificationListenerConnected(@NonNull List<? extends StatusBarNotification> activeNotifications);
 
         void onNotificationListenerNotConnected(NotConnectedReason reason, long elapsedMillis);
 
@@ -103,7 +104,7 @@ public class NotificationParserManager
         mFooNotificationListenerManagerCallbacks = new FooNotificationListenerManagerCallbacks()
         {
             @Override
-            public boolean onNotificationListenerServiceConnected(@NonNull StatusBarNotification[] activeNotifications)
+            public boolean onNotificationListenerServiceConnected(@NonNull List<? extends StatusBarNotification> activeNotifications)
             {
                 return NotificationParserManager.this.onNotificationListenerConnected(activeNotifications);
             }
@@ -115,15 +116,15 @@ public class NotificationParserManager
             }
 
             @Override
-            public void onNotificationPosted(@NonNull StatusBarNotification sbn)
+            public void onNotificationPosted(@NonNull StatusBarNotification sbn, RankingMap rankingMap)
             {
-                NotificationParserManager.this.onNotificationPosted(sbn);
+                NotificationParserManager.this.onNotificationPosted(sbn, rankingMap);
             }
 
             @Override
-            public void onNotificationRemoved(@NonNull StatusBarNotification sbn)
+            public void onNotificationRemoved(@NonNull StatusBarNotification sbn, RankingMap rankingMap, int reason)
             {
-                NotificationParserManager.this.onNotificationRemoved(sbn);
+                NotificationParserManager.this.onNotificationRemoved(sbn, rankingMap, reason);
             }
         };
 
@@ -196,38 +197,7 @@ public class NotificationParserManager
 
     public void initializeActiveNotifications()
     {
-        StatusBarNotification[] activeNotifications = mFooNotificationListenerManager.getActiveNotifications();
-        List<StatusBarNotification> prioritizedActiveNotifications = prioritizeNotifications(activeNotifications);
-        for (StatusBarNotification activeNotification : prioritizedActiveNotifications)
-        {
-            onNotificationPosted(activeNotification);
-        }
-    }
-
-    @NonNull
-    private List<StatusBarNotification> prioritizeNotifications(StatusBarNotification[] statusBarNotifications)
-    {
-        List<StatusBarNotification> prioritized = new LinkedList<>();
-        if (statusBarNotifications != null)
-        {
-            int numPrioritized = 0;
-            String packageNameSelf = mContext.getPackageName();
-            for (StatusBarNotification statusBarNotification : statusBarNotifications)
-            {
-                String packageName = statusBarNotification.getPackageName();
-                if (packageName.equals(packageNameSelf))
-                {
-                    Notification notification = statusBarNotification.getNotification();
-                    if ((notification.flags & Notification.FLAG_ONGOING_EVENT) == Notification.FLAG_ONGOING_EVENT)
-                    {
-                        prioritized.add(numPrioritized++, statusBarNotification);
-                        continue;
-                    }
-                }
-                prioritized.add(statusBarNotification);
-            }
-        }
-        return prioritized;
+        mFooNotificationListenerManager.initializeActiveNotifications();
     }
 
     public void attach(NotificationParserManagerCallbacks callbacks)
@@ -257,6 +227,21 @@ public class NotificationParserManager
         mNotificationParsers.put(notificationParser.getPackageName(), notificationParser);
     }
 
+    private void notificationParserClear()
+    {
+        mNotificationParsers.clear();
+    }
+
+    private AbstractNotificationParser notificationParserGetOrDefault(String packageName)
+    {
+        AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
+        if (notificationParser == null)
+        {
+            notificationParser = mDefaultNotificationParser;
+        }
+        return notificationParser;
+    }
+
     private void notificationParsersInit()
     {
         // TODO:(pv) In DEBUG, show any parsers that do not have app installed w/ link to install app from Google Play
@@ -284,12 +269,7 @@ public class NotificationParserManager
         notificationParsersAdd(new SpotifyNotificationParser(mNotificationParserCallbacks));
     }
 
-    private void notificationParserClear()
-    {
-        mNotificationParsers.clear();
-    }
-
-    private boolean onNotificationListenerConnected(StatusBarNotification[] activeNotifications)
+    private boolean onNotificationListenerConnected(@NonNull List<? extends StatusBarNotification> activeNotifications)
     {
         FooLog.i(TAG, "onNotificationListenerConnected(...)");
         mIsInitialized = true;
@@ -319,7 +299,7 @@ public class NotificationParserManager
         mListenerManager.endTraversing();
     }
 
-    private void onNotificationPosted(StatusBarNotification sbn)
+    private void onNotificationPosted(StatusBarNotification sbn, RankingMap rankingMap)
     {
         if (!isEnabled())
         {
@@ -332,12 +312,8 @@ public class NotificationParserManager
 
         NotificationParseResult result;
 
-        AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
+        AbstractNotificationParser notificationParser = notificationParserGetOrDefault(packageName);
         FooLog.v(TAG, "onNotificationPosted: notificationParser=" + notificationParser);
-        if (notificationParser == null)
-        {
-            notificationParser = mDefaultNotificationParser;
-        }
         result = notificationParser.onNotificationPosted(sbn);
 
         //noinspection SwitchStatementWithTooFewBranches
@@ -349,7 +325,7 @@ public class NotificationParserManager
         }
     }
 
-    private void onNotificationRemoved(StatusBarNotification sbn)
+    private void onNotificationRemoved(StatusBarNotification sbn, RankingMap rankingMap, int reason)
     {
         if (!isEnabled())
         {
@@ -360,13 +336,9 @@ public class NotificationParserManager
         String packageName = NotificationParserUtils.getPackageName(sbn);
         FooLog.d(TAG, "onNotificationRemoved: packageName=" + FooString.quote(packageName));
 
-        AbstractNotificationParser notificationParser = mNotificationParsers.get(packageName);
-        if (notificationParser == null)
-        {
-            notificationParser = mDefaultNotificationParser;
-        }
-
-        // TODO:(pv) Reset any cache in the parser…
+        AbstractNotificationParser notificationParser = notificationParserGetOrDefault(packageName);
+        FooLog.v(TAG, "onNotificationRemoved: notificationParser=" + notificationParser);
+        // TODO:(pv) Reset any cache in the parser...
         notificationParser.onNotificationRemoved(sbn);
     }
 

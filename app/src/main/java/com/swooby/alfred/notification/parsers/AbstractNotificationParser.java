@@ -89,6 +89,7 @@ public abstract class AbstractNotificationParser
 
         final FooTextToSpeechBuilder builder = new FooTextToSpeechBuilder(packageAppSpokenName);
 
+        /*
         WalkViewCallbacks walkViewCallbacks = textView -> {
             if (textView.getVisibility() != View.VISIBLE)
             {
@@ -103,12 +104,14 @@ public abstract class AbstractNotificationParser
 
             builder.appendSpeech(text);
         };
+        */
 
-        FooLog.v(TAG, "defaultOnNotificationPosted: ---- bigContentView ----");
+        //FooLog.v(TAG, "defaultOnNotificationPosted: ---- bigContentView ----");
         // NOTE: "As of N, this field may be null." :(
-        RemoteViews bigContentView = notification.bigContentView;
-        View inflatedBigContentView = inflateRemoteView(context, bigContentView);
-        walkView(inflatedBigContentView, null, true, walkViewCallbacks);
+        //RemoteViews bigContentView = notification.bigContentView;
+        //FooLog.v(TAG, "defaultOnNotificationPosted: bigContentView=" + bigContentView);
+        //View inflatedBigContentView = inflateRemoteView(context, bigContentView);
+        //walkView(inflatedBigContentView, null, true, walkViewCallbacks);
         //View mockBigContentView = mockRemoteView(mainApplication, bigContentView);
         //Set<Integer> bigContentViewIds = new LinkedHashSet<>();
         //walkView(mockBigContentView, bigContentViewIds);
@@ -122,11 +125,12 @@ public abstract class AbstractNotificationParser
         }
         */
 
-        FooLog.v(TAG, "defaultOnNotificationPosted: ---- contentView ----");
+        //FooLog.v(TAG, "defaultOnNotificationPosted: ---- contentView ----");
         // NOTE: "As of N, this field may be null." :(
-        RemoteViews contentView = notification.contentView;
-        View inflatedContentView = inflateRemoteView(context, contentView);
-        walkView(inflatedContentView, null, true, bigContentView != null ? null : walkViewCallbacks);
+        //RemoteViews contentView = notification.contentView;
+        //FooLog.v(TAG, "defaultOnNotificationPosted: contentView=" + contentView);
+        //View inflatedContentView = inflateRemoteView(context, contentView);
+        //walkView(inflatedContentView, null, true, bigContentView != null ? null : walkViewCallbacks);
         //View mockContentView = mockRemoteView(mainApplication, contentView);
         //Set<Integer> contentViewIds = new LinkedHashSet<>();
         //walkView(mockContentView, contentViewIds);
