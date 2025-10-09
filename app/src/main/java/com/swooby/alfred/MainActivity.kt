@@ -458,7 +458,7 @@ class MainActivity
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val isDebugEnabled = true // TODO: Preferences...isDebugEnabled
-        val isLoggingEnabled = FooLog.isEnabled()
+        val isLoggingEnabled = FooLog.isEnabled
 
         var menuItem = menu.findItem(R.id.action_development_settings)
         menuItem?.setVisible(isDebugEnabled)

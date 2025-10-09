@@ -343,7 +343,7 @@ class AlfredManager(applicationContext: Context) {
                     this@AlfredManager.onChargePortDisconnected(chargePort)
                 }
             })
-            for (audioStreamType in FooAudioUtils.getAudioStreamTypes()) {
+            for (audioStreamType in FooAudioUtils.audioStreamTypes) {
                 volumeObserverStart(audioStreamType)
             }
             // TODO:(pv) Phone doze listener

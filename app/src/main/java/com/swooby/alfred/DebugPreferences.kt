@@ -36,7 +36,7 @@ class DebugPreferences
         }
 
         setBoolean(FILE_NAME_USER, KEY_USER_IS_DEBUG_ENABLED, value)
-        FooLog.setEnabled(value)
+        FooLog.isEnabled = value
         if (value) {
             debugToFileEnabled = debugToFileEnabled
         } else {

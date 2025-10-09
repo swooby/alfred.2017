@@ -12,8 +12,8 @@ import androidx.annotation.NonNull;
 
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.logging.FooLog;
-import com.smartfoo.android.core.media.FooAudioFocusListener;
-import com.smartfoo.android.core.media.FooAudioFocusListener.FooAudioFocusListenerCallbacks;
+import com.smartfoo.android.core.media.FooAudioFocusController;
+import com.smartfoo.android.core.media.FooAudioFocusController.FooAudioFocusControllerCallbacks;
 import com.swooby.alfred.R;
 
 public abstract class AbstractMediaPlayerNotificiationParser
@@ -93,19 +93,19 @@ public abstract class AbstractMediaPlayerNotificiationParser
         return s + '(' + playbackState + ')';
     }
 
-    private final FooAudioFocusListener mAudioFocusListener;
+    private final FooAudioFocusController mAudioFocusListener;
 
     protected AbstractMediaPlayerNotificiationParser(@NonNull String hashtag, @NonNull NotificationParserCallbacks callbacks)
     {
         super(hashtag, callbacks);
 
-        mAudioFocusListener = FooAudioFocusListener.getInstance();
+        mAudioFocusListener = FooAudioFocusController.Companion.getInstance();
     }
 
-    private final FooAudioFocusListenerCallbacks mAudioFocusListenerCallbacks = new FooAudioFocusListenerCallbacks()
+    private final FooAudioFocusControllerCallbacks mAudioFocusListenerCallbacks = new FooAudioFocusControllerCallbacks()
     {
         @Override
-        public boolean onAudioFocusLost(FooAudioFocusListener audioFocusListener, int audioFocusStreamType, int audioFocusDurationHint, int focusChange)
+        public boolean onAudioFocusLost(int audioFocusStreamType, int audioFocusDurationHint, int focusChange)
         {
             audioFocusStart();
             return true;
