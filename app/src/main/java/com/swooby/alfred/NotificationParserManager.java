@@ -1,7 +1,7 @@
 package com.swooby.alfred;
 
-import android.app.Notification;
 import android.content.Context;
+import android.service.notification.NotificationListenerService;
 import android.service.notification.NotificationListenerService.RankingMap;
 import android.service.notification.StatusBarNotification;
 
@@ -12,8 +12,10 @@ import com.smartfoo.android.core.FooListenerAutoStartManager.FooListenerAutoStar
 import com.smartfoo.android.core.FooRun;
 import com.smartfoo.android.core.FooString;
 import com.smartfoo.android.core.logging.FooLog;
+import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.FooNotificationListenerManagerCallbacks;
+import com.smartfoo.android.core.notification.FooNotificationListenerManager.FooNotificationListenerService;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser;
 import com.swooby.alfred.notification.parsers.AbstractNotificationParser.NotificationParseResult;
@@ -33,8 +35,10 @@ import com.swooby.alfred.notification.parsers.NotificationParserUtils;
 import com.swooby.alfred.notification.parsers.PandoraNotificationParser;
 import com.swooby.alfred.notification.parsers.SpotifyNotificationParser;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -116,13 +120,13 @@ public class NotificationParserManager
             }
 
             @Override
-            public void onNotificationPosted(@NonNull StatusBarNotification sbn, RankingMap rankingMap)
+            public void onNotificationPosted(@NotNull StatusBarNotification sbn, @Nullable RankingMap rankingMap)
             {
                 NotificationParserManager.this.onNotificationPosted(sbn, rankingMap);
             }
 
             @Override
-            public void onNotificationRemoved(@NonNull StatusBarNotification sbn, RankingMap rankingMap, int reason)
+            public void onNotificationRemoved(@NotNull StatusBarNotification sbn, @Nullable RankingMap rankingMap, int reason)
             {
                 NotificationParserManager.this.onNotificationRemoved(sbn, rankingMap, reason);
             }
@@ -182,7 +186,7 @@ public class NotificationParserManager
 
     public boolean isNotificationAccessSettingConfirmedEnabled()
     {
-        return FooNotificationListenerManager.isNotificationAccessSettingConfirmedEnabled(mContext);
+        return FooNotificationListener.hasNotificationListenerAccess(mContext, FooNotificationListenerService.class);
     }
 
     public boolean isNotificationListenerConnected()
@@ -192,7 +196,7 @@ public class NotificationParserManager
 
     public void startActivityNotificationListenerSettings(Context context)
     {
-        FooNotificationListenerManager.startActivityNotificationListenerSettings(context);
+        FooNotificationListener.startActivityNotificationListenerSettings(context);
     }
 
     public void initializeActiveNotifications()
@@ -271,12 +275,20 @@ public class NotificationParserManager
 
     private boolean onNotificationListenerConnected(@NonNull List<? extends StatusBarNotification> activeNotifications)
     {
+        mNotificationParsers.clear();
+    }
+
+    private boolean onNotificationListenerConnected(@NotNull List<? extends StatusBarNotification> activeNotifications)
+    {
         FooLog.i(TAG, "onNotificationListenerConnected(...)");
         mIsInitialized = true;
         boolean handled = false;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            handled |= callbacks.onNotificationListenerConnected(activeNotifications);
+            if (callbacks != null)
+            {
+                handled |= callbacks.onNotificationListenerConnected(activeNotifications);
+            }
         }
         mListenerManager.endTraversing();
 
@@ -294,7 +306,10 @@ public class NotificationParserManager
         mIsInitialized = true;
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationListenerNotConnected(reason, elapsedMillis);
+            if (callbacks != null)
+            {
+                callbacks.onNotificationListenerNotConnected(reason, elapsedMillis);
+            }
         }
         mListenerManager.endTraversing();
     }
@@ -346,7 +361,10 @@ public class NotificationParserManager
     {
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationParsed(parser);
+            if (callbacks != null)
+            {
+                callbacks.onNotificationParsed(parser);
+            }
         }
         mListenerManager.endTraversing();
     }
@@ -355,7 +373,10 @@ public class NotificationParserManager
     {
         for (NotificationParserManagerCallbacks callbacks : mListenerManager.beginTraversing())
         {
-            callbacks.onNotificationRemoved(parser);
+            if (callbacks != null)
+            {
+                callbacks.onNotificationRemoved(parser);
+            }
         }
         mListenerManager.endTraversing();
     }
