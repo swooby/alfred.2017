@@ -37,10 +37,10 @@ import com.smartfoo.android.core.app.GenericPromptPositiveNegativeDialogFragment
 import com.smartfoo.android.core.logging.FooLog
 import com.smartfoo.android.core.media.FooAudioStreamVolumeObserver
 import com.smartfoo.android.core.media.FooAudioUtils
-import com.smartfoo.android.core.notification.FooNotificationListenerManager
+import com.smartfoo.android.core.notification.FooNotificationListener
 import com.smartfoo.android.core.notification.FooNotificationListenerManager.NotConnectedReason
 import com.smartfoo.android.core.platform.FooPlatformUtils
-import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper.IntentTextToSpeechSettings
+import com.smartfoo.android.core.texttospeech.FooTextToSpeechHelper
 import com.swooby.alfred.AlfredManager.AlfredManagerCallbacks
 import com.swooby.alfred.TextToSpeechManager.TextToSpeechManagerCallbacks
 import com.swooby.alfred.databinding.ActivityMainBinding
@@ -458,7 +458,7 @@ class MainActivity
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val isDebugEnabled = true // TODO: Preferences...isDebugEnabled
-        val isLoggingEnabled = FooLog.isEnabled()
+        val isLoggingEnabled = FooLog.isEnabled
 
         var menuItem = menu.findItem(R.id.action_development_settings)
         menuItem?.setVisible(isDebugEnabled)
@@ -467,7 +467,7 @@ class MainActivity
         menuItem?.setVisible(isDebugEnabled)
 
         menuItem = menu.findItem(R.id.action_notification_access)
-        menuItem?.setVisible(FooNotificationListenerManager.supportsNotificationListenerSettings())
+        menuItem?.setVisible(FooNotificationListener.supportsNotificationListenerSettings())
 
         menuItem = menu.findItem(R.id.action_debug_show_debug_log)
         menuItem?.setVisible(isLoggingEnabled)
@@ -518,7 +518,7 @@ class MainActivity
                 return true
             }
             R.id.action_text_to_speech -> {
-                startActivity(IntentTextToSpeechSettings)
+                FooTextToSpeechHelper.showTextToSpeechSettings(this)
                 return true
             }
             R.id.action_debug_show_debug_log -> {

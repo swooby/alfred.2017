@@ -21,6 +21,7 @@ import com.smartfoo.android.core.logging.FooLog;
 import com.smartfoo.android.core.notification.FooNotification;
 import com.smartfoo.android.core.notification.FooNotification.Companion.ChannelInfo;
 import com.smartfoo.android.core.notification.FooNotificationBuilder;
+import com.smartfoo.android.core.notification.FooNotificationListener;
 import com.smartfoo.android.core.notification.FooNotificationListenerManager;
 import com.smartfoo.android.core.platform.FooRes;
 import com.swooby.alfred.Profile.Tokens;
@@ -66,7 +67,7 @@ public class NotificationManager
     @Nullable
     public static PendingIntent createPendingIntentNotificationListenerSettingsActivity(@NonNull Context context, int requestCode)
     {
-        Intent intent = FooNotificationListenerManager.getIntentNotificationListenerSettings();
+        Intent intent = FooNotificationListener.getIntentNotificationListenerSettings();
         return intent != null ? FooNotification.createPendingIntentForActivity(context, requestCode, intent) : null;
     }
 

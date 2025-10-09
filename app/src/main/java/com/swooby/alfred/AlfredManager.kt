@@ -284,7 +284,7 @@ class AlfredManager(applicationContext: Context) {
                 }
             })
             notificationParserManager.attach(object : NotificationParserManagerCallbacks {
-                override fun onNotificationListenerConnected(activeNotifications: Array<StatusBarNotification>): Boolean {
+                override fun onNotificationListenerConnected(activeNotifications: List<StatusBarNotification?>): Boolean {
                     return this@AlfredManager.onNotificationListenerConnected()
                 }
 
@@ -343,7 +343,7 @@ class AlfredManager(applicationContext: Context) {
                     this@AlfredManager.onChargePortDisconnected(chargePort)
                 }
             })
-            for (audioStreamType in FooAudioUtils.getAudioStreamTypes()) {
+            for (audioStreamType in FooAudioUtils.audioStreamTypes) {
                 volumeObserverStart(audioStreamType)
             }
             // TODO:(pv) Phone doze listener
